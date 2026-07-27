@@ -1,1 +1,17 @@
+# env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+
+
+# docs
 docs/
