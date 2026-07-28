@@ -1,3 +1,5 @@
+"""Embedding client for Ollama's /api/embeddings endpoint."""
+
 import httpx
 
 from app.config import settings
@@ -9,10 +11,17 @@ class EmbeddingClient:
         self.url = url or settings.ollama_url
 
     def embed(self, text: str) -> list[float]:
-        response = httpx.post(
-            f"{self.url}/api/embeddings",
-            json={"model": self.model, "prompt": text},
-            timeout=60.0,
-        )
-        response.raise_for_status()
-        return response.json()["embedding"]
+        try:
+            response = httpx.post(
+                f"{self.url}/api/embeddings",
+                json={"model": self.model, "prompt": text},
+                timeout=60.0,
+            )
+            response.raise_for_status()
+            data = response.json()
+        except httpx.HTTPError as e:
+            raise RuntimeError(f"Embedding request failed: {e}") from e
+
+        if "embedding" not in data:
+            raise ValueError(f"Unexpected embedding response: {list(data.keys())}")
+        return data["embedding"]

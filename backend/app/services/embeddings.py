@@ -8,9 +8,9 @@ from app.vector.client import HybridVectorStore
 
 
 class EmbeddingService:
-    def __init__(self, store: HybridVectorStore):
+    def __init__(self, store: HybridVectorStore, embedder: EmbeddingClient | None = None):
         self.store = store
-        self._embedder = EmbeddingClient()
+        self._embedder = embedder or EmbeddingClient()
 
     def ingest(self, regulation_id: str, document: DocumentStructure, doc_type: str):
         if doc_type in ("RBI Circular", "Regulation"):
@@ -21,14 +21,16 @@ class EmbeddingService:
             chunks = self._recursive_chunk(document)
 
         sample = self._embedder.embed(chunks[0]["text"]) if chunks else []
+        # ponytail: 768 fallback for empty-chunks edge case; replace with model dim lookup if needed
         dim = len(sample) if sample else 768
         self.store.ensure_collection("regulation_chunks", size=dim)
         points = []
         for i, chunk in enumerate(chunks):
+            vector = sample if i == 0 else self._embedder.embed(chunk["text"])
             points.append(
                 PointStruct(
                     id=f"{regulation_id}-chunk-{i}",
-                    vector=self._embedder.embed(chunk["text"]),
+                    vector=vector,
                     payload={
                         "text": chunk["text"],
                         "regulation_id": regulation_id,
