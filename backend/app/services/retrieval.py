@@ -23,6 +23,8 @@ class Reranker:
         candidate_ids = {str(c.get("id") or c.get("text", "")) for c in candidates}
         prompt = self._build_prompt(query, candidates)
         try:
+            # ponytail: synchronous httpx call because RetrievalService.search is synchronous.
+            # Async refactor deferred to a future performance pass.
             response = httpx.post(
                 f"{self.url.rstrip('/')}/api/chat",
                 json={
@@ -131,7 +133,7 @@ class RetrievalService:
                             {
                                 "id": rid,
                                 "text": r.get("text", ""),
-                                "score": item["score"],
+                                "score": item.get("rerank_score", item["score"]),
                                 "source": "graph",
                             }
                         )

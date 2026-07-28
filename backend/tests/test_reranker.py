@@ -164,3 +164,21 @@ def test_reranker_candidate_without_id():
 
     assert len(result) == 1
     assert result[0]["rerank_score"] == 5
+
+
+def test_reranker_fallback_on_malformed_response():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"id": "a", "text": "first", "score": 0.1},
+        {"id": "b", "text": "second", "score": 0.9},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {}  # missing message/content
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    assert result[0]["id"] == "b"
+    assert result[1]["id"] == "a"
