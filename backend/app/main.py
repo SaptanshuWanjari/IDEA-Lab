@@ -18,11 +18,13 @@ async def lifespan(app: FastAPI):
     yield
 
 
-from app.routers import auth
+from app.routers import auth, maps, regulations
 
 app = FastAPI(title="PravahOS", version="0.1.0", lifespan=lifespan)
 
 app.include_router(auth.router)
+app.include_router(regulations.router)
+app.include_router(maps.router)
 
 app.add_middleware(
     CORSMiddleware,

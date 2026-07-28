@@ -36,4 +36,4 @@ def require_role(*roles: str):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
         return user
 
-    return Depends(checker)
+    return checker
