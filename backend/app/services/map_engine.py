@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List
 from uuid import UUID
 
@@ -27,7 +27,7 @@ class MapEngine:
                     regulation_id=UUID(regulation_id),
                     owner_department_id=dept.id,
                     description=g.description,
-                    deadline=datetime.utcnow() + timedelta(days=g.deadline_days) if g.deadline_days else None,
+                    deadline=datetime.now(timezone.utc) + timedelta(days=g.deadline_days) if g.deadline_days else None,
                     evidence_required=g.evidence_required,
                     status="Pending",
                     approval_state="Draft",
@@ -46,6 +46,22 @@ class MapEngine:
         for m in maps:
             self.session.add(m)
         await self.session.flush()  # get IDs assigned
+
+        # Validate dependency edges for cycles before persisting them
+        edges: List[tuple[UUID, UUID]] = []
+        for dep in dependencies:
+            map_idx = dep.get("map_index")
+            dep_indices = dep.get("depends_on_indices", [])
+            if map_idx is None or map_idx >= len(maps):
+                continue
+            target = maps[map_idx]
+            for di in dep_indices:
+                if di < len(maps):
+                    edges.append((target.id, maps[di].id))
+        if self.detect_cycle(edges):
+            await self.session.rollback()
+            raise ValueError("Cycle detected in MAP dependencies")
+
         for dep in dependencies:
             map_idx = dep.get("map_index")
             dep_indices = dep.get("depends_on_indices", [])

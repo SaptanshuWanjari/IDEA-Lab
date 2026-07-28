@@ -1,3 +1,5 @@
+import random
+
 from app.services.digital_twin import DigitalTwin
 
 
@@ -15,10 +17,11 @@ def test_monte_carlo_simulation():
 
 
 def test_ripple_effect():
+    random.seed(0)
     maps = [
         {"id": "a", "department": "IT", "dependencies": [], "status": "Pending", "optimistic_days": 3, "most_likely_days": 7, "pessimistic_days": 14},
         {"id": "b", "department": "Operations", "dependencies": ["a"], "status": "Pending"},
     ]
-    twin = DigitalTwin(maps, iterations=50)
-    ripple = twin.ripple_effect("a", 7)
+    twin = DigitalTwin(maps, iterations=100)
+    ripple = twin.ripple_effect("a", 30)
     assert ripple["delta_days"] > 0

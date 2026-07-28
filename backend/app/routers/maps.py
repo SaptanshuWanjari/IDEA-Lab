@@ -60,6 +60,7 @@ async def review_map(
         m = await engine.approve(str(map_id))
     elif action.action == "reject":
         m.approval_state = "Rejected"
+        m.status = "Rejected"
     elif action.action == "edit":
         if action.description:
             m.description = action.description
@@ -113,6 +114,15 @@ async def complete_map(
     validation = ValidationService(session, LLMClient())
     completeness = await validation.check_completeness(str(map_id), file.filename)
     m.status = "Completed" if completeness["complete"] else "InProgress"
+    await session.flush()
+
+    functional_coverage = await validation.functional_coverage(str(m.regulation_id))
+    integrity_issues = await validation.integrity_check(str(m.regulation_id))
+    integrity_checks = {
+        "file_type_valid": file.content_type in allowed,
+        "size_within_limit": len(content) <= 20 * 1024 * 1024,
+        "issues": integrity_issues,
+    }
 
     await session.commit()
     audit = AuditService(session)
@@ -124,4 +134,9 @@ async def complete_map(
         payload={"complete": completeness["complete"], "method": completeness.get("method")},
     )
     await session.refresh(m)
-    return {"map": MAPOut.model_validate(m), "completeness_check": completeness}
+    return {
+        "map": MAPOut.model_validate(m),
+        "completeness_check": completeness,
+        "functional_coverage": functional_coverage,
+        "integrity_checks": integrity_checks,
+    }

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from jose import JWTError, jwt
@@ -37,12 +37,12 @@ class AuthService:
         access_payload = {
             "sub": str(user_id),
             "type": "access",
-            "exp": datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes),
         }
         refresh_payload = {
             "sub": str(user_id),
             "type": "refresh",
-            "exp": datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days),
+            "exp": datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days),
         }
         access = jwt.encode(access_payload, settings.secret_key, algorithm=settings.algorithm)
         refresh = jwt.encode(refresh_payload, settings.secret_key, algorithm=settings.algorithm)

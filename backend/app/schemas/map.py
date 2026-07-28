@@ -26,6 +26,7 @@ class MAPOut(BaseModel):
     confidence: Optional[float] = None
     reasoning: Optional[str] = None
     source_clauses: List[str] = []
+    estimated_days: Optional[int] = None
     status: str
     approval_state: str
     created_at: datetime

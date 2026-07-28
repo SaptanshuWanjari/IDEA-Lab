@@ -36,36 +36,51 @@ class AuditService:
         return entry
 
     async def build_report(self, regulation_id: str) -> dict:
+        from app.models.department import Department
+
         regulation = await self.session.get(Regulation, UUID(regulation_id))
-        result = await self.session.execute(select(MAP).where(MAP.regulation_id == UUID(regulation_id)))
-        maps = result.scalars().all()
+        if not regulation:
+            raise ValueError("Regulation not found")
+
+        result = await self.session.execute(
+            select(MAP, Department.name.label("department_name"))
+            .outerjoin(Department, MAP.owner_department_id == Department.id)
+            .where(MAP.regulation_id == UUID(regulation_id))
+        )
+        rows = result.all()
+        maps = [row.MAP for row in rows]
+        dept_names = {row.MAP.id: row.department_name for row in rows}
         map_ids = [m.id for m in maps]
         ev_result = await self.session.execute(select(Evidence).where(Evidence.map_id.in_(map_ids)))
-        evidence = ev_result.scalars().all()
+        evidence_by_map: dict[UUID, list[Evidence]] = {}
+        for e in ev_result.scalars().all():
+            evidence_by_map.setdefault(e.map_id, []).append(e)
         completed_count = sum(1 for m in maps if m.status == "Completed")
+
         return {
-            "regulation": {
-                "id": str(regulation.id),
-                "title": regulation.title,
-                "status": regulation.status,
-            } if regulation else None,
+            "regulation_id": str(regulation.id),
+            "title": regulation.title,
+            "status": regulation.status,
+            "summary": regulation.summary,
+            "effective_date": str(regulation.effective_date) if regulation.effective_date else None,
             "maps": [
                 {
                     "id": str(m.id),
                     "description": m.description,
                     "status": m.status,
-                    "approval_state": m.approval_state,
+                    "department": dept_names.get(m.id) or str(m.owner_department_id),
+                    "confidence": m.confidence,
+                    "source_clauses": m.source_clauses or [],
+                    "reasoning": m.reasoning,
+                    "evidence": [
+                        {
+                            "file_name": e.file_name,
+                            "uploaded_at": e.created_at.isoformat() if e.created_at else None,
+                        }
+                        for e in evidence_by_map.get(m.id, [])
+                    ],
                 }
                 for m in maps
-            ],
-            "evidence": [
-                {
-                    "id": str(e.id),
-                    "map_id": str(e.map_id),
-                    "file_name": e.file_name,
-                    "uploaded_by": str(e.uploaded_by),
-                }
-                for e in evidence
             ],
             "completed_count": completed_count,
             "total_count": len(maps),

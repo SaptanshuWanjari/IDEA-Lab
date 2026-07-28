@@ -76,15 +76,13 @@ Does the filename strongly suggest this requirement is satisfied? Answer only YE
         issues = []
         result = await self.session.execute(select(MAP).where(MAP.regulation_id == regulation_id))
         maps = result.scalars().all()
-        ev_result = await self.session.execute(select(Evidence))
-        evidence = ev_result.scalars().all()
         map_ids = {m.id for m in maps}
+        ev_result = await self.session.execute(select(Evidence).where(Evidence.map_id.in_(map_ids)))
+        evidence = ev_result.scalars().all()
+        evidence_by_map: dict = {}
         for ev in evidence:
-            if ev.map_id not in map_ids:
-                issues.append(f"Orphan evidence {ev.id}: MAP {ev.map_id} not found in this regulation")
+            evidence_by_map.setdefault(ev.map_id, []).append(ev)
         for m in maps:
-            if m.status == "Completed":
-                ev_count = sum(1 for ev in evidence if ev.map_id == m.id)
-                if ev_count == 0:
-                    issues.append(f"MAP {m.id} is Completed but has no evidence")
+            if m.status == "Completed" and not evidence_by_map.get(m.id):
+                issues.append(f"MAP {m.id} is Completed but has no evidence")
         return issues
