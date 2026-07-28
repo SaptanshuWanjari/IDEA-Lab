@@ -18,3 +18,7 @@ docs/
 
 # worktrees
 .worktrees/
+
+__pycache__
+
+cookies.txt

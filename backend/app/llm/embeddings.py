@@ -17,7 +17,7 @@ class EmbeddingClient:
             response = httpx.post(
                 f"{self.url.rstrip('/')}/api/embeddings",
                 json={"model": self.model, "prompt": text},
-                timeout=60.0,
+                timeout=settings.ollama_embed_timeout,
             )
             response.raise_for_status()
             data = response.json()

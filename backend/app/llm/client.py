@@ -10,7 +10,14 @@ class LLMClient:
         self.model = model or settings.ollama_chat_model
         self.url = settings.ollama_url
 
-    def chat(self, messages: list[dict], temperature: float = 0.2, max_tokens: int = 2000) -> str:
+    def chat(
+        self,
+        messages: list[dict],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> str:
+        temperature = settings.ollama_chat_temperature if temperature is None else temperature
+        max_tokens = settings.ollama_chat_max_tokens if max_tokens is None else max_tokens
         try:
             response = httpx.post(
                 f"{self.url}/api/chat",
@@ -20,7 +27,7 @@ class LLMClient:
                     "stream": False,
                     "options": {"temperature": temperature, "num_predict": max_tokens},
                 },
-                timeout=120.0,
+                timeout=settings.ollama_chat_timeout,
             )
             response.raise_for_status()
             return response.json()["message"]["content"]

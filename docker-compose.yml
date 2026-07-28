@@ -9,6 +9,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pravah} -d ${POSTGRES_DB:-pravah}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   qdrant:
     image: qdrant/qdrant:latest
@@ -16,16 +21,27 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/6333'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   neo4j:
     image: neo4j:5
     environment:
       NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/pravah}
+      NEO4J_dbms_security_auth__minimum__password__length: 4
     ports:
       - "7474:7474"
       - "7687:7687"
     volumes:
       - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-pravah} 'RETURN 1'"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
 
   minio:
     image: minio/minio:latest
@@ -38,13 +54,11 @@ services:
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
-
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build: ./backend
@@ -59,14 +73,20 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      OLLAMA_URL: http://ollama:11434
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-qwen2.5:14b}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
+      OLLAMA_RERANK_MODEL: ${OLLAMA_RERANK_MODEL:-qwen2.5:14b}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
     depends_on:
-      - postgres
-      - qdrant
-      - neo4j
-      - minio
-      - ollama
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - tantivy_data:/tmp/pravah_tantivy
@@ -88,5 +108,4 @@ volumes:
   qdrant_data:
   neo4j_data:
   minio_data:
-  ollama_data:
   tantivy_data:

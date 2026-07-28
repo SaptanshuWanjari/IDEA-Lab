@@ -40,7 +40,7 @@ class Reranker:
                     },
                     {"role": "user", "content": prompt},
                 ],
-                {"temperature": 0.0, "num_predict": 500},
+                {"temperature": 0.0, "num_predict": settings.ollama_rerank_max_tokens},
             )
             content = data["message"]["content"]
             scores = self._parse_scores(content, valid_ids=candidate_ids)
@@ -99,7 +99,7 @@ class Reranker:
                 response = httpx.post(
                     f"{self.url.rstrip('/')}/api/chat",
                     json={"model": self.model, "messages": messages, "stream": False, "options": options},
-                    timeout=httpx.Timeout(30.0, connect=5.0),
+                    timeout=httpx.Timeout(settings.ollama_rerank_timeout, connect=settings.ollama_rerank_connect_timeout),
                 )
                 response.raise_for_status()
                 return response.json()

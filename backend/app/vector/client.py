@@ -23,7 +23,7 @@ class HybridVectorStore:
         schema = (
             SchemaBuilder()
             .add_text_field("text", stored=True)
-            .add_text_field("chunk_id", stored=True, tokenizer="raw")
+            .add_text_field("chunk_id", stored=True, tokenizer_name="raw")
             .add_text_field("document_type", stored=True)
             .add_text_field("section", stored=True)
             .add_integer_field("page", stored=True)
@@ -33,7 +33,7 @@ class HybridVectorStore:
         self.tantivy = Index(schema, path=self.index_path)
         self.writer = self.tantivy.writer(50_000_000, 1)
 
-    def ensure_collection(self, name: str, size: int = 768):
+    def ensure_collection(self, name: str, size: int = 1024):
         try:
             self.qdrant.get_collection(name)
         except Exception:

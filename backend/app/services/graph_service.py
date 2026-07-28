@@ -3,6 +3,7 @@ import logging
 import re
 from typing import Literal
 
+from app.config import settings
 from app.graph.client import GraphClient
 from app.llm.client import LLMClient
 from app.schemas.document import DocumentStructure
@@ -92,7 +93,7 @@ class GraphService:
                 {"role": "user", "content": RELATION_PROMPT.replace("{title}", title).replace("{clauses}", clauses_text)},
             ],
             temperature=0.0,
-            max_tokens=1000,
+            max_tokens=settings.ollama_relation_max_tokens,
         )
         return self._parse_relations(response)
 
