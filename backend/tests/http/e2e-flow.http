@@ -1,0 +1,148 @@
+### PravahOS — Full Happy Path E2E Flow
+### Run sequentially: Register -> Login -> Upload -> Ingest -> Generate -> Review -> Complete -> Report
+###
+### Usage: Run each request in order. Variables auto-set via response handler.
+### In VS Code REST Client, use the "send request" in order.
+
+# -------------------------------------------------------
+# STEP 1: Register admin
+# -------------------------------------------------------
+# @name register
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "e2e@pravah.local",
+  "password": "e2etest123",
+  "role": "admin"
+}
+
+###
+# -------------------------------------------------------
+# STEP 2: Login (sets auth cookies)
+# -------------------------------------------------------
+# @name login
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "e2e@pravah.local",
+  "password": "e2etest123"
+}
+
+###
+# -------------------------------------------------------
+# STEP 3: Verify auth — GET /auth/me
+# -------------------------------------------------------
+# @name me
+GET http://localhost:8000/auth/me
+
+###
+# -------------------------------------------------------
+# STEP 4: Upload a regulation PDF
+# -------------------------------------------------------
+# @name upload
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="rbi_circular.pdf"
+Content-Type: application/pdf
+
+< ../../docs/plans/2026-07-27-pravahos-mvp.md
+------boundary
+Content-Disposition: form-data; name="title"
+
+RBI Cyber Security Circular 2026
+------boundary--
+
+###
+# -------------------------------------------------------
+# STEP 5: List all regulations
+# -------------------------------------------------------
+# @name list
+GET http://localhost:8000/regulations/
+
+###
+# -------------------------------------------------------
+# STEP 6: Ingest the regulation (extract clauses)
+# -------------------------------------------------------
+# @name ingest
+POST http://localhost:8000/regulations/{{upload.response.body.id}}/ingest
+
+###
+# -------------------------------------------------------
+# STEP 7: Generate MAPs (4-agent pipeline)
+# -------------------------------------------------------
+# @name generate
+POST http://localhost:8000/regulations/{{upload.response.body.id}}/generate
+
+###
+# -------------------------------------------------------
+# STEP 8: Get dependency graph
+# -------------------------------------------------------
+# @name graph
+GET http://localhost:8000/regulations/{{upload.response.body.id}}/graph
+
+###
+# -------------------------------------------------------
+# STEP 9: Run Digital Twin simulation
+# -------------------------------------------------------
+# @name simulate
+GET http://localhost:8000/regulations/{{upload.response.body.id}}/simulate
+
+###
+# -------------------------------------------------------
+# STEP 10: Get regulation detail
+# -------------------------------------------------------
+# @name detail
+GET http://localhost:8000/regulations/{{upload.response.body.id}}
+
+###
+# -------------------------------------------------------
+# STEP 11: List MAPs for this regulation
+# -------------------------------------------------------
+# @name listMaps
+GET http://localhost:8000/maps/?regulation_id={{upload.response.body.id}}
+
+###
+# -------------------------------------------------------
+# STEP 12: Review & approve first MAP
+# -------------------------------------------------------
+# @name review
+POST http://localhost:8000/maps/{{generate.response.body.0.id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+###
+# -------------------------------------------------------
+# STEP 13: Complete MAP with evidence
+# -------------------------------------------------------
+# @name complete
+POST http://localhost:8000/maps/{{generate.response.body.0.id}}/complete
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="mfa_implementation_plan.pdf"
+Content-Type: application/pdf
+
+MFA implementation plan evidence document.
+Rollout scheduled for Q4 2026.
+------boundary--
+
+###
+# -------------------------------------------------------
+# STEP 14: Generate compliance report
+# -------------------------------------------------------
+# @name report
+GET http://localhost:8000/reports/{{upload.response.body.id}}/report
+
+###
+# -------------------------------------------------------
+# STEP 15: Logout
+# -------------------------------------------------------
+# @name logout
+POST http://localhost:8000/auth/logout

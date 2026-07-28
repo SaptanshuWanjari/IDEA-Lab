@@ -1,0 +1,94 @@
+### Regulations API Tests — PravahOS
+### Requires: login first via auth.http (admin) to set cookies
+
+# -------------------------------------------------------
+# 1. UPLOAD — multipart PDF upload
+# -------------------------------------------------------
+
+### Upload a PDF regulation (admin)
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ../../docs/plans/2026-07-27-pravahos-mvp.md
+------boundary
+Content-Disposition: form-data; name="title"
+
+Cyber Security Circular
+------boundary--
+
+### Upload without authentication (expect 401)
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="test.pdf"
+Content-Type: application/pdf
+
+test content
+------boundary--
+
+### Upload non-PDF file (expect 400)
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+This is not a PDF
+------boundary
+
+
+# -------------------------------------------------------
+# 2. LIST — get all regulations
+# -------------------------------------------------------
+
+### List all regulations
+GET http://localhost:8000/regulations/
+
+
+# -------------------------------------------------------
+# 3. GET BY ID — get single regulation
+# -------------------------------------------------------
+
+### Get regulation by ID
+GET http://localhost:8000/regulations/{{regulation_id}}
+
+### Get nonexistent regulation (expect 404)
+GET http://localhost:8000/regulations/00000000-0000-0000-0000-000000000000
+
+
+# -------------------------------------------------------
+# 4. INGEST — extract clauses + classify
+# -------------------------------------------------------
+
+### Ingest regulation (extract clauses, classify)
+POST http://localhost:8000/regulations/{{regulation_id}}/ingest
+
+
+# -------------------------------------------------------
+# 5. GENERATE — run 4-agent pipeline to create MAPs
+# -------------------------------------------------------
+
+### Generate MAPs from regulation
+POST http://localhost:8000/regulations/{{regulation_id}}/generate
+
+
+# -------------------------------------------------------
+# 6. GRAPH — get dependency graph data
+# -------------------------------------------------------
+
+### Get dependency graph
+GET http://localhost:8000/regulations/{{regulation_id}}/graph
+
+
+# -------------------------------------------------------
+# 7. SIMULATE — run Monte Carlo Digital Twin
+# -------------------------------------------------------
+
+### Run simulation (100 iterations)
+GET http://localhost:8000/regulations/{{regulation_id}}/simulate

@@ -24,4 +24,6 @@ dependencies = [
     "structlog>=24.4.0",
     "tantivy>=0.21.0",
     "numpy>=2.1.0",
+    "email-validator>=2.3.0",
+    "bcrypt<4.1",
 ]

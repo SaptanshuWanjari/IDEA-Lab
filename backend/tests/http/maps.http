@@ -1,0 +1,101 @@
+### MAPs API Tests — PravahOS
+### Requires: login first (admin/compliance officer) + generated MAPs
+
+# -------------------------------------------------------
+# 1. LIST MAPs
+# -------------------------------------------------------
+
+### List all MAPs
+GET http://localhost:8000/maps/
+
+### List MAPs filtered by regulation
+GET http://localhost:8000/maps/?regulation_id={{regulation_id}}
+
+### List MAPs with nonexistent regulation (expect empty)
+GET http://localhost:8000/maps/?regulation_id=00000000-0000-0000-0000-000000000000
+
+
+# -------------------------------------------------------
+# 2. GET MAP BY ID
+# -------------------------------------------------------
+
+### Get single MAP
+GET http://localhost:8000/maps/{{map_id}}
+
+### Get nonexistent MAP (expect 404)
+GET http://localhost:8000/maps/00000000-0000-0000-0000-000000000000
+
+
+# -------------------------------------------------------
+# 3. REVIEW MAP — approve / edit / reject
+#     Requires: compliance_officer or admin role
+# -------------------------------------------------------
+
+### Approve a MAP (admin or compliance_officer)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Reject a MAP
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "reject"
+}
+
+### Edit a MAP description + deadline
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "edit",
+  "description": "Updated: Banks must implement MFA within 60 days",
+  "deadline": "2026-12-01T00:00:00Z"
+}
+
+### Review MAP with department_manager role (expect 403)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Review with invalid action (expect 400)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "delete"
+}
+
+
+# -------------------------------------------------------
+# 4. COMPLETE MAP — upload evidence
+# -------------------------------------------------------
+
+### Complete a MAP with evidence file
+POST http://localhost:8000/maps/{{map_id}}/complete
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="mfa_evidence.pdf"
+Content-Type: application/pdf
+
+evidence content here
+------boundary--
+
+### Complete with unsupported file type (expect 400)
+POST http://localhost:8000/maps/{{map_id}}/complete
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="hack.exe"
+Content-Type: application/x-msdownload
+
+malicious content
+------boundary--

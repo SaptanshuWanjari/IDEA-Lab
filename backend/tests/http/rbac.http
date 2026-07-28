@@ -1,0 +1,104 @@
+### RBAC / Authorization Tests — PravahOS
+### Tests for role-based access control
+###
+### Setup: run auth.http to create admin, compliance_officer, and department_manager users first.
+### Then login as each role below and test access.
+
+# -------------------------------------------------------
+# RBAC 1: ADMIN — all access
+# -------------------------------------------------------
+
+### Login as admin
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local",
+  "password": "admin123"
+}
+
+### Admin: review MAP (allowed — admin has full access)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Admin: list regulations (allowed)
+GET http://localhost:8000/regulations/
+
+### Admin: generate report (allowed)
+GET http://localhost:8000/reports/{{regulation_id}}/report
+
+
+# -------------------------------------------------------
+# RBAC 2: COMPLIANCE OFFICER — can review but not admin
+# -------------------------------------------------------
+
+### Login as compliance officer
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "compliance@pravah.local",
+  "password": "compliance123"
+}
+
+### Compliance officer: review MAP (allowed)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Compliance officer: list regulations (allowed)
+GET http://localhost:8000/regulations/
+
+
+# -------------------------------------------------------
+# RBAC 3: DEPARTMENT MANAGER — read-only on reviews
+# -------------------------------------------------------
+
+### Login as department manager
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@pravah.local",
+  "password": "manager123"
+}
+
+### Department manager: review MAP (expect 403 Forbidden)
+POST http://localhost:8000/maps/{{map_id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Department manager: list regulations (allowed)
+GET http://localhost:8000/regulations/
+
+### Department manager: get own profile (allowed)
+GET http://localhost:8000/auth/me
+
+
+# -------------------------------------------------------
+# RBAC 4: UNAUTHENTICATED — denied everywhere
+# -------------------------------------------------------
+
+### Unauthenticated: list regulations (expect 401)
+GET http://localhost:8000/regulations/
+
+### Unauthenticated: review MAP (expect 401)
+POST http://localhost:8000/maps/00000000-0000-0000-0000-000000000000/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### Unauthenticated: get report (expect 401)
+GET http://localhost:8000/reports/00000000-0000-0000-0000-000000000000/report

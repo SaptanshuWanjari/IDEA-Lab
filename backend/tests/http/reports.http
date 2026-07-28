@@ -1,0 +1,12 @@
+### Reports API Tests — PravahOS
+### Requires: login first + regulation with completed MAPs
+
+# -------------------------------------------------------
+# 1. GENERATE REPORT
+# -------------------------------------------------------
+
+### Generate compliance audit report
+GET http://localhost:8000/reports/{{regulation_id}}/report
+
+### Generate report for nonexistent regulation (expect 404)
+GET http://localhost:8000/reports/00000000-0000-0000-0000-000000000000/report

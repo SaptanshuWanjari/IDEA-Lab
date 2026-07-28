@@ -1,0 +1,169 @@
+### Auth API Tests — PravahOS
+### Base: http://localhost:8000
+### Uses httpOnly cookies — REST Client auto-manages Set-Cookie
+
+# -------------------------------------------------------
+# 1. REGISTER — creates account + sets cookies
+# -------------------------------------------------------
+
+### Register admin user
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local",
+  "password": "admin123",
+  "role": "admin"
+}
+
+### Register compliance officer
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "compliance@pravah.local",
+  "password": "compliance123",
+  "role": "compliance_officer"
+}
+
+### Register department manager
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "manager@pravah.local",
+  "password": "manager123",
+  "role": "department_manager"
+}
+
+### Register with duplicate email (expect 400)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local",
+  "password": "admin123"
+}
+
+### Register with default role (role omitted)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "default@pravah.local",
+  "password": "default123"
+}
+
+### Register with invalid email (expect 422)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "bad123"
+}
+
+
+# -------------------------------------------------------
+# 2. LOGIN — authenticate + sets cookies
+# -------------------------------------------------------
+
+### Login as admin
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local",
+  "password": "admin123"
+}
+
+### Login as compliance officer
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "compliance@pravah.local",
+  "password": "compliance123"
+}
+
+### Login as department manager
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@pravah.local",
+  "password": "manager123"
+}
+
+### Login with wrong password (expect 401)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local",
+  "password": "wrongpassword"
+}
+
+### Login with nonexistent user (expect 401)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@pravah.local",
+  "password": "nobody123"
+}
+
+### Login with missing fields (expect 422)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.local"
+}
+
+
+# -------------------------------------------------------
+# 3. ME — get current user from cookie
+# -------------------------------------------------------
+
+### Get current user (admin)
+GET http://localhost:8000/auth/me
+
+### Get current user (compliance officer)
+GET http://localhost:8000/auth/me
+
+### Get current user (manager)
+GET http://localhost:8000/auth/me
+
+### Get current user without cookie (expect 401)
+GET http://localhost:8000/auth/me
+
+
+# -------------------------------------------------------
+# 4. REFRESH — rotate tokens
+# -------------------------------------------------------
+
+### Refresh tokens (sends refresh_token cookie)
+POST http://localhost:8000/auth/refresh
+
+### Refresh without cookie (expect 401)
+POST http://localhost:8000/auth/refresh
+
+
+# -------------------------------------------------------
+# 5. LOGOUT — clear cookies
+# -------------------------------------------------------
+
+### Logout
+POST http://localhost:8000/auth/logout
+
+### Verify logged out — me should fail (expect 401)
+GET http://localhost:8000/auth/me
+
+
+# -------------------------------------------------------
+# 6. HEALTH — no auth required
+# -------------------------------------------------------
+
+### Health check
+GET http://localhost:8000/health
