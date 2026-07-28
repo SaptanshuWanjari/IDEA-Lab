@@ -87,6 +87,9 @@ def test_reranker_injected_into_retrieval_service():
     mock_reranker = MagicMock()
     mock_reranker.rerank.return_value = [{"id": "a", "text": "t", "score": 1.0, "source": "vector"}]
 
+    mock_embedder = MagicMock()
+    mock_embedder.embed.return_value = [1.0] * 768
+
     store = MagicMock(spec=HybridVectorStore)
     store.dense_search.return_value = []
     store.bm25_search.return_value = [{"chunk_id": "a", "score": 1.0}]
@@ -94,10 +97,11 @@ def test_reranker_injected_into_retrieval_service():
     graph = MagicMock(spec=GraphClient)
     graph.run.return_value = []
 
-    service = RetrievalService(store, graph, reranker=mock_reranker)
+    service = RetrievalService(store, graph, reranker=mock_reranker, embedder=mock_embedder)
     result = service.search("query", limit=5)
 
     mock_reranker.rerank.assert_called_once()
+    mock_embedder.embed.assert_called_once_with("query")
     assert result[0]["id"] == "a"
 
 
@@ -109,7 +113,7 @@ def test_retrieval_service_flow():
     store = MagicMock(spec=HybridVectorStore)
     dense_point = MagicMock()
     dense_point.id = "a"
-    dense_point.payload = {"text": "dense a", "clause": "1"}
+    dense_point.payload = {"text": "dense a", "clause": "1", "regulation_id": "reg-1"}
     store.dense_search.return_value = [dense_point]
     store.bm25_search.return_value = [{"chunk_id": "b", "score": 2.0}]
 
@@ -121,14 +125,21 @@ def test_retrieval_service_flow():
         {"id": "a", "text": "dense a", "score": 9.0, "score_source": "llm", "source": "vector"},
     ]
 
-    service = RetrievalService(store, graph, reranker=reranker)
-    result = service.search("query", limit=1)
+    mock_embedder = MagicMock()
+    mock_embedder.embed.return_value = [1.0] * 768
+
+    service = RetrievalService(store, graph, reranker=reranker, embedder=mock_embedder)
+    result = service.search("query", limit=2)
 
     reranker.rerank.assert_called_once()
+    mock_embedder.embed.assert_called_once_with("query")
     assert result[0]["id"] == "a"
     assert result[0]["score_source"] == "llm"
     # Graph expansion keeps parent's score_source and marks source as graph
     assert any(r["id"] == "c" and r["score_source"] == "llm" and r["source"] == "graph" for r in result)
+    # Graph expansion uses the full clause node id: regulation_id-clause_id
+    graph.run.assert_called_once()
+    assert graph.run.call_args[0][1]["id"] == "reg-1-1"
 
 
 def test_retrieval_service_includes_bm25_text():
@@ -151,7 +162,10 @@ def test_retrieval_service_includes_bm25_text():
             captured["candidates"] = candidates
             return sorted(candidates, key=lambda x: x["score"], reverse=True)
 
-    service = RetrievalService(store, graph, reranker=CaptureReranker())
+    mock_embedder = MagicMock()
+    mock_embedder.embed.return_value = [1.0] * 768
+
+    service = RetrievalService(store, graph, reranker=CaptureReranker(), embedder=mock_embedder)
     service.search("query", limit=5)
 
     by_id = {c["id"]: c for c in captured["candidates"]}

@@ -39,10 +39,12 @@ class AgentNodes:
         graph_context = ""
         if state.get("clauses"):
             first_clause = state["clauses"][0].get("id")
-            if first_clause:
+            regulation_id = state.get("regulation_id")
+            if first_clause and regulation_id:
+                full_clause_id = f"{regulation_id}-{first_clause}"
                 graph_result = query_graph(
                     "MATCH (c:Clause {id: $id})-[:REQUIRES|:AMENDS|:DEFINES]-(r) RETURN r.text AS text LIMIT 5",
-                    {"id": first_clause},
+                    {"id": full_clause_id},
                 )
                 graph_context = "\n".join(r.get("text", "") for r in graph_result)
 

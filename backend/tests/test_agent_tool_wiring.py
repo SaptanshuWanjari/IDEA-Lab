@@ -13,7 +13,9 @@ def test_requirements_node_calls_retrieve():
             nodes.requirements({
                 "summary": "MFA requirement",
                 "clauses": [{"id": "1", "text": "Implement MFA"}],
+                "regulation_id": "RBI-2024-01",
             })
 
     mock_retrieve.assert_called_once()
     mock_query_graph.assert_called_once()
+    assert mock_query_graph.call_args[0][1]["id"] == "RBI-2024-01-1"

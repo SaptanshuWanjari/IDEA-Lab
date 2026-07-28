@@ -7,6 +7,7 @@ import httpx
 
 from app.config import settings
 from app.graph.client import GraphClient
+from app.llm.embeddings import EmbeddingClient
 from app.vector.client import HybridVectorStore
 
 logger = logging.getLogger(__name__)
@@ -110,10 +111,17 @@ class Reranker:
 
 
 class RetrievalService:
-    def __init__(self, store: HybridVectorStore, graph: GraphClient, reranker: Reranker | None = None):
+    def __init__(
+        self,
+        store: HybridVectorStore,
+        graph: GraphClient,
+        reranker: Reranker | None = None,
+        embedder: EmbeddingClient | None = None,
+    ):
         self.store = store
         self.graph = graph
         self.reranker = reranker or Reranker()
+        self.embedder = embedder or EmbeddingClient()
 
     def search(
         self,
@@ -128,22 +136,26 @@ class RetrievalService:
         if department:
             filters["department"] = department
 
+        query_vector = self.embedder.embed(query)
         dense = self.store.dense_search(
-            "regulation_chunks", [0.0] * 768, limit=50, filters=filters
+            "regulation_chunks", query_vector, limit=50, filters=filters
         )
         bm25 = self.store.bm25_search(query, limit=50)
 
         dense_by_id = {getattr(item, "id", str(rank)): item for rank, item in enumerate(dense)}
         text_by_id: dict[str, str] = {}
+        payload_by_id: dict[str, dict] = {}
         for item in dense:
             cid = getattr(item, "id", "")
             payload = getattr(item, "payload", {}) or {}
             if not isinstance(payload, dict):
                 payload = {}
+            payload_by_id[cid] = payload
             text_by_id[cid] = getattr(item, "text", "") or payload.get("text", "")
         for item in bm25:
             cid = item.get("chunk_id", "")
             text_by_id.setdefault(cid, "")
+            payload_by_id.setdefault(cid, {})
 
         fused = self._reciprocal_rank_fusion(dense, bm25, k=60)
         top = sorted(fused, key=lambda x: x["score"], reverse=True)[:20]
@@ -169,11 +181,12 @@ class RetrievalService:
             seen.add(chunk_id)
 
         for item in reranked[:5]:
-            original = dense_by_id.get(item["id"])
-            payload = getattr(original, "payload", {}) if original else {}
-            clause_id = payload.get("clause") if isinstance(payload, dict) else None
-            if clause_id:
-                related = self._graph_expand(clause_id)
+            payload = payload_by_id.get(item["id"], {})
+            clause_id = payload.get("clause")
+            regulation_id = payload.get("regulation_id")
+            if clause_id and regulation_id:
+                full_clause_id = f"{regulation_id}-{clause_id}"
+                related = self._graph_expand(full_clause_id)
                 for r in related:
                     rid = r.get("id")
                     if rid and rid not in seen:
@@ -188,7 +201,7 @@ class RetrievalService:
                         )
                         seen.add(rid)
 
-        return expanded[: limit + 5]
+        return expanded[:limit]
 
     def _reciprocal_rank_fusion(
         self, list_a: list[Any], list_b: list[dict[str, Any]], k: int = 60
