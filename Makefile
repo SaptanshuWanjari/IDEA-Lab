@@ -2,8 +2,6 @@
 
 setup:
 	docker compose up -d
-	docker compose exec ollama ollama pull qwen2.5:14b || true
-	docker compose exec ollama ollama pull nomic-embed-text || true
 
 up:
 	docker compose up -d

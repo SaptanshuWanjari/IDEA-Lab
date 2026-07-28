@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     minio_secret_key: str = "minioadmin"
     minio_secure: bool = False
     ollama_url: str = "http://localhost:11434"
+    ollama_chat_model: str = "qwen2.5:14b"
+    ollama_embedding_model: str = "nomic-embed-text"
+    ollama_rerank_model: str = "qwen2.5:14b"
     secret_key: str = "dev-secret-change-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
