@@ -31,7 +31,7 @@ def retrieve(query: str, filters: dict = None) -> list[dict]:
         {
             "id": r.get("id") or r.get("chunk_id"),
             "text": r.get("text", ""),
-            "score": r.get("rerank_score", r.get("score", 0.0)),
+            "score": r.get("score", 0.0),
             "score_source": r.get("score_source", "rrf"),
         }
         for r in results

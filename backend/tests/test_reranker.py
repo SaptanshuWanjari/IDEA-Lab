@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import httpx
-import pytest
 
 from app.services.retrieval import Reranker, RetrievalService
 
@@ -33,12 +32,15 @@ def test_reranker_build_prompt_includes_ids_and_text():
     assert "my query" in prompt
 
 
-def test_reranker_prompt_wraps_query_in_delimiters():
+def test_reranker_prompt_wraps_query_and_candidates_in_delimiters():
     reranker = Reranker()
     prompt = reranker._build_prompt("my query", [{"id": "a", "text": "text"}])
     assert "<<<QUERY_BEGIN>>>" in prompt
     assert "<<<QUERY_END>>>" in prompt
     assert "<<<QUERY_BEGIN>>>\nmy query\n<<<QUERY_END>>>" in prompt
+    assert "<<<CANDIDATE_BEGIN>>>" in prompt
+    assert "<<<CANDIDATE_END>>>" in prompt
+    assert "untrusted data" in prompt
 
 
 def test_reranker_parse_scores_filters_invalid_labels():
@@ -99,7 +101,7 @@ def test_reranker_injected_into_retrieval_service():
     assert result[0]["id"] == "a"
 
 
-def test_retrieval_service_reranks_and_expands_graph():
+def test_retrieval_service_flow():
     from app.graph.client import GraphClient
     from app.vector.client import HybridVectorStore
 
@@ -125,8 +127,36 @@ def test_retrieval_service_reranks_and_expands_graph():
     reranker.rerank.assert_called_once()
     assert result[0]["id"] == "a"
     assert result[0]["score_source"] == "llm"
-    # Graph expansion from top-5 reranked items
-    assert any(r["id"] == "c" and r["score_source"] == "graph" for r in result)
+    # Graph expansion keeps parent's score_source and marks source as graph
+    assert any(r["id"] == "c" and r["score_source"] == "llm" and r["source"] == "graph" for r in result)
+
+
+def test_retrieval_service_includes_bm25_text():
+    from app.graph.client import GraphClient
+    from app.vector.client import HybridVectorStore
+
+    store = MagicMock(spec=HybridVectorStore)
+    dense_point = MagicMock()
+    dense_point.id = "a"
+    dense_point.payload = {"text": "dense a"}
+    store.dense_search.return_value = [dense_point]
+    store.bm25_search.return_value = [{"chunk_id": "b", "score": 2.0}]
+
+    graph = MagicMock(spec=GraphClient)
+    graph.run.return_value = []
+
+    captured = {}
+    class CaptureReranker:
+        def rerank(self, query, candidates):
+            captured["candidates"] = candidates
+            return sorted(candidates, key=lambda x: x["score"], reverse=True)
+
+    service = RetrievalService(store, graph, reranker=CaptureReranker())
+    service.search("query", limit=5)
+
+    by_id = {c["id"]: c for c in captured["candidates"]}
+    assert by_id["b"]["text"] == ""
+    assert "a" in by_id
 
 
 def test_reranker_falls_back_when_partial_scores():
@@ -217,8 +247,8 @@ def test_reranker_candidate_without_id():
         result = reranker.rerank("query", candidates)
 
     assert len(result) == 1
-    # Without an id the LLM score cannot be matched back, so we keep the original RRF score.
-    assert result[0]["score"] == 0.5
+    # Candidates without an explicit id are labeled by their text, so the LLM score matches.
+    assert result[0]["score"] == 5
 
 
 def test_reranker_fallback_on_malformed_response():
