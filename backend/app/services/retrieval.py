@@ -57,10 +57,11 @@ class Reranker:
             scores = {}
 
         ranked = []
+        source = "llm" if scores else "rrf"
         for c in candidates:
-            cid = str(c.get("id") or c.get("text", ""))
+            cid = str(c.get("id", ""))
             final_score = scores.get(cid, c.get("score", 0))
-            ranked.append({**c, "score": final_score, "rerank_score": final_score})
+            ranked.append({**c, "score": final_score, "score_source": source})
         return sorted(ranked, key=lambda x: x["score"], reverse=True)
 
     def _build_prompt(self, query: str, candidates: list[dict[str, Any]]) -> str:
@@ -74,7 +75,7 @@ class Reranker:
         for c in candidates:
             cid = c.get("id") or c.get("text", "?")
             text = c.get("text", "")
-            lines.append(f"{cid}: {text[:200]}{'[truncated]' if len(text) > 200 else ''}\n")
+            lines.append(f"{cid}: {text[:200]}{' [truncated]' if len(text) > 200 else ''}\n")
         return "".join(lines)
 
     def _parse_scores(self, content: str, valid_ids: set[str]) -> dict[str, int]:
@@ -93,6 +94,15 @@ class RetrievalService:
         self.store = store
         self.graph = graph
         self.reranker = reranker or Reranker()
+
+    def _text_for_chunk(self, chunk_id: str, dense_by_id: dict[str, Any]) -> str:
+        original = dense_by_id.get(chunk_id)
+        if original is None:
+            return ""
+        payload = getattr(original, "payload", {}) or {}
+        if not isinstance(payload, dict):
+            payload = {}
+        return getattr(original, "text", "") or payload.get("text", "")
 
     def search(
         self,
@@ -119,10 +129,14 @@ class RetrievalService:
         candidates = []
         for item in top:
             chunk_id = item["id"]
-            original = dense_by_id.get(chunk_id)
-            payload = getattr(original, "payload", {}) if original else {}
-            text = getattr(original, "text", "") or (payload.get("text", "") if isinstance(payload, dict) else "")
-            candidates.append({"id": chunk_id, "text": text, "score": item["score"], "source": "vector"})
+            text = self._text_for_chunk(chunk_id, dense_by_id)
+            candidates.append({
+                "id": chunk_id,
+                "text": text,
+                "score": item["score"],
+                "score_source": "rrf",
+                "source": "vector",
+            })
 
         reranked = self.reranker.rerank(query, candidates)
 
@@ -147,6 +161,7 @@ class RetrievalService:
                                 "id": rid,
                                 "text": r.get("text", ""),
                                 "score": item["score"],
+                                "score_source": "graph",
                                 "source": "graph",
                             }
                         )

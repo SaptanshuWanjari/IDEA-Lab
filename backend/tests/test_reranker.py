@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 import httpx
 import pytest
 
-from app.services.retrieval import Reranker
+from app.services.retrieval import Reranker, RetrievalService
 
 
 def test_reranker_sorts_by_score():
@@ -31,6 +31,14 @@ def test_reranker_build_prompt_includes_ids_and_text():
     assert "x:" in prompt
     assert "clause text" in prompt
     assert "my query" in prompt
+
+
+def test_reranker_prompt_wraps_query_in_delimiters():
+    reranker = Reranker()
+    prompt = reranker._build_prompt("my query", [{"id": "a", "text": "text"}])
+    assert "<<<QUERY_BEGIN>>>" in prompt
+    assert "<<<QUERY_END>>>" in prompt
+    assert "<<<QUERY_BEGIN>>>\nmy query\n<<<QUERY_END>>>" in prompt
 
 
 def test_reranker_parse_scores_filters_invalid_labels():
@@ -71,7 +79,6 @@ def test_reranker_fallback_on_http_error():
 
 
 def test_reranker_injected_into_retrieval_service():
-    from app.services.retrieval import RetrievalService
     from app.vector.client import HybridVectorStore
     from app.graph.client import GraphClient
 
@@ -90,6 +97,36 @@ def test_reranker_injected_into_retrieval_service():
 
     mock_reranker.rerank.assert_called_once()
     assert result[0]["id"] == "a"
+
+
+def test_retrieval_service_reranks_and_expands_graph():
+    from app.graph.client import GraphClient
+    from app.vector.client import HybridVectorStore
+
+    # Mock vector store: dense result for 'a', BM25 result for 'b'
+    store = MagicMock(spec=HybridVectorStore)
+    dense_point = MagicMock()
+    dense_point.id = "a"
+    dense_point.payload = {"text": "dense a", "clause": "1"}
+    store.dense_search.return_value = [dense_point]
+    store.bm25_search.return_value = [{"chunk_id": "b", "score": 2.0}]
+
+    graph = MagicMock(spec=GraphClient)
+    graph.run.return_value = [{"id": "c", "text": "related"}]
+
+    reranker = MagicMock()
+    reranker.rerank.return_value = [
+        {"id": "a", "text": "dense a", "score": 9.0, "score_source": "llm", "source": "vector"},
+    ]
+
+    service = RetrievalService(store, graph, reranker=reranker)
+    result = service.search("query", limit=1)
+
+    reranker.rerank.assert_called_once()
+    assert result[0]["id"] == "a"
+    assert result[0]["score_source"] == "llm"
+    # Graph expansion from top-5 reranked items
+    assert any(r["id"] == "c" and r["score_source"] == "graph" for r in result)
 
 
 def test_reranker_falls_back_when_partial_scores():
@@ -125,7 +162,7 @@ def test_reranker_normalizes_score_field():
         result = reranker.rerank("query", candidates)
 
     assert result[0]["score"] == 7
-    assert result[0]["rerank_score"] == 7
+    assert result[0]["score_source"] == "llm"
 
 
 def test_reranker_clamps_out_of_range_scores():
@@ -144,8 +181,8 @@ def test_reranker_clamps_out_of_range_scores():
 
     assert result[0]["id"] == "a"  # clamped to 10
     assert result[1]["id"] == "b"  # clamped to 0
-    assert result[0]["rerank_score"] == 10
-    assert result[1]["rerank_score"] == 0
+    assert result[0]["score"] == 10
+    assert result[1]["score"] == 0
 
 
 def test_reranker_handles_tied_scores():
@@ -163,7 +200,7 @@ def test_reranker_handles_tied_scores():
         result = reranker.rerank("query", candidates)
 
     assert {r["id"] for r in result} == {"a", "b"}
-    assert result[0]["rerank_score"] == result[1]["rerank_score"]
+    assert result[0]["score"] == result[1]["score"]
 
 
 def test_reranker_candidate_without_id():
@@ -180,7 +217,8 @@ def test_reranker_candidate_without_id():
         result = reranker.rerank("query", candidates)
 
     assert len(result) == 1
-    assert result[0]["rerank_score"] == 5
+    # Without an id the LLM score cannot be matched back, so we keep the original RRF score.
+    assert result[0]["score"] == 0.5
 
 
 def test_reranker_fallback_on_malformed_response():
