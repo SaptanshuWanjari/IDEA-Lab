@@ -1,13 +1,66 @@
+import re
 from typing import Any, Optional
 
+import httpx
+
+from app.config import settings
 from app.graph.client import GraphClient
 from app.vector.client import HybridVectorStore
+
+
+class Reranker:
+    def __init__(self, model: str | None = None, url: str | None = None):
+        self.model = model or settings.ollama_rerank_model
+        self.url = url or settings.ollama_url
+
+    def rerank(self, query: str, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        if not candidates:
+            return []
+
+        prompt = self._build_prompt(query, candidates)
+        response = httpx.post(
+            f"{self.url.rstrip('/')}/api/chat",
+            json={
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "Return only one score per candidate in the format 'label: score' where score is an integer 0-10."},
+                    {"role": "user", "content": prompt},
+                ],
+                "stream": False,
+                "options": {"temperature": 0.0, "num_predict": 500},
+            },
+            timeout=120.0,
+        )
+        response.raise_for_status()
+        content = response.json()["message"]["content"]
+
+        scores = self._parse_scores(content)
+        for c in candidates:
+            c["rerank_score"] = scores.get(c.get("text", "")[:200], 0)
+        return sorted(candidates, key=lambda x: x["rerank_score"], reverse=True)
+
+    def _build_prompt(self, query: str, candidates: list[dict[str, Any]]) -> str:
+        lines = [f"Query: {query}\n", "Score each candidate 0-10:\n"]
+        for c in candidates:
+            label = c.get("text", "")[:200] or c.get("id", "?")
+            text = c.get("text", "")
+            lines.append(f"{label}: {text[:200]}\n")
+        return "".join(lines)
+
+    def _parse_scores(self, content: str) -> dict[str, int]:
+        scores = {}
+        for line in content.splitlines():
+            match = re.match(r"(.+?)[:\t]\s*(\d+)", line.strip())
+            if match:
+                scores[match.group(1).strip()] = int(match.group(2))
+        return scores
 
 
 class RetrievalService:
     def __init__(self, store: HybridVectorStore, graph: GraphClient):
         self.store = store
         self.graph = graph
+        self.reranker = Reranker()
 
     def search(
         self,
@@ -22,7 +75,6 @@ class RetrievalService:
         if department:
             filters["department"] = department
 
-        # Dense + BM25 + RRF
         dense = self.store.dense_search(
             "regulation_chunks", [0.0] * 768, limit=50, filters=filters
         )
@@ -32,19 +84,24 @@ class RetrievalService:
         fused = self._reciprocal_rank_fusion(dense, bm25, k=60)
         top = sorted(fused, key=lambda x: x["score"], reverse=True)[:20]
 
-        # Cross-encoder rerank is a placeholder for MVP
-        expanded = []
-        seen = set()
+        candidates = []
         for item in top:
             chunk_id = item["id"]
             original = dense_by_id.get(chunk_id)
             payload = getattr(original, "payload", {}) if original else {}
             text = getattr(original, "text", "") or (payload.get("text", "") if isinstance(payload, dict) else "")
-            expanded.append({"id": chunk_id, "text": text, "score": item["score"], "source": "vector"})
+            candidates.append({"id": chunk_id, "text": text, "score": item["score"], "source": "vector"})
+
+        reranked = self.reranker.rerank(query, candidates)
+
+        expanded = []
+        seen = set()
+        for item in reranked:
+            chunk_id = item["id"]
+            expanded.append(item)
             seen.add(chunk_id)
 
-        # Knowledge graph expansion: follow related clause edges
-        for item in top[:5]:
+        for item in reranked[:5]:
             original = dense_by_id.get(item["id"])
             payload = getattr(original, "payload", {}) if original else {}
             clause_id = payload.get("clause") if isinstance(payload, dict) else None
