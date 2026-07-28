@@ -20,7 +20,7 @@ class Reranker:
         if not candidates:
             return []
 
-        candidate_ids = {str(c.get("id", "")) for c in candidates}
+        candidate_ids = {str(c.get("id") or c.get("text", "")) for c in candidates}
         prompt = self._build_prompt(query, candidates)
         try:
             response = httpx.post(
@@ -39,20 +39,25 @@ class Reranker:
             response.raise_for_status()
             content = response.json()["message"]["content"]
             scores = self._parse_scores(content, valid_ids=candidate_ids)
+
+            # If the LLM did not score every candidate, fall back to RRF scores to avoid mixing scales.
+            if scores and len(scores) != len(candidate_ids):
+                logger.warning("Reranker returned partial scores (%d/%d), falling back to RRF scores", len(scores), len(candidate_ids))
+                scores = {}
         except Exception as e:
             logger.warning("Reranker call failed, falling back to RRF scores: %s", e)
             scores = {}
 
         ranked = []
         for c in candidates:
-            cid = str(c.get("id", ""))
+            cid = str(c.get("id") or c.get("text", ""))
             ranked.append({**c, "rerank_score": scores.get(cid, c.get("score", 0))})
         return sorted(ranked, key=lambda x: x["rerank_score"], reverse=True)
 
     def _build_prompt(self, query: str, candidates: list[dict[str, Any]]) -> str:
         lines = [f"Query: {query}\n", "Score each candidate 0-10:\n"]
         for c in candidates:
-            cid = c.get("id", "?")
+            cid = c.get("id") or c.get("text", "?")
             text = c.get("text", "")
             lines.append(f"{cid}: {text[:200]}\n")
         return "".join(lines)
@@ -60,11 +65,11 @@ class Reranker:
     def _parse_scores(self, content: str, valid_ids: set[str]) -> dict[str, int]:
         scores = {}
         for line in content.splitlines():
-            match = re.match(r"(.+?)[:\t]\s*(\d+)", line.strip())
+            match = re.match(r"(.+?)[:\t]\s*(-?\d+)", line.strip())
             if match:
                 label = match.group(1).strip()
                 if label in valid_ids:
-                    scores[label] = int(match.group(2))
+                    scores[label] = min(max(int(match.group(2)), 0), 10)
         return scores
 
 

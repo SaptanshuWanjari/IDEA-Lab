@@ -90,3 +90,77 @@ def test_reranker_injected_into_retrieval_service():
 
     mock_reranker.rerank.assert_called_once()
     assert result[0]["id"] == "a"
+
+
+def test_reranker_falls_back_when_partial_scores():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"id": "a", "text": "first", "score": 0.1},
+        {"id": "b", "text": "second", "score": 0.9},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"content": "a: 10"}}  # only a scored
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    # Should fall back to original RRF scores
+    assert result[0]["id"] == "b"
+    assert result[1]["id"] == "a"
+
+
+def test_reranker_clamps_out_of_range_scores():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"id": "a", "text": "first", "score": 0.5},
+        {"id": "b", "text": "second", "score": 0.5},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"content": "a: 999\nb: -5"}}
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    assert result[0]["id"] == "a"  # clamped to 10
+    assert result[1]["id"] == "b"  # clamped to 0
+    assert result[0]["rerank_score"] == 10
+    assert result[1]["rerank_score"] == 0
+
+
+def test_reranker_handles_tied_scores():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"id": "a", "text": "first", "score": 0.5},
+        {"id": "b", "text": "second", "score": 0.5},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"content": "a: 5\nb: 5"}}
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    assert {r["id"] for r in result} == {"a", "b"}
+    assert result[0]["rerank_score"] == result[1]["rerank_score"]
+
+
+def test_reranker_candidate_without_id():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"text": "no id", "score": 0.5},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"content": "no id: 5"}}
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    assert len(result) == 1
+    assert result[0]["rerank_score"] == 5
