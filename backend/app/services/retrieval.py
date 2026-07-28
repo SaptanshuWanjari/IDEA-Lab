@@ -36,13 +36,13 @@ class Reranker:
 
         scores = self._parse_scores(content)
         for c in candidates:
-            c["rerank_score"] = scores.get(c.get("text", "")[:200], 0)
+            c["rerank_score"] = scores.get(c.get("id", ""), c.get("score", 0))
         return sorted(candidates, key=lambda x: x["rerank_score"], reverse=True)
 
     def _build_prompt(self, query: str, candidates: list[dict[str, Any]]) -> str:
         lines = [f"Query: {query}\n", "Score each candidate 0-10:\n"]
         for c in candidates:
-            label = c.get("text", "")[:200] or c.get("id", "?")
+            label = c.get("id", "?")
             text = c.get("text", "")
             lines.append(f"{label}: {text[:200]}\n")
         return "".join(lines)

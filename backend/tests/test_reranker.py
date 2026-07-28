@@ -12,7 +12,7 @@ def test_reranker_sorts_by_score():
 
     mock_response = MagicMock()
     mock_response.json.return_value = {
-        "message": {"content": "first: 3\nsecond: 8"}
+        "message": {"content": "a: 3\nb: 8"}
     }
     mock_response.raise_for_status = MagicMock()
 
