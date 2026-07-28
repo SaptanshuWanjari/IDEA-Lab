@@ -10,6 +10,7 @@ from app.llm.client import LLMClient
 from app.models.map import MAP
 from app.models.user import User
 from app.schemas.map import MAPOut, MAPReviewAction
+from app.services.audit import AuditService
 from app.services.evidence_service import EvidenceService
 from app.services.map_engine import MapEngine
 from app.services.storage import StorageService
@@ -70,6 +71,14 @@ async def review_map(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
 
     await session.commit()
+    audit = AuditService(session)
+    await audit.log(
+        action=f"review_{action.action}",
+        regulation_id=str(m.regulation_id),
+        map_id=str(map_id),
+        actor_id=str(user.id),
+        payload={"approval_state": m.approval_state},
+    )
     await session.refresh(m)
     return m
 
@@ -106,5 +115,13 @@ async def complete_map(
     m.status = "Completed" if completeness["complete"] else "InProgress"
 
     await session.commit()
+    audit = AuditService(session)
+    await audit.log(
+        action="map_completed",
+        regulation_id=str(m.regulation_id),
+        map_id=str(map_id),
+        actor_id=str(user.id),
+        payload={"complete": completeness["complete"], "method": completeness.get("method")},
+    )
     await session.refresh(m)
     return {"map": MAPOut.model_validate(m), "completeness_check": completeness}

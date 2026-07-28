@@ -4,15 +4,21 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from app.dependencies import get_current_user, get_session
+from app.models.department import Department
+from app.models.map import MAP
+from app.models.map_dependency import MapDependency
 from app.models.regulation import Regulation
 from app.models.user import User
+from app.services.digital_twin import DigitalTwin
 from app.agents.graph import AgentGraph
 from app.config import settings
 from app.graph.client import GraphClient
 from app.schemas.map import MAPOut
 from app.schemas.regulation import RegulationOut
+from app.services.dependency_graph import DependencyGraph
 from app.services.document_classifier import classify_document
 from app.services.embeddings import EmbeddingService
 from app.services.graph_service import GraphService
@@ -142,3 +148,83 @@ async def generate_maps(
     regulation.status = "Review"
     await session.commit()
     return [MAPOut.model_validate(m) for m in maps]
+
+
+@router.get("/{regulation_id}/graph")
+async def get_regulation_graph(
+    regulation_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+
+    result = await session.execute(
+        select(MAP).where(MAP.regulation_id == regulation_id).options(joinedload(MAP.department))
+    )
+    maps = result.scalars().unique().all()
+    map_ids = [m.id for m in maps]
+
+    deps_result = await session.execute(select(MapDependency).where(MapDependency.map_id.in_(map_ids)))
+    dependencies = deps_result.scalars().all()
+
+    graph = DependencyGraph(maps, dependencies)
+    nodes = [
+        {
+            "id": str(m.id),
+            "label": (m.description or "")[:60],
+            "status": m.status,
+            "department": m.department.name if m.department else None,
+        }
+        for m in maps
+    ]
+    return {
+        "nodes": nodes,
+        "edges": graph.edges(),
+        "critical_path": [str(m) for m in graph.critical_path()],
+        "topological_order": [str(m) for m in graph.topological_order()],
+    }
+
+
+@router.get("/{regulation_id}/simulate")
+async def simulate_regulation(
+    regulation_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+
+    result = await session.execute(
+        select(MAP, Department.name.label("department_name"))
+        .outerjoin(Department, MAP.owner_department_id == Department.id)
+        .where(MAP.regulation_id == regulation_id)
+    )
+    rows = result.all()
+    maps = [row.MAP for row in rows]
+    dept_names = {row.MAP.id: row.department_name for row in rows}
+
+    dep_result = await session.execute(
+        select(MapDependency).where(MapDependency.map_id.in_([m.id for m in maps]))
+    )
+    deps_by_map = {m.id: [] for m in maps}
+    for dep in dep_result.scalars().all():
+        deps_by_map[dep.map_id].append(str(dep.depends_on_map_id))
+
+    map_data = [
+        {
+            "id": str(m.id),
+            "department": dept_names.get(m.id) or str(m.owner_department_id),
+            "status": m.status,
+            "dependencies": deps_by_map.get(m.id, []),
+            "optimistic_days": m.estimated_days or 3,
+            "most_likely_days": m.estimated_days or 7,
+            "pessimistic_days": (m.estimated_days or 7) * 2,
+        }
+        for m in maps
+    ]
+
+    twin = DigitalTwin(map_data, iterations=100)
+    return twin.simulate()
