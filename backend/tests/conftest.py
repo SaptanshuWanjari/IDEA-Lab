@@ -1,7 +1,9 @@
+import asyncio
 import os
 import sys
 from pathlib import Path
 
+import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,8 +27,27 @@ AsyncSessionLocal = sessionmaker(
 )
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+def _db_unreachable() -> bool:
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        try:
+            asyncio.run(_ping_db())
+            return False
+        except Exception:
+            return True
+
+
+async def _ping_db():
+    async with engine.connect() as _:
+        pass
+
+
+@pytest_asyncio.fixture(scope="session")
 async def setup_db():
+    if _db_unreachable():
+        pytest.skip("Database is unreachable")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -35,6 +56,6 @@ async def setup_db():
 
 
 @pytest_asyncio.fixture
-async def session():
+async def session(setup_db):
     async with AsyncSessionLocal() as s:
         yield s
