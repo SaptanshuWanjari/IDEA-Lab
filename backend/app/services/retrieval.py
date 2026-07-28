@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Any, Optional
 
@@ -6,6 +7,8 @@ import httpx
 from app.config import settings
 from app.graph.client import GraphClient
 from app.vector.client import HybridVectorStore
+
+logger = logging.getLogger(__name__)
 
 
 class Reranker:
@@ -17,50 +20,59 @@ class Reranker:
         if not candidates:
             return []
 
+        candidate_ids = {str(c.get("id", "")) for c in candidates}
         prompt = self._build_prompt(query, candidates)
-        response = httpx.post(
-            f"{self.url.rstrip('/')}/api/chat",
-            json={
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "Return only one score per candidate in the format 'label: score' where score is an integer 0-10."},
-                    {"role": "user", "content": prompt},
-                ],
-                "stream": False,
-                "options": {"temperature": 0.0, "num_predict": 500},
-            },
-            timeout=120.0,
-        )
-        response.raise_for_status()
-        content = response.json()["message"]["content"]
+        try:
+            response = httpx.post(
+                f"{self.url.rstrip('/')}/api/chat",
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": "Return only one score per candidate in the format 'id: score' where score is an integer 0-10. Do not include explanations."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "stream": False,
+                    "options": {"temperature": 0.0, "num_predict": 2000},
+                },
+                timeout=120.0,
+            )
+            response.raise_for_status()
+            content = response.json()["message"]["content"]
+            scores = self._parse_scores(content, valid_ids=candidate_ids)
+        except Exception as e:
+            logger.warning("Reranker call failed, falling back to RRF scores: %s", e)
+            scores = {}
 
-        scores = self._parse_scores(content)
+        ranked = []
         for c in candidates:
-            c["rerank_score"] = scores.get(c.get("id", ""), c.get("score", 0))
-        return sorted(candidates, key=lambda x: x["rerank_score"], reverse=True)
+            cid = str(c.get("id", ""))
+            ranked.append({**c, "rerank_score": scores.get(cid, c.get("score", 0))})
+        return sorted(ranked, key=lambda x: x["rerank_score"], reverse=True)
 
     def _build_prompt(self, query: str, candidates: list[dict[str, Any]]) -> str:
         lines = [f"Query: {query}\n", "Score each candidate 0-10:\n"]
         for c in candidates:
-            label = c.get("id", "?")
+            cid = c.get("id", "?")
             text = c.get("text", "")
-            lines.append(f"{label}: {text[:200]}\n")
+            lines.append(f"{cid}: {text[:200]}\n")
         return "".join(lines)
 
-    def _parse_scores(self, content: str) -> dict[str, int]:
+    def _parse_scores(self, content: str, valid_ids: set[str]) -> dict[str, int]:
         scores = {}
         for line in content.splitlines():
             match = re.match(r"(.+?)[:\t]\s*(\d+)", line.strip())
             if match:
-                scores[match.group(1).strip()] = int(match.group(2))
+                label = match.group(1).strip()
+                if label in valid_ids:
+                    scores[label] = int(match.group(2))
         return scores
 
 
 class RetrievalService:
-    def __init__(self, store: HybridVectorStore, graph: GraphClient):
+    def __init__(self, store: HybridVectorStore, graph: GraphClient, reranker: Reranker | None = None):
         self.store = store
         self.graph = graph
-        self.reranker = Reranker()
+        self.reranker = reranker or Reranker()
 
     def search(
         self,
