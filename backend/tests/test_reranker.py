@@ -92,7 +92,7 @@ def test_reranker_injected_into_retrieval_service():
     assert result[0]["id"] == "a"
 
 
-def test_reranker_uses_partial_scores_with_rrf_fallback():
+def test_reranker_falls_back_when_partial_scores():
     reranker = Reranker(model="test-model", url="http://test")
     candidates = [
         {"id": "a", "text": "first", "score": 0.1},
@@ -106,11 +106,9 @@ def test_reranker_uses_partial_scores_with_rrf_fallback():
     with patch("app.services.retrieval.httpx.post", return_value=mock_response):
         result = reranker.rerank("query", candidates)
 
-    # a gets LLM score 10, b falls back to RRF score 0.9
-    assert result[0]["id"] == "a"
-    assert result[1]["id"] == "b"
-    assert result[0]["score"] == 10
-    assert result[1]["score"] == 0.9
+    # Should fall back entirely to original RRF scores
+    assert result[0]["id"] == "b"
+    assert result[1]["id"] == "a"
 
 
 def test_reranker_normalizes_score_field():
