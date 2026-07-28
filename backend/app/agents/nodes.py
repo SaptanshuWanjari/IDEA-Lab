@@ -6,6 +6,7 @@ from app.agents.prompts import (
     REQUIREMENT_PROMPT,
     UNDERSTANDING_PROMPT,
 )
+from app.agents.tools import query_graph, retrieve
 from app.llm.client import LLMClient
 from app.schemas.agent import GeneratedMAP, Requirement
 
@@ -32,6 +33,21 @@ class AgentNodes:
             f"{c.get('id', i)}: {c.get('text', c)}"
             for i, c in enumerate(state.get("clauses", []))
         )
+        query = state.get("summary", "")[:200]
+        retrieved = retrieve(query, filters={"document_type": "RBI Circular"}) if query else []
+        related_clauses = "\n".join(r.get("text", "") for r in retrieved[:5])
+        graph_context = ""
+        if state.get("clauses"):
+            first_clause = state["clauses"][0].get("id")
+            if first_clause:
+                graph_result = query_graph(
+                    "MATCH (c:Clause {id: $id})-[:REQUIRES|:AMENDS|:DEFINES]-(r) RETURN r.text AS text LIMIT 5",
+                    {"id": first_clause},
+                )
+                graph_context = "\n".join(r.get("text", "") for r in graph_result)
+
+        context = f"Retrieved context:\n{related_clauses}\n\nGraph context:\n{graph_context}".strip()
+
         response = self.client.chat(
             [
                 {"role": "system", "content": "Return only valid JSON."},
@@ -40,7 +56,7 @@ class AgentNodes:
                     "content": REQUIREMENT_PROMPT.format(
                         summary=state.get("summary", ""),
                         clauses=clauses_text,
-                        context="",
+                        context=context,
                         schema=Requirement.model_json_schema(),
                     ),
                 },
@@ -54,6 +70,9 @@ class AgentNodes:
 
     def generate_maps(self, state: dict) -> dict:
         req_text = json.dumps(state.get("requirements", []))
+        historical = retrieve("Measurable Action Point implementation plan", filters={"document_type": "RBI Circular"})
+        historical_context = "\n".join(h.get("text", "") for h in historical[:3])
+
         response = self.client.chat(
             [
                 {"role": "system", "content": "Return only valid JSON array of MAPs."},
@@ -62,7 +81,7 @@ class AgentNodes:
                     "content": MAP_PROMPT.format(
                         requirements=req_text,
                         departments="Compliance, Risk, IT, Operations, Audit",
-                        historical_context="",
+                        historical_context=historical_context,
                         schema=GeneratedMAP.model_json_schema(),
                     ),
                 },
