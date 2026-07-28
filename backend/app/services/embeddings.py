@@ -1,8 +1,8 @@
-import random
 from typing import Any
 
 from qdrant_client.models import PointStruct
 
+from app.llm.embeddings import EmbeddingClient
 from app.schemas.document import DocumentStructure
 from app.vector.client import HybridVectorStore
 
@@ -10,6 +10,7 @@ from app.vector.client import HybridVectorStore
 class EmbeddingService:
     def __init__(self, store: HybridVectorStore):
         self.store = store
+        self._embedder = EmbeddingClient()
 
     def ingest(self, regulation_id: str, document: DocumentStructure, doc_type: str):
         if doc_type in ("RBI Circular", "Regulation"):
@@ -19,15 +20,15 @@ class EmbeddingService:
         else:
             chunks = self._recursive_chunk(document)
 
-        # ponytail: placeholder 768-dim vectors until an embedding model is wired in
-        dim = 768
+        sample = self._embedder.embed(chunks[0]["text"]) if chunks else []
+        dim = len(sample) if sample else 768
         self.store.ensure_collection("regulation_chunks", size=dim)
         points = []
         for i, chunk in enumerate(chunks):
             points.append(
                 PointStruct(
                     id=f"{regulation_id}-chunk-{i}",
-                    vector=[random.random() for _ in range(dim)],
+                    vector=self._embedder.embed(chunk["text"]),
                     payload={
                         "text": chunk["text"],
                         "regulation_id": regulation_id,
