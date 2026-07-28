@@ -6,8 +6,8 @@ from app.config import settings
 
 
 class LLMClient:
-    def __init__(self, model: str = "qwen2.5:14b"):
-        self.model = model
+    def __init__(self, model: str | None = None):
+        self.model = model or settings.ollama_chat_model
         self.url = settings.ollama_url
 
     def chat(self, messages: list[dict], temperature: float = 0.2, max_tokens: int = 2000) -> str:
