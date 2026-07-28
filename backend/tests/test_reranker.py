@@ -92,7 +92,7 @@ def test_reranker_injected_into_retrieval_service():
     assert result[0]["id"] == "a"
 
 
-def test_reranker_falls_back_when_partial_scores():
+def test_reranker_uses_partial_scores_with_rrf_fallback():
     reranker = Reranker(model="test-model", url="http://test")
     candidates = [
         {"id": "a", "text": "first", "score": 0.1},
@@ -106,9 +106,28 @@ def test_reranker_falls_back_when_partial_scores():
     with patch("app.services.retrieval.httpx.post", return_value=mock_response):
         result = reranker.rerank("query", candidates)
 
-    # Should fall back to original RRF scores
-    assert result[0]["id"] == "b"
-    assert result[1]["id"] == "a"
+    # a gets LLM score 10, b falls back to RRF score 0.9
+    assert result[0]["id"] == "a"
+    assert result[1]["id"] == "b"
+    assert result[0]["score"] == 10
+    assert result[1]["score"] == 0.9
+
+
+def test_reranker_normalizes_score_field():
+    reranker = Reranker(model="test-model", url="http://test")
+    candidates = [
+        {"id": "a", "text": "first", "score": 0.1},
+    ]
+
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"message": {"content": "a: 7"}}
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.services.retrieval.httpx.post", return_value=mock_response):
+        result = reranker.rerank("query", candidates)
+
+    assert result[0]["score"] == 7
+    assert result[0]["rerank_score"] == 7
 
 
 def test_reranker_clamps_out_of_range_scores():
