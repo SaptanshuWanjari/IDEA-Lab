@@ -10,7 +10,7 @@ from app.vector.client import HybridVectorStore
 class EmbeddingService:
     def __init__(self, store: HybridVectorStore, embedder: EmbeddingClient | None = None):
         self.store = store
-        self._embedder = embedder or EmbeddingClient()
+        self._embedder: EmbeddingClient = embedder or EmbeddingClient()
 
     def ingest(self, regulation_id: str, document: DocumentStructure, doc_type: str):
         if doc_type in ("RBI Circular", "Regulation"):
@@ -20,8 +20,11 @@ class EmbeddingService:
         else:
             chunks = self._recursive_chunk(document)
 
-        sample = self._embedder.embed(chunks[0]["text"]) if chunks else []
-        # ponytail: 768 fallback for empty-chunks edge case; replace with model dim lookup if needed
+        if not chunks:
+            return
+
+        sample = self._embedder.embed(chunks[0]["text"])
+        # ponytail: 768 is the dimension of nomic-embed-text; used only when document has no chunks
         dim = len(sample) if sample else 768
         self.store.ensure_collection("regulation_chunks", size=dim)
         points = []

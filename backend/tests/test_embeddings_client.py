@@ -1,8 +1,10 @@
 from unittest.mock import MagicMock, patch
+import json
 
 import httpx
 import pytest
 
+from app.llm import embeddings as embeddings_module
 from app.llm.embeddings import EmbeddingClient
 
 
@@ -24,8 +26,9 @@ def test_embedding_client_returns_vector():
 
 
 def test_embedding_client_uses_default_model():
-    client = EmbeddingClient()
-    assert client.model == "nomic-embed-text"  # default from config
+    with patch.object(embeddings_module.settings, "ollama_embedding_model", "patched-model"):
+        client = EmbeddingClient()
+        assert client.model == "patched-model"
 
 
 def test_embedding_client_raises_on_http_error():
@@ -38,10 +41,32 @@ def test_embedding_client_raises_on_http_error():
             client.embed("hello")
 
 
-def test_embedding_client_raises_on_missing_embedding_key():
+def test_embedding_client_raises_on_json_decode_error():
+    client = EmbeddingClient(model="nomic-embed-text")
+    mock_response = MagicMock()
+    mock_response.json.side_effect = json.JSONDecodeError("expecting value", "", 0)
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.llm.embeddings.httpx.post", return_value=mock_response):
+        with pytest.raises(RuntimeError, match="Embedding request failed"):
+            client.embed("hello")
+
+
+def test_embedding_client_raises_on_model_error():
     client = EmbeddingClient(model="nomic-embed-text")
     mock_response = MagicMock()
     mock_response.json.return_value = {"error": "model not found"}
+    mock_response.raise_for_status = MagicMock()
+
+    with patch("app.llm.embeddings.httpx.post", return_value=mock_response):
+        with pytest.raises(RuntimeError, match="model not found"):
+            client.embed("hello")
+
+
+def test_embedding_client_raises_on_missing_embedding_key():
+    client = EmbeddingClient(model="nomic-embed-text")
+    mock_response = MagicMock()
+    mock_response.json.return_value = {"unexpected": "payload"}
     mock_response.raise_for_status = MagicMock()
 
     with patch("app.llm.embeddings.httpx.post", return_value=mock_response):
