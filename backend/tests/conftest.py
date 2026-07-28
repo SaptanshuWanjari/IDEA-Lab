@@ -13,8 +13,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+# Default to Supabase for tests; override via TEST_DATABASE_URL env var.
 TEST_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL", "postgresql+asyncpg://pravah:pravah@localhost:5432/pravah"
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:Saptanshu%4012@db.daubulisecwfolulknrd.supabase.co:5432/postgres",
 )
 
 engine = create_async_engine(TEST_DATABASE_URL)
