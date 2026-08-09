@@ -62,6 +62,8 @@ services:
 
   api:
     build: ./backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
     environment:
@@ -74,9 +76,11 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       OLLAMA_URL: http://host.docker.internal:11434
-      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-qwen2.5:14b}
+      OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-qwen3:8b}
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
       OLLAMA_RERANK_MODEL: ${OLLAMA_RERANK_MODEL:-qwen2.5:14b}
+      OLLAMA_CHAT_MAX_TOKENS: ${OLLAMA_CHAT_MAX_TOKENS:-16384}
+      OLLAMA_CHAT_TIMEOUT: ${OLLAMA_CHAT_TIMEOUT:-600}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
     depends_on:
       postgres:

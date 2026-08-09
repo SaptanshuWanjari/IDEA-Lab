@@ -1,4 +1,5 @@
 import json
+import logging
 
 from app.agents.prompts import (
     DEPENDENCY_PROMPT,
@@ -9,6 +10,75 @@ from app.agents.prompts import (
 from app.agents.tools import query_graph, retrieve
 from app.llm.client import LLMClient
 from app.schemas.agent import GeneratedMAP, Requirement
+
+_json_log = logging.getLogger(__name__)
+
+
+def _remove_trailing_commas(text: str) -> str:
+    """Remove trailing commas before } or ] that LLMs commonly emit."""
+    in_string = False
+    escape = False
+    chars = []
+    for i, ch in enumerate(text):
+        if escape:
+            chars.append(ch)
+            escape = False
+            continue
+        if ch == "\\":
+            chars.append(ch)
+            escape = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            chars.append(ch)
+            continue
+        if not in_string and ch == ",":
+            j = i + 1
+            while j < len(text) and text[j].isspace():
+                j += 1
+            if j < len(text) and text[j] in "}]":
+                continue
+        chars.append(ch)
+    return "".join(chars)
+
+
+def _extract_json(text: str, default: list | dict = None) -> list | dict:
+    if default is None:
+        default = []
+
+    # Strip markdown code fences (case-insensitive language tag)
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        first_newline = cleaned.find("\n")
+        if first_newline != -1:
+            cleaned = cleaned[first_newline + 1 :]
+        cleaned = cleaned.rstrip().removesuffix("```").strip()
+
+    # Direct parse
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        _json_log.debug("_extract_json direct parse failed: %s", e)
+
+    # Repair common LLM JSON defects and reparse
+    repaired = _remove_trailing_commas(cleaned)
+    try:
+        return json.loads(repaired)
+    except json.JSONDecodeError as e:
+        _json_log.debug("_extract_json repaired parse failed: %s", e)
+
+    # Extract the first self-contained JSON value, ignoring surrounding prose
+    for starter, ender in (("[", "]"), ("{", "}")):
+        idx = cleaned.find(starter)
+        while idx != -1:
+            try:
+                parsed, _ = json.JSONDecoder().raw_decode(cleaned, idx)
+                return parsed
+            except json.JSONDecodeError:
+                idx = cleaned.find(starter, idx + 1)
+
+    _json_log.warning("_extract_json could not parse response (len=%d): %s", len(text), text[:500])
+    return default
 
 
 class AgentNodes:
@@ -22,10 +92,20 @@ class AgentNodes:
                 {"role": "user", "content": UNDERSTANDING_PROMPT.format(text=state["text"][:8000])},
             ]
         )
+        if not response or not response.strip():
+            _json_log.warning("understanding node got empty response, using raw text fallback")
+            return {
+                "summary": state["text"][:500],
+                "affected_domains": ["Compliance", "Risk", "IT", "Operations"],
+            }
         lines = response.split("\n")
         summary_start = next((i for i, l in enumerate(lines) if l and not l.startswith("-")), 0)
         domains = [l.strip("- ") for l in lines if l.strip().startswith("-")]
         summary = "\n".join(lines[summary_start : summary_start + 5]).strip()
+        if not summary:
+            summary = state["text"][:500]
+        if not domains:
+            domains = ["Compliance", "Risk", "IT", "Operations"]
         return {"summary": summary, "affected_domains": domains}
 
     def requirements(self, state: dict) -> dict:
@@ -33,7 +113,9 @@ class AgentNodes:
             f"{c.get('id', i)}: {c.get('text', c)}"
             for i, c in enumerate(state.get("clauses", []))
         )
-        query = state.get("summary", "")[:200]
+        import re
+        raw_query = state.get("summary", "")[:200]
+        query = re.sub(r'[^\w\s]', ' ', raw_query).strip()
         retrieved = retrieve(query, filters={"document_type": "RBI Circular"}) if query else []
         related_clauses = "\n".join(r.get("text", "") for r in retrieved[:5])
         graph_context = ""
@@ -43,7 +125,7 @@ class AgentNodes:
             if first_clause and regulation_id:
                 full_clause_id = f"{regulation_id}-{first_clause}"
                 graph_result = query_graph(
-                    "MATCH (c:Clause {id: $id})-[:REQUIRES|:AMENDS|:DEFINES]-(r) RETURN r.text AS text LIMIT 5",
+                    "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(r) RETURN r.text AS text LIMIT 5",
                     {"id": full_clause_id},
                 )
                 graph_context = "\n".join(r.get("text", "") for r in graph_result)
@@ -59,16 +141,13 @@ class AgentNodes:
                         summary=state.get("summary", ""),
                         clauses=clauses_text,
                         context=context,
-                        schema=Requirement.model_json_schema(),
+                        schema=json.dumps(Requirement.model_json_schema(), indent=2),
                     ),
                 },
             ]
         )
-        try:
-            data = json.loads(response[response.find("[") : response.rfind("]") + 1])
-        except Exception:
-            data = []
-        return {"requirements": data}
+        _json_log.debug("REQ LLM RESPONSE (len=%d): %s", len(response), response[:200])
+        return {"requirements": _extract_json(response, default=[]), "raw_req_response": response}
 
     def generate_maps(self, state: dict) -> dict:
         req_text = json.dumps(state.get("requirements", []))
@@ -77,23 +156,36 @@ class AgentNodes:
 
         response = self.client.chat(
             [
-                {"role": "system", "content": "Return only valid JSON array of MAPs."},
+                {
+                    "role": "system",
+                    "content": (
+                        "Return only a valid JSON array of MAPs. "
+                        "owner_department MUST be one of: Compliance, Risk, IT, Operations, Audit. "
+                        "No other department names are allowed."
+                    ),
+                },
                 {
                     "role": "user",
                     "content": MAP_PROMPT.format(
                         requirements=req_text,
-                        departments="Compliance, Risk, IT, Operations, Audit",
                         historical_context=historical_context,
-                        schema=GeneratedMAP.model_json_schema(),
+                        schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
                     ),
                 },
             ]
         )
-        try:
-            data = json.loads(response[response.find("[") : response.rfind("]") + 1])
-        except Exception:
-            data = []
-        return {"generated_maps": data}
+        _json_log.debug("MAPS LLM RESPONSE (len=%d): %s", len(response), response[:300])
+        parsed = _extract_json(response, default=[])
+        
+        # Robust unwrap if LLM returned {"maps": [...]} instead of [...]
+        if isinstance(parsed, dict):
+            if len(parsed) == 1 and isinstance(list(parsed.values())[0], list):
+                parsed = list(parsed.values())[0]
+            else:
+                parsed = [parsed]
+                
+        _json_log.debug("MAPS PARSED: %d items", len(parsed))
+        return {"generated_maps": parsed, "raw_llm_response": response}
 
     def dependencies(self, state: dict) -> dict:
         maps_text = json.dumps(
@@ -108,8 +200,5 @@ class AgentNodes:
                 {"role": "user", "content": DEPENDENCY_PROMPT.format(maps=maps_text)},
             ]
         )
-        try:
-            data = json.loads(response[response.find("{") : response.rfind("}") + 1])
-        except Exception:
-            data = {"dependencies": []}
-        return {"dependencies": data.get("dependencies", [])}
+        data = _extract_json(response, default={"dependencies": []})
+        return {"dependencies": data.get("dependencies", []) if isinstance(data, dict) else []}

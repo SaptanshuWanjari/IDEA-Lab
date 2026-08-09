@@ -14,7 +14,19 @@ from tantivy import Document, Index, SchemaBuilder
 
 
 class HybridVectorStore:
-    def __init__(self, qdrant_url: str, index_path: str = "/tmp/pravah_tantivy"):
+    _instance: "HybridVectorStore | None" = None
+
+    def __new__(cls, qdrant_url: str = "", index_path: str = "/tmp/pravah_tantivy"):
+        if cls._instance is None:
+            inst = super().__new__(cls)
+            inst._initialized = False
+            cls._instance = inst
+        return cls._instance
+
+    def __init__(self, qdrant_url: str = "", index_path: str = "/tmp/pravah_tantivy"):
+        if self._initialized:
+            return
+        self._initialized = True
         self.qdrant = QdrantClient(url=qdrant_url)
         self.index_path = index_path
         self._init_tantivy()
@@ -42,15 +54,23 @@ class HybridVectorStore:
                 vectors_config=VectorParams(size=size, distance=Distance.COSINE),
             )
 
+    def delete_regulation(self, collection: str, regulation_id: str):
+        self.qdrant.delete(
+            collection_name=collection,
+            points_selector=Filter(
+                must=[FieldCondition(key="regulation_id", match=MatchValue(value=regulation_id))]
+            ),
+        )
+
     def upsert(self, collection: str, points: list[PointStruct]):
         self.qdrant.upsert(collection_name=collection, points=points)
         for p in points:
             document = Document(
-                text=p.payload.get("text", ""),
+                text=p.payload.get("text") or "",
                 chunk_id=str(p.id),
-                document_type=p.payload.get("document_type", ""),
-                section=p.payload.get("section", ""),
-                page=p.payload.get("source_page", 0),
+                document_type=p.payload.get("document_type") or "",
+                section=p.payload.get("section") or "",
+                page=p.payload.get("source_page") or 0,
             )
             self.writer.add_document(document)
         self.writer.commit()
@@ -70,12 +90,12 @@ class HybridVectorStore:
                 if v is not None
             ]
             q_filter = Filter(must=conditions) if conditions else None
-        return self.qdrant.search(
+        return self.qdrant.query_points(
             collection_name=collection,
-            query_vector=vector,
+            query=vector,
             limit=limit,
             query_filter=q_filter,
-        )
+        ).points
 
     def bm25_search(self, query_text: str, limit: int = 50) -> list[dict]:
         self.tantivy.reload()
@@ -83,7 +103,7 @@ class HybridVectorStore:
         query = self.tantivy.parse_query(query_text, ["text"])
         top_docs = searcher.search(query, limit)
         docs = []
-        for score, doc_addr in top_docs:
+        for score, doc_addr in top_docs.hits:
             d = searcher.doc(doc_addr)
             chunk_id = d.get_first("chunk_id")
             docs.append({"chunk_id": chunk_id, "score": score})

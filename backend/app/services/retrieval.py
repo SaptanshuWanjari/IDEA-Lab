@@ -217,7 +217,7 @@ class RetrievalService:
 
     def _graph_expand(self, clause_id: str) -> list[dict[str, Any]]:
         result = self.graph.run(
-            "MATCH (c:Clause {id: $id})-[:REQUIRES|:AMENDS|:DEFINES]-(related) RETURN related.id AS id, related.text AS text",
+            "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(related) RETURN related.id AS id, related.text AS text",
             {"id": clause_id},
         )
         return [{"id": r["id"], "text": r["text"]} for r in result]

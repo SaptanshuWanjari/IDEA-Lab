@@ -17,9 +17,12 @@ class FakeSession:
         self.rolled_back = False
 
     async def execute(self, stmt):
+        compiled = str(stmt.compile(compile_kwargs={"literal_binds": True}))
+        is_case_insensitive = "lower" in compiled.lower()
+
         class R:
             def scalar_one_or_none(_self):
-                return self._dept
+                return self._dept if is_case_insensitive else None
         return R()
 
     def add(self, obj):
@@ -40,6 +43,25 @@ class FakeSession:
 
     async def refresh(self, obj):
         pass
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_matches_department_case_insensitive():
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="it",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=["1"],
+        )
+    ]
+    maps = await engine.from_agent_output(str(uuid4()), generated)
+    assert len(maps) == 1
+    assert maps[0].owner_department_id == session._dept.id
 
 
 def test_detect_cycle():

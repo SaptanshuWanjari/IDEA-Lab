@@ -1,22 +1,27 @@
-### PravahOS — Comprehensive Backend Test Flow
-### Based on docs/backend-testing-guide.md
-###
-### Prerequisites:
-###   1. make setup          (Postgres, Qdrant, Neo4j, MinIO, API up)
-###   2. ollama serve on host + models pulled:
-###        ollama pull minimax-m3:cloud && ollama pull qwen3-embedding:0.6b
-###   3. Sample PDF at backend/tests/fixtures/sample.pdf (already committed)
-###
-### Execution order: run top to bottom. REST Client auto-manages httpOnly cookies
-### and `# @name` captures response bodies into {{...}} variables, so the happy
-### path chains: upload -> ingest -> generate -> review -> complete -> report.
-###
-### IMPORTANT: sample.pdf is content-deduped (409 on re-upload). For a repeat run
-### against the same DB, delete the old regulation (or use a different PDF) so
-### step 5.1 succeeds and {{upload.response.body.$.id}} gets set again.
-###
-### Load-test the LLM path: /generate runs pypdf + graph + vector + 4-agent
-### pipeline, so it is slow (needs Ollama reachable).
+# PravahOS — Comprehensive Backend Test Flow
+# Based on docs/backend-testing-guide.md
+#
+# Prerequisites:
+#   1. make setup          (Postgres, Qdrant, Neo4j, MinIO, API up)
+#   2. ollama serve on host + models pulled:
+#        ollama pull minimax-m3:cloud && ollama pull qwen3-embedding:0.6b
+#   3. Sample PDF at backend/tests/fixtures/sample.pdf
+#
+# HOW TO RUN:
+#   1. Send 5.1 (upload), copy "id" from its response.
+#   2. Paste it into @regulation_id below.
+#   3. Send 6.5 (generate), copy first MAP "id" from response.
+#   4. Paste it into @map_id below.
+#   5. Send everything else top-to-bottom. Cookies auto-managed.
+#
+# Duplicate PDFs are rejected (409) — sample.pdf uploads once per DB state.
+# /generate runs pypdf + graph + vector + 4-agent pipeline — slow, needs Ollama.
+#
+# All regulation-scoped and map-scoped calls read from @regulation_id / @map_id.
+# No response-body chaining — those variables are filled by hand once per run.
+
+@regulation_id=57618800-1a75-4740-81a1-0d23a0ca3dba
+@map_id=PASTE_MAP_ID_HERE
 
 # ============================================================
 # 1. HEALTH & READINESS
@@ -155,23 +160,6 @@ Content-Disposition: form-data; name="title"
 Smoke Test Circular
 ------boundary--
 
-### upload another pdf
-
-# @name upload
-POST http://localhost:8000/regulations/
-Content-Type: multipart/form-data; boundary=----boundary
-
-------boundary
-Content-Disposition: form-data; name="file"; filename="2circular.pdf"
-Content-Type: application/pdf
-
-< ../fixtures/2circular.pdf
-------boundary
-Content-Disposition: form-data; name="title"
-
-2nd Smoke Test Circular
-------boundary--
-
 ### 5.2 Upload same PDF again (expect 409 Conflict — hash dedupe)
 POST http://localhost:8000/regulations/
 Content-Type: multipart/form-data; boundary=----boundary
@@ -214,20 +202,21 @@ This is not a PDF
 # ============================================================
 
 ### 6.1 List all regulations
+# @name list
 GET http://localhost:8000/regulations/
 
 ### 6.2 Get uploaded regulation
-GET http://localhost:8000/regulations/{{upload.response.body.$.id}}
+GET http://localhost:8000/regulations/{{regulation_id}}
 
 ### 6.3 Get nonexistent regulation (expect 404)
 GET http://localhost:8000/regulations/00000000-0000-0000-0000-000000000000
 
 ### 6.4 Ingest — pypdf extract + classify (expect clause_count >= 1)
-POST http://localhost:8000/regulations/{{upload.response.body.$.id}}/ingest
+POST http://localhost:8000/regulations/{{regulation_id}}/ingest
 
 ### 6.5 Generate MAPs — 4-agent LangGraph pipeline (SLOW: Ollama + Qdrant + Neo4j)
 # @name generate
-POST http://localhost:8000/regulations/{{upload.response.body.$.id}}/generate
+POST http://localhost:8000/regulations/{{regulation_id}}/generate
 
 # ============================================================
 # 7. MAPS — LIST / GET
@@ -237,11 +226,11 @@ POST http://localhost:8000/regulations/{{upload.response.body.$.id}}/generate
 GET http://localhost:8000/maps/
 
 ### 7.2 List MAPs filtered by regulation
-GET http://localhost:8000/maps/?regulation_id={{upload.response.body.$.id}}
+GET http://localhost:8000/maps/?regulation_id={{regulation_id}}
 
 ### 7.3 Get first generated MAP
 # @name map
-GET http://localhost:8000/maps/{{generate.response.body.0.$.id}}
+GET http://localhost:8000/maps/{{map_id}}
 
 ### 7.4 Get nonexistent MAP (expect 404)
 GET http://localhost:8000/maps/00000000-0000-0000-0000-000000000000
@@ -252,7 +241,7 @@ GET http://localhost:8000/maps/00000000-0000-0000-0000-000000000000
 
 ### 8.1 Approve MAP
 # @name approved
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+POST http://localhost:8000/maps/{{map_id}}/review
 Content-Type: application/json
 
 {
@@ -260,7 +249,7 @@ Content-Type: application/json
 }
 
 ### 8.2 Edit MAP (description + deadline)
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+POST http://localhost:8000/maps/{{map_id}}/review
 Content-Type: application/json
 
 {
@@ -270,7 +259,7 @@ Content-Type: application/json
 }
 
 ### 8.3 Reject MAP
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+POST http://localhost:8000/maps/{{map_id}}/review
 Content-Type: application/json
 
 {
@@ -278,7 +267,7 @@ Content-Type: application/json
 }
 
 ### 8.4 Invalid review action (expect 400)
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+POST http://localhost:8000/maps/{{map_id}}/review
 Content-Type: application/json
 
 {
@@ -290,7 +279,7 @@ Content-Type: application/json
 # ============================================================
 
 ### 9.1 Complete MAP with evidence (expect completeness_check + coverage)
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/complete
+POST http://localhost:8000/maps/{{map_id}}/complete
 Content-Type: multipart/form-data; boundary=----boundary
 
 ------boundary
@@ -301,7 +290,7 @@ Content-Type: application/pdf
 ------boundary--
 
 ### 9.2 Complete with unsupported file type (expect 400)
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/complete
+POST http://localhost:8000/maps/{{map_id}}/complete
 Content-Type: multipart/form-data; boundary=----boundary
 
 ------boundary
@@ -316,17 +305,17 @@ malicious content
 # ============================================================
 
 ### 10.1 Dependency graph (expect nodes, edges, critical_path, topological_order)
-GET http://localhost:8000/regulations/{{upload.response.body.$.id}}/graph
+GET http://localhost:8000/regulations/{{regulation_id}}/graph
 
 ### 10.2 Digital Twin simulation (expect median/p90/pessimistic + bottleneck)
-GET http://localhost:8000/regulations/{{upload.response.body.$.id}}/simulate
+GET http://localhost:8000/regulations/{{regulation_id}}/simulate
 
 # ============================================================
 # 11. REPORTS
 # ============================================================
 
 ### 11.1 Compliance report
-GET http://localhost:8000/reports/{{upload.response.body.$.id}}/report
+GET http://localhost:8000/reports/{{regulation_id}}/report
 
 ### 11.2 Report for nonexistent regulation (expect 404)
 GET http://localhost:8000/reports/00000000-0000-0000-0000-000000000000/report
@@ -346,7 +335,7 @@ Content-Type: application/json
 }
 
 ### 12.2 Manager review MAP (expect 403 Forbidden)
-POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+POST http://localhost:8000/maps/{{map_id}}/review
 Content-Type: application/json
 
 {

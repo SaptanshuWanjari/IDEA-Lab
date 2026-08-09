@@ -2,13 +2,20 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 from uuid import UUID
 
-from sqlalchemy import select
+import logging
+
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.department import Department
 from app.models.map import MAP
 from app.models.map_dependency import MapDependency
 from app.schemas.agent import GeneratedMAP
+
+
+_map_log = logging.getLogger(__name__)
+
+_VALID_DEPARTMENTS = {"Compliance", "Risk", "IT", "Operations", "Audit"}
 
 
 class MapEngine:
@@ -18,9 +25,18 @@ class MapEngine:
     async def from_agent_output(self, regulation_id: str, generated: List[GeneratedMAP]) -> List[MAP]:
         maps = []
         for g in generated:
-            result = await self.session.execute(select(Department).where(Department.name == g.owner_department))
+            if g.owner_department not in _VALID_DEPARTMENTS:
+                _map_log.warning(
+                    "LLM used invalid department '%s' (prompt constraint violated) — skipping MAP. "
+                    "Valid: %s", g.owner_department, _VALID_DEPARTMENTS,
+                )
+                continue
+            result = await self.session.execute(
+                select(Department).where(func.lower(Department.name) == func.lower(g.owner_department))
+            )
             dept = result.scalar_one_or_none()
             if not dept:
+                _map_log.error("Department '%s' not seeded in DB — skipping MAP", g.owner_department)
                 continue
             maps.append(
                 MAP(
@@ -41,7 +57,16 @@ class MapEngine:
     async def save_draft(
         self, regulation_id: str, generated: List[dict], dependencies: List[dict]
     ) -> List[MAP]:
-        generated_maps = [GeneratedMAP(**g) for g in generated]
+        from pydantic import ValidationError
+        generated_maps = []
+        for g in generated:
+            try:
+                generated_maps.append(GeneratedMAP(**g))
+            except ValidationError as e:
+                _map_log.warning(
+                    "Skipping MAP with invalid fields (owner_department must be one of Compliance/Risk/IT/Operations/Audit): %s",
+                    e,
+                )
         maps = await self.from_agent_output(regulation_id, generated_maps)
         for m in maps:
             self.session.add(m)

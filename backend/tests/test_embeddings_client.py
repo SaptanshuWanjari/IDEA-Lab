@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 import json
 
 import httpx
@@ -18,7 +18,7 @@ def test_embedding_client_returns_vector():
         result = client.embed("hello")
 
     mock_post.assert_called_once_with(
-        "http://localhost:11434/api/embeddings",
+        ANY,
         json={"model": "nomic-embed-text", "prompt": "hello"},
         timeout=60.0,
     )

@@ -34,26 +34,38 @@ class GraphService:
         self.client = client
 
     def ingest_regulation(self, regulation_id: str, title: str, document: DocumentStructure):
-        self.client.run(
-            "MERGE (r:Regulation {id: $id}) SET r.title = $title",
-            {"id": regulation_id, "title": title},
-        )
+        try:
+            self.client.run(
+                "MERGE (r:Regulation {id: $id}) SET r.title = $title",
+                {"id": regulation_id, "title": title},
+            )
+        except Exception as e:
+            if "already exists" in str(e):
+                logger.info("Regulation %s already in graph, skipping ingest", regulation_id)
+                return
+            raise
         clause_ids = {c.id for c in document.clauses}
         for clause in document.clauses:
             clause_id = f"{regulation_id}-{clause.id}"
-            self.client.run(
-                """
-                MERGE (c:Clause {id: $clause_id})
-                SET c.text = $text, c.section = $section, c.regulation_id = $reg_id
-                MERGE (r:Regulation {id: $reg_id})-[:CONTAINS]->(c)
-                """,
-                {
-                    "clause_id": clause_id,
-                    "text": clause.text,
-                    "section": clause.section,
-                    "reg_id": regulation_id,
-                },
-            )
+            try:
+                self.client.run(
+                    """
+                    MERGE (c:Clause {id: $clause_id})
+                    SET c.text = $text, c.section = $section, c.regulation_id = $reg_id
+                    MERGE (r:Regulation {id: $reg_id})-[:CONTAINS]->(c)
+                    """,
+                    {
+                        "clause_id": clause_id,
+                        "text": clause.text,
+                        "section": clause.section,
+                        "reg_id": regulation_id,
+                    },
+                )
+            except Exception as e:
+                if "already exists" in str(e):
+                    logger.info("Clause %s already in graph, continuing", clause_id)
+                    continue
+                raise
 
         try:
             relations = self._extract_relations(title, document)

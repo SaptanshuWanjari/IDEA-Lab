@@ -12,7 +12,7 @@ class MAP(Base, TimestampMixin):
     regulation_id = Column(UUID(as_uuid=True), ForeignKey("regulations.id"), nullable=False, index=True)
     owner_department_id = Column(UUID(as_uuid=True), ForeignKey("departments.id"), nullable=False)
     description = Column(Text, nullable=False)
-    deadline = Column(DateTime, nullable=True)
+    deadline = Column(DateTime(timezone=True), nullable=True)
     status = Column(String(50), nullable=False, default="Pending")
     approval_state = Column(String(50), nullable=False, default="Draft")
     confidence = Column(Float, nullable=True)

@@ -27,12 +27,13 @@ class EmbeddingService:
         # ponytail: 768 is the dimension of nomic-embed-text; used only when document has no chunks
         dim = len(sample) if sample else 768
         self.store.ensure_collection("regulation_chunks", size=dim)
+        self.store.delete_regulation("regulation_chunks", regulation_id)
         points = []
         for i, chunk in enumerate(chunks):
             vector = sample if i == 0 else self._embedder.embed(chunk["text"])
             points.append(
                 PointStruct(
-                    id=f"{regulation_id}-chunk-{i}",
+                    id=i,
                     vector=vector,
                     payload={
                         "text": chunk["text"],

@@ -22,19 +22,28 @@ Return JSON matching this schema:
 {schema}
 """
 
-MAP_PROMPT = """You are a compliance implementation specialist. Convert each requirement into a concrete MAP (Measurable Action Point).
-For each MAP: description, owner_department (Compliance/Risk/IT/Operations/Audit), deadline_days, evidence_required, confidence (0.0-1.0), reasoning (explain why this MAP is needed and which clause requires it), source_clauses (list of clause IDs).
+MAP_PROMPT = """You are a compliance implementation specialist. Convert each requirement into a concrete MAP (Measurable Action Point). Output a JSON array.
+
+STRICT RULE: owner_department MUST be exactly one of these five strings (case-sensitive):
+  "Compliance", "Risk", "IT", "Operations", "Audit"
+Do NOT use any other department name. Do NOT invent new departments like Finance, Legal, HR, Technology, etc.
+
+For each MAP provide:
+- description: what must be done
+- owner_department: MUST be one of ["Compliance", "Risk", "IT", "Operations", "Audit"] — no other value accepted
+- deadline_days: integer number of days from today, or null
+- evidence_required: what proof of completion is needed
+- confidence: float 0.0-1.0
+- reasoning: why this MAP is needed and which clause requires it
+- source_clauses: list of clause IDs
 
 Requirements:
 {requirements}
 
-Available departments:
-{departments}
-
-Similar historical MAPs:
+Similar historical MAPs for context:
 {historical_context}
 
-Return JSON matching this schema:
+Return a JSON array of objects matching this schema:
 {schema}
 """
 

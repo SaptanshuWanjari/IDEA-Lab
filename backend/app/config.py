@@ -24,17 +24,17 @@ class Settings(BaseSettings):
     ollama_url: str = "http://localhost:11434"
 
     # Ollama models (override in .env)
-    ollama_chat_model: str = "qwen2.5:14b"
+    ollama_chat_model: str = "qwen3:8b"
     ollama_embedding_model: str = "nomic-embed-text"
     ollama_rerank_model: str = "qwen2.5:14b"
 
     # Timeouts and generation limits
     ollama_embed_timeout: float = 60.0
-    ollama_chat_timeout: float = 120.0
+    ollama_chat_timeout: float = 600.0
     ollama_rerank_timeout: float = 30.0
     ollama_rerank_connect_timeout: float = 5.0
     ollama_rerank_max_tokens: int = 500
-    ollama_chat_max_tokens: int = 2000
+    ollama_chat_max_tokens: int = 16384
     ollama_chat_temperature: float = 0.2
     ollama_relation_max_tokens: int = 1000
 

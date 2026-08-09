@@ -6,7 +6,7 @@ ifneq (,$(wildcard .env))
   export
 endif
 
-MODEL_CHAT ?= $(or $(OLLAMA_CHAT_MODEL),qwen2.5:14b)
+MODEL_CHAT ?= $(or $(OLLAMA_CHAT_MODEL),qwen3:8b)
 MODEL_EMBED ?= $(or $(OLLAMA_EMBEDDING_MODEL),nomic-embed-text)
 
 setup:
@@ -37,6 +37,31 @@ models:
 
 test:
 	cd backend && uv run pytest -v
+
+smoke:
+	@echo "=== Neo4j (from api container) ==="
+	@docker compose exec -T api uv run python -c "\
+from app.config import settings; \
+from app.graph.client import GraphClient; \
+c = GraphClient(); \
+r = c.run('MATCH (n) RETURN count(n) AS nodes'); \
+print(f'ok  ({r[0][\"nodes\"]} nodes)')"
+	@echo ""
+	@echo "=== Ollama embed (from api container) ==="
+	@docker compose exec -T api uv run python -c "\
+from app.llm.embeddings import OllamaEmbedder; \
+e = OllamaEmbedder(); \
+v = e.embed('test'); \
+d = len(v); \
+print('ok  (' + str(d) + ' dims)')"
+	@echo ""
+	@echo "=== Ollama chat (from api container) ==="
+	@docker compose exec -T api uv run python -c "\
+from app.llm.client import LLMClient; \
+c = LLMClient(); \
+r = c.chat([{'role':'user','content':'Say hello in one word.'}], max_tokens=8); \
+print('ok  (\"' + r.strip() + '\")')"
+	@echo "\nAll smoke checks passed.\n"
 
 shell-api:
 	docker compose exec api bash

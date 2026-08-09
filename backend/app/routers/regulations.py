@@ -136,21 +136,53 @@ async def generate_maps(
     vector_store = HybridVectorStore(settings.qdrant_url)
     EmbeddingService(vector_store).ingest(str(regulation_id), doc, doc_class)
 
-    # Run 4-agent pipeline
-    agent = AgentGraph()
-    text = doc.clauses[0].text if doc.clauses else doc.raw_markdown[:4000]
-    result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses])
+    import traceback
 
-    # Save MAPs + dependencies
-    engine = MapEngine(session)
-    maps = await engine.save_draft(
-        str(regulation_id),
-        result.get("generated_maps", []),
-        result.get("dependencies", []),
-    )
-    regulation.status = "Review"
-    await session.commit()
-    return [MAPOut.model_validate(m) for m in maps]
+    try:
+        # Run 4-agent pipeline
+        agent = AgentGraph()
+        text = doc.raw_markdown[:8000]
+        result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses])
+
+        import logging
+        _log = logging.getLogger(__name__)
+        _log.debug("AGENT STATE: generated_maps=%d deps=%d, raw[0]=%s",
+            len(result.get("generated_maps", [])),
+            len(result.get("dependencies", [])),
+            str(result.get("generated_maps", [])[:1])[:200])
+
+        if not result.get("generated_maps"):
+            raw_req = result.get("raw_req_response", "No req response found")
+            raw_map = result.get("raw_llm_response", "No map response found")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Agent pipeline produced no MAPs (parse failed or LLM returned empty).\nRaw Req Output:\n{raw_req[:1000]}\n\nRaw Map Output:\n{raw_map[:1000]}",
+            )
+
+        # Save MAPs + dependencies
+        engine = MapEngine(session)
+        maps = await engine.save_draft(
+            str(regulation_id),
+            result.get("generated_maps", []),
+            result.get("dependencies", []),
+        )
+        if not maps:
+            raw_resp = result.get("raw_llm_response", "Not available")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"No MAPs saved — all generated MAPs failed validation or were empty.\nRaw LLM response:\n{raw_resp[:2000]}",
+            )
+        regulation.status = "Review"
+        await session.commit()
+        return [MAPOut.model_validate(m) for m in maps]
+    except HTTPException:
+        raise
+    except Exception as e:
+        tb = traceback.format_exc()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Internal pipeline error:\n{str(e)}\n\nTraceback:\n{tb}",
+        )
 
 
 @router.get("/{regulation_id}/graph")

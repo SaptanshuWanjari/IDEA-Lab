@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,9 +12,12 @@ class Requirement(BaseModel):
     confidence: float
 
 
+DepartmentName = Literal["Compliance", "Risk", "IT", "Operations", "Audit"]
+
+
 class GeneratedMAP(BaseModel):
     description: str
-    owner_department: str
+    owner_department: DepartmentName
     deadline_days: Optional[int] = None
     evidence_required: Optional[str] = None
     depends_on: List[str] = Field(default_factory=list)
