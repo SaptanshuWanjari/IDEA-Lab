@@ -42,7 +42,7 @@ function createAuthClient(): AuthClient {
 
 async function registerAndLogin(role = "admin") {
   const api = createAuthClient();
-  const email = `test-${Date.now()}-${Math.random().toString(36).slice(2)}@pravah.local`;
+  const email = `test-${Date.now()}-${Math.random().toString(36).slice(2)}@pravah.in`;
   const reg = await api.post("/auth/register", { email, password: "test123", role });
   return { api, email, reg };
 }

@@ -12,6 +12,7 @@ class Regulation(Base, TimestampMixin):
     title = Column(String(500), nullable=True)
     source_pdf_url = Column(Text, nullable=False)
     status = Column(String(50), nullable=False, default="Draft")
+    content_hash = Column(String(64), nullable=True, index=True)
     summary = Column(Text, nullable=True)
     effective_date = Column(Date, nullable=True)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)

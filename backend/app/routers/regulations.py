@@ -44,7 +44,10 @@ async def upload_regulation(
     if len(content) > 20 * 1024 * 1024:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large (max 20MB)")
     service = RegulationService(session, StorageService())
-    regulation = await service.create(content, file.filename, title, str(user.id))
+    try:
+        regulation = await service.create(content, file.filename, title, str(user.id))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     return regulation
 
 

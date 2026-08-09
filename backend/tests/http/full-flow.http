@@ -1,0 +1,380 @@
+### PravahOS — Comprehensive Backend Test Flow
+### Based on docs/backend-testing-guide.md
+###
+### Prerequisites:
+###   1. make setup          (Postgres, Qdrant, Neo4j, MinIO, API up)
+###   2. ollama serve on host + models pulled:
+###        ollama pull minimax-m3:cloud && ollama pull qwen3-embedding:0.6b
+###   3. Sample PDF at backend/tests/fixtures/sample.pdf (already committed)
+###
+### Execution order: run top to bottom. REST Client auto-manages httpOnly cookies
+### and `# @name` captures response bodies into {{...}} variables, so the happy
+### path chains: upload -> ingest -> generate -> review -> complete -> report.
+###
+### IMPORTANT: sample.pdf is content-deduped (409 on re-upload). For a repeat run
+### against the same DB, delete the old regulation (or use a different PDF) so
+### step 5.1 succeeds and {{upload.response.body.$.id}} gets set again.
+###
+### Load-test the LLM path: /generate runs pypdf + graph + vector + 4-agent
+### pipeline, so it is slow (needs Ollama reachable).
+
+# ============================================================
+# 1. HEALTH & READINESS
+# ============================================================
+
+### 1.1 API health (expect {"status":"ok"})
+GET http://localhost:8000/health
+
+# ============================================================
+# 2. AUTH — REGISTER
+# ============================================================
+
+### 2.1 Register compliance officer (can review MAPs)
+# @name register
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "admin123",
+  "role": "compliance_officer"
+}
+
+### 2.2 Register department manager (RBAC tests)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "manager@pravah.in",
+  "password": "manager123",
+  "role": "department_manager"
+}
+
+### 2.3 Register duplicate email (expect 400)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "admin123",
+  "role": "compliance_officer"
+}
+
+### 2.4 Register invalid email (expect 422)
+POST http://localhost:8000/auth/register
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "bad123"
+}
+
+# ============================================================
+# 3. AUTH — LOGIN
+# ============================================================
+
+### 3.1 Login as compliance officer (sets cookies)
+# @name login
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "admin123"
+}
+
+### 3.2 Login wrong password (expect 401)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "wrongpassword"
+}
+
+### 3.3 Login nonexistent user (expect 401)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@pravah.in",
+  "password": "nobody123"
+}
+
+### 3.4 Login missing password (expect 422)
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in"
+}
+
+# ============================================================
+# 4. AUTH — ME / REFRESH / LOGOUT
+# ============================================================
+
+### 4.1 Get current user (from cookie)
+GET http://localhost:8000/auth/me
+
+### 4.2 Rotate tokens (uses refresh_token cookie)
+POST http://localhost:8000/auth/refresh
+
+### 4.3 Logout (clears cookies)
+POST http://localhost:8000/auth/logout
+
+### 4.4 Me after logout (expect 401)
+GET http://localhost:8000/auth/me
+
+### 4.5 Re-login for the rest of the flow
+# @name login
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "admin123"
+}
+
+# ============================================================
+# 5. REGULATIONS — UPLOAD
+# ============================================================
+
+### 5.1 Upload sample PDF (valid)
+# @name upload
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ../fixtures/sample.pdf
+------boundary
+Content-Disposition: form-data; name="title"
+
+Smoke Test Circular
+------boundary--
+
+### upload another pdf
+
+# @name upload
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="2circular.pdf"
+Content-Type: application/pdf
+
+< ../fixtures/2circular.pdf
+------boundary
+Content-Disposition: form-data; name="title"
+
+2nd Smoke Test Circular
+------boundary--
+
+### 5.2 Upload same PDF again (expect 409 Conflict — hash dedupe)
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ../fixtures/sample.pdf
+------boundary
+Content-Disposition: form-data; name="title"
+
+Smoke Test Circular
+------boundary--
+
+### 5.3 Upload without auth (expect 401) — requires no cookie jar, run after logout
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="test.pdf"
+Content-Type: application/pdf
+
+not a real pdf
+------boundary--
+
+### 5.4 Upload non-PDF (expect 400)
+POST http://localhost:8000/regulations/
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="note.txt"
+Content-Type: text/plain
+
+This is not a PDF
+------boundary--
+
+# ============================================================
+# 6. REGULATIONS — LIST / GET / INGEST / GENERATE
+# ============================================================
+
+### 6.1 List all regulations
+GET http://localhost:8000/regulations/
+
+### 6.2 Get uploaded regulation
+GET http://localhost:8000/regulations/{{upload.response.body.$.id}}
+
+### 6.3 Get nonexistent regulation (expect 404)
+GET http://localhost:8000/regulations/00000000-0000-0000-0000-000000000000
+
+### 6.4 Ingest — pypdf extract + classify (expect clause_count >= 1)
+POST http://localhost:8000/regulations/{{upload.response.body.$.id}}/ingest
+
+### 6.5 Generate MAPs — 4-agent LangGraph pipeline (SLOW: Ollama + Qdrant + Neo4j)
+# @name generate
+POST http://localhost:8000/regulations/{{upload.response.body.$.id}}/generate
+
+# ============================================================
+# 7. MAPS — LIST / GET
+# ============================================================
+
+### 7.1 List all MAPs
+GET http://localhost:8000/maps/
+
+### 7.2 List MAPs filtered by regulation
+GET http://localhost:8000/maps/?regulation_id={{upload.response.body.$.id}}
+
+### 7.3 Get first generated MAP
+# @name map
+GET http://localhost:8000/maps/{{generate.response.body.0.$.id}}
+
+### 7.4 Get nonexistent MAP (expect 404)
+GET http://localhost:8000/maps/00000000-0000-0000-0000-000000000000
+
+# ============================================================
+# 8. MAPS — REVIEW (compliance_officer/admin only)
+# ============================================================
+
+### 8.1 Approve MAP
+# @name approved
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### 8.2 Edit MAP (description + deadline)
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+Content-Type: application/json
+
+{
+  "action": "edit",
+  "description": "Updated: Banks must implement MFA within 60 days",
+  "deadline": "2026-12-01T00:00:00Z"
+}
+
+### 8.3 Reject MAP
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+Content-Type: application/json
+
+{
+  "action": "reject"
+}
+
+### 8.4 Invalid review action (expect 400)
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+Content-Type: application/json
+
+{
+  "action": "delete"
+}
+
+# ============================================================
+# 9. MAPS — COMPLETE (evidence upload + validation)
+# ============================================================
+
+### 9.1 Complete MAP with evidence (expect completeness_check + coverage)
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/complete
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="mfa_evidence.pdf"
+Content-Type: application/pdf
+
+< ../fixtures/sample.pdf
+------boundary--
+
+### 9.2 Complete with unsupported file type (expect 400)
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/complete
+Content-Type: multipart/form-data; boundary=----boundary
+
+------boundary
+Content-Disposition: form-data; name="file"; filename="hack.exe"
+Content-Type: application/x-msdownload
+
+malicious content
+------boundary--
+
+# ============================================================
+# 10. REGULATIONS — GRAPH / SIMULATE
+# ============================================================
+
+### 10.1 Dependency graph (expect nodes, edges, critical_path, topological_order)
+GET http://localhost:8000/regulations/{{upload.response.body.$.id}}/graph
+
+### 10.2 Digital Twin simulation (expect median/p90/pessimistic + bottleneck)
+GET http://localhost:8000/regulations/{{upload.response.body.$.id}}/simulate
+
+# ============================================================
+# 11. REPORTS
+# ============================================================
+
+### 11.1 Compliance report
+GET http://localhost:8000/reports/{{upload.response.body.$.id}}/report
+
+### 11.2 Report for nonexistent regulation (expect 404)
+GET http://localhost:8000/reports/00000000-0000-0000-0000-000000000000/report
+
+# ============================================================
+# 12. RBAC — ROLE CHECKS
+# ============================================================
+
+### 12.1 Login as department manager (no review rights)
+# @name managerLogin
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "manager@pravah.in",
+  "password": "manager123"
+}
+
+### 12.2 Manager review MAP (expect 403 Forbidden)
+POST http://localhost:8000/maps/{{generate.response.body.0.$.id}}/review
+Content-Type: application/json
+
+{
+  "action": "approve"
+}
+
+### 12.3 Manager list regulations (allowed)
+GET http://localhost:8000/regulations/
+
+### 12.4 Re-login as compliance officer
+# @name login
+POST http://localhost:8000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@pravah.in",
+  "password": "admin123"
+}
+
+# ============================================================
+# 13. INFRASTRUCTURE VERIFICATION (manual, not API)
+# ============================================================
+# Qdrant collection (expect regulation_chunks with points):
+#   GET http://localhost:6333/collections/regulation_chunks
+#
+# Neo4j graph (expect CONTAINS + relation edges):
+#   docker compose exec neo4j cypher-shell -u neo4j -p pravah \
+#     "MATCH (a:Clause)-[r:REQUIRES|AMENDS|DEFINES]->(b:Clause) RETURN a.id, type(r), b.id LIMIT 20"
+#
+# Ollama models:
+#   curl http://localhost:11434/api/tags

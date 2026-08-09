@@ -1,0 +1,64 @@
+Master Direction / Notification header:
+Title: Master Direction – Operational Resilience and Business Continuity Controls
+Reference number and date: RBI/DPSS/2026-27/91, dated Mar 18, 2026
+
+The Reserve Bank of India, in exercise of its powers under section 35A of the Banking Regulation Act, 1949, hereby issues the following directions to all Regulated Entities.
+
+1. Applicability and Definitions
+
+1.1 These directions shall apply to all regulated entities undertaking banking, payment, digital lending or other technology-enabled financial services.
+
+1.2 “Regulated Entity” means a bank or other financial institution regulated by the Reserve Bank of India.
+
+1.3 “Critical Business Service” means a banking or payment service whose prolonged disruption may materially affect customers, financial stability or the regulated entity’s ability to meet regulatory obligations.
+
+1.4 “Critical Service Provider” means a third-party service provider whose failure could materially disrupt a critical business service.
+
+2. Business Continuity Planning
+
+2.1 Every regulated entity shall identify and document all critical business services and their supporting systems within 60 days.
+
+2.2 The Board-approved business continuity plan shall define recovery objectives, alternate operating arrangements, communication procedures and escalation responsibilities within 90 days.
+
+2.3 Each regulated entity shall conduct a full business continuity and disaster recovery exercise for every critical business service within 6 months and submit the results to the Risk Management Committee within 15 days of completion.
+
+3. Disaster Recovery and Backup
+
+3.1 Regulated entities shall maintain geographically separated backups for critical databases and transaction records within 90 days.
+
+3.2 Recovery procedures for critical systems shall be tested at least quarterly, with the first documented recovery test completed within 60 days.
+
+3.3 Backup integrity shall be independently verified by the information technology function within 30 days of each quarterly recovery test.
+
+4. Third-Party Risk Management
+
+4.1 Before entering into any material outsourcing arrangement, the regulated entity shall complete a documented operational resilience and cybersecurity risk assessment within 30 days of vendor selection.
+
+4.2 Existing arrangements involving critical service providers shall be reassessed within 6 months.
+
+4.3 Material deficiencies identified under clause 4.2 shall be presented to the Risk Management Committee within 15 days of identification, together with remediation timelines.
+
+5. Incident Escalation
+
+5.1 The Chief Information Security Officer and Chief Risk Officer shall establish a joint incident escalation process within 45 days.
+
+5.2 Any disruption of a critical business service exceeding 30 minutes shall be classified, investigated and documented within 24 hours of restoration.
+
+5.3 Material service disruptions shall be reported to the Board or its designated committee within 7 days of closure.
+
+6. Board and Committee Oversight
+
+6.1 The Risk Management Committee shall review the regulated entity’s operational resilience posture at least quarterly, with the first review completed within 90 days.
+
+6.2 The report required under clause 6.1 shall include results of testing under clause 3.2, unresolved deficiencies under clause 4.3 and material incidents under clause 5.3.
+
+7. Amendment to Earlier Notification
+
+7.1 In partial modification of RBI Notification No. RBI/2023-24/87, dated November 15, 2023, requirements relating to annual disaster recovery testing shall stand amended to require quarterly testing for systems supporting critical business services.
+
+8. Responsibility for Compliance
+
+8.1 The Chief Risk Officer shall submit an annual operational resilience compliance certificate to the Board within 30 days after the end of each financial year.
+
+These directions shall come into force with immediate effect.
+

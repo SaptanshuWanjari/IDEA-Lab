@@ -1,0 +1,62 @@
+Master Direction / Notification header:
+Title: Master Direction – Customer Protection and Digital Transaction Security Controls
+Reference number and date: RBI/DPSS/2026-27/97, dated Apr 10, 2026
+
+The Reserve Bank of India, in exercise of its powers under section 35A of the Banking Regulation Act, 1949, hereby issues the following directions to all Regulated Entities.
+
+1. Applicability and Definitions
+
+1.1 These directions shall apply to all regulated entities providing internet banking, mobile banking, card, wallet, UPI or other electronic transaction services.
+
+1.2 “Regulated Entity” means a bank or financial institution regulated by the Reserve Bank of India.
+
+1.3 “Digital Transaction” means a payment, transfer, withdrawal, purchase or other financial transaction initiated or authorised through an electronic channel.
+
+1.4 “High-Risk Transaction” means a digital transaction that exceeds a risk threshold established by the regulated entity based on transaction value, customer behaviour, device characteristics or other fraud indicators.
+
+2. Customer Authentication
+
+2.1 Every regulated entity shall deploy multi-factor authentication for all high-risk digital transactions within 60 days.
+
+2.2 Authentication controls shall include at least two independent factors for transactions designated as high risk, and implementation shall be independently tested within 30 days after deployment.
+
+2.3 The Chief Information Security Officer shall submit a certification confirming completion of the controls required under clause 2.1 to the Compliance Department within 15 days of implementation.
+
+3. Fraud Detection and Reporting
+
+3.1 Regulated entities shall maintain automated fraud-monitoring controls capable of identifying anomalous digital transactions within 90 days.
+
+3.2 Suspected customer-impacting digital fraud shall be escalated to the designated fraud-monitoring function within 2 hours of detection.
+
+3.3 Confirmed material digital fraud incidents shall be reported to the Reserve Bank through the prescribed channel within 6 hours of confirmation.
+
+4. Customer Communication
+
+4.1 Regulated entities shall provide real-time transaction alerts for all digital transactions within 60 days.
+
+4.2 Where an unauthorised transaction is reported by a customer, the regulated entity shall acknowledge the complaint and provide a complaint reference number within 24 hours.
+
+4.3 Customer awareness campaigns covering phishing, credential theft, malicious applications and safe digital banking practices shall be conducted at least quarterly, with the first campaign completed within 45 days.
+
+5. Record-Keeping
+
+5.1 Records of digital transaction authentication, fraud alerts, customer complaints and investigation outcomes shall be retained for a minimum period of 8 years, with the required retention system implemented within 6 months.
+
+5.2 The Operations function shall conduct a monthly reconciliation of fraud alerts and customer complaints, with the first reconciliation completed within 30 days.
+
+6. Board-Level Reporting
+
+6.1 The Risk Management Committee shall review digital fraud trends and customer protection measures quarterly, with the first report submitted to the Board within 30 days after the end of the quarter.
+
+6.2 The report required under clause 6.1 shall include fraud volumes, monetary exposure, unresolved customer complaints and remediation status arising from clause 3.2.
+
+7. Amendment to Earlier Notification
+
+7.1 In partial modification of RBI Notification No. RBI/2024-25/63, dated September 20, 2024, the prescribed customer transaction-alert requirement shall be expanded to cover all digital transactions and shall be implemented within 60 days.
+
+8. Responsibility for Compliance
+
+8.1 The Chief Information Security Officer shall monitor compliance with clauses 2 and 3 and submit a quarterly compliance report to the Risk Management Committee within 15 days after each quarter.
+
+These directions shall come into force with immediate effect.
+

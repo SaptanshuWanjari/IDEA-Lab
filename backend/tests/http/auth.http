@@ -11,7 +11,7 @@ POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "admin@pravah.local",
+  "email": "admin@pravah.in",
   "password": "admin123",
   "role": "admin"
 }
@@ -21,7 +21,7 @@ POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "compliance@pravah.local",
+  "email": "compliance@pravah.in",
   "password": "compliance123",
   "role": "compliance_officer"
 }
@@ -31,7 +31,7 @@ POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "manager@pravah.local",
+  "email": "manager@pravah.in",
   "password": "manager123",
   "role": "department_manager"
 }
@@ -41,7 +41,7 @@ POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "admin@pravah.local",
+  "email": "admin@pravah.in",
   "password": "admin123"
 }
 
@@ -50,7 +50,7 @@ POST http://localhost:8000/auth/register
 Content-Type: application/json
 
 {
-  "email": "default@pravah.local",
+  "email": "default@pravah.in",
   "password": "default123"
 }
 
@@ -73,7 +73,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@pravah.local",
+  "email": "admin@pravah.in",
   "password": "admin123"
 }
 
@@ -82,7 +82,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "compliance@pravah.local",
+  "email": "compliance@pravah.in",
   "password": "compliance123"
 }
 
@@ -91,7 +91,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "manager@pravah.local",
+  "email": "manager@pravah.in",
   "password": "manager123"
 }
 
@@ -100,7 +100,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@pravah.local",
+  "email": "admin@pravah.in",
   "password": "wrongpassword"
 }
 
@@ -109,7 +109,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "nobody@pravah.local",
+  "email": "nobody@pravah.in",
   "password": "nobody123"
 }
 
@@ -118,7 +118,7 @@ POST http://localhost:8000/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@pravah.local"
+  "email": "admin@pravah.in"
 }
 
 

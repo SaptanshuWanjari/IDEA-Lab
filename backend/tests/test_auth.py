@@ -7,33 +7,33 @@ from app.services.auth_service import AuthService, pwd_context
 @pytest.mark.asyncio
 async def test_register_user(session):
     service = AuthService(session)
-    user = await service.register("auth-test@pravah.local", "secret")
-    assert user.email == "auth-test@pravah.local"
+    user = await service.register("auth-test@pravah.in", "secret")
+    assert user.email == "auth-test@pravah.in"
     assert pwd_context.verify("secret", user.hashed_password)
 
 
 @pytest.mark.asyncio
 async def test_register_duplicate(session):
     service = AuthService(session)
-    await service.register("dup@pravah.local", "secret")
+    await service.register("dup@pravah.in", "secret")
     with pytest.raises(ValueError, match="already registered"):
-        await service.register("dup@pravah.local", "secret")
+        await service.register("dup@pravah.in", "secret")
 
 
 @pytest.mark.asyncio
 async def test_authenticate(session):
     service = AuthService(session)
-    await service.register("login@pravah.local", "secret")
-    user = await service.authenticate("login@pravah.local", "secret")
-    assert user.email == "login@pravah.local"
+    await service.register("login@pravah.in", "secret")
+    user = await service.authenticate("login@pravah.in", "secret")
+    assert user.email == "login@pravah.in"
 
 
 @pytest.mark.asyncio
 async def test_authenticate_wrong_password(session):
     service = AuthService(session)
-    await service.register("bad@pravah.local", "secret")
+    await service.register("bad@pravah.in", "secret")
     with pytest.raises(ValueError, match="Invalid credentials"):
-        await service.authenticate("bad@pravah.local", "wrong")
+        await service.authenticate("bad@pravah.in", "wrong")
 
 
 def test_create_and_decode_token(session):

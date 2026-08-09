@@ -13,7 +13,7 @@ setup:
 	docker compose up -d
 
 up:
-	docker compose up -d
+	docker compose up 
 
 down:
 	docker compose down

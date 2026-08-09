@@ -166,7 +166,7 @@ After `make setup` and pulling models:
 # Register
 curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@pravah.local","password":"admin123","role":"compliance_officer"}' \
+  -d '{"email":"admin@pravah.in","password":"admin123","role":"compliance_officer"}' \
   -c cookies.txt
 
 # Upload a regulation

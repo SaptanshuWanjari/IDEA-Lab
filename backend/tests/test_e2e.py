@@ -11,7 +11,7 @@ def client():
 
 @pytest.fixture
 def auth_cookies(client):
-    email = "e2e@pravah.local"
+    email = "e2e@pravah.in"
     password = "e2e123"
     client.post("/auth/register", json={"email": email, "password": password, "role": "compliance_officer"})
     resp = client.post("/auth/login", json={"email": email, "password": password})

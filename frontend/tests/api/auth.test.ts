@@ -5,7 +5,7 @@ describe("POST /auth/register", () => {
   it("registers a new user", async () => {
     const api = createAuthClient();
     const res = await api.post("/auth/register", {
-      email: `reg-${Date.now()}@pravah.local`,
+      email: `reg-${Date.now()}@pravah.in`,
       password: "test123",
       role: "admin",
     });
@@ -17,7 +17,7 @@ describe("POST /auth/register", () => {
 
   it("rejects duplicate email", async () => {
     const api = createAuthClient();
-    const email = `dup-${Date.now()}@pravah.local`;
+    const email = `dup-${Date.now()}@pravah.in`;
     await api.post("/auth/register", { email, password: "test123" });
     const res = await api.post("/auth/register", { email, password: "test123" });
     expect(res.status).toBe(400);
@@ -37,7 +37,7 @@ describe("POST /auth/register", () => {
   it("defaults role to department_manager", async () => {
     const api = createAuthClient();
     const res = await api.post("/auth/register", {
-      email: `default-${Date.now()}@pravah.local`,
+      email: `default-${Date.now()}@pravah.in`,
       password: "test123",
     });
     expect(res.status).toBe(201);
@@ -50,7 +50,7 @@ describe("POST /auth/login", () => {
 
   beforeAll(async () => {
     const api = createAuthClient();
-    email = `login-${Date.now()}@pravah.local`;
+    email = `login-${Date.now()}@pravah.in`;
     await api.post("/auth/register", { email, password: "correctpass" });
   });
 
@@ -70,7 +70,7 @@ describe("POST /auth/login", () => {
   it("rejects nonexistent user", async () => {
     const api = createAuthClient();
     const res = await api.post("/auth/login", {
-      email: "nobody@pravah.local",
+      email: "nobody@pravah.in",
       password: "nobody",
     });
     expect(res.status).toBe(401);

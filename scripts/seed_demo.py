@@ -10,7 +10,7 @@ def create_demo_user(client: httpx.Client):
     resp = client.post(
         f"{BASE_URL}/auth/register",
         json={
-            "email": "demo@pravah.local",
+            "email": "demo@pravah.in",
             "password": "demo123",
             "role": "compliance_officer",
         },
@@ -18,7 +18,7 @@ def create_demo_user(client: httpx.Client):
     if resp.status_code == 400 and "already registered" in resp.text:
         resp = client.post(
             f"{BASE_URL}/auth/login",
-            json={"email": "demo@pravah.local", "password": "demo123"},
+            json={"email": "demo@pravah.in", "password": "demo123"},
         )
     resp.raise_for_status()
     return resp.json()
