@@ -142,7 +142,7 @@ async def generate_maps(
         # Run 4-agent pipeline
         agent = AgentGraph()
         text = doc.raw_markdown[:8000]
-        result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses])
+        result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses], doc_class)
 
         import logging
         _log = logging.getLogger(__name__)

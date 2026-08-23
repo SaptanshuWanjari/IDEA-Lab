@@ -7,6 +7,7 @@ from app.llm.client import LLMClient
 
 class AgentState(TypedDict, total=False):
     regulation_id: str
+    document_type: str | None
     text: str
     clauses: list
     summary: str
@@ -33,5 +34,7 @@ class AgentGraph:
         builder.add_edge("dependencies", END)
         self.graph = builder.compile()
 
-    def run(self, regulation_id: str, text: str, clauses: list) -> dict:
-        return self.graph.invoke({"regulation_id": regulation_id, "text": text, "clauses": clauses})
+    def run(self, regulation_id: str, text: str, clauses: list, document_type: str | None = None) -> dict:
+        return self.graph.invoke(
+            {"regulation_id": regulation_id, "text": text, "clauses": clauses, "document_type": document_type}
+        )
