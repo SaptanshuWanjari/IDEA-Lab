@@ -1,6 +1,6 @@
 from typing import Any, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class Requirement(BaseModel):
@@ -25,6 +25,20 @@ class GeneratedMAP(BaseModel):
     reasoning: str
     source_clauses: List[str]
     retrieved_context: Optional[str] = None
+
+    @field_validator("owner_department", mode="before")
+    @classmethod
+    def _normalize_department(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            return v
+        canonical = {
+            "compliance": "Compliance",
+            "risk": "Risk",
+            "it": "IT",
+            "operations": "Operations",
+            "audit": "Audit",
+        }
+        return canonical.get(v.lower(), v)
 
 
 class AgentState(BaseModel):
