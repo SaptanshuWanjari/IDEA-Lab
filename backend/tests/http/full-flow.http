@@ -20,8 +20,8 @@
 # All regulation-scoped and map-scoped calls read from @regulation_id / @map_id.
 # No response-body chaining — those variables are filled by hand once per run.
 
-@regulation_id=57618800-1a75-4740-81a1-0d23a0ca3dba
-@map_id=PASTE_MAP_ID_HERE
+@regulation_id=19368c82-6772-49da-ac0f-3c3544e57935
+@map_id=6804208f-126b-479c-82c3-c4eb09f7f300
 
 # ============================================================
 # 1. HEALTH & READINESS

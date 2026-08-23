@@ -22,3 +22,5 @@ docs/
 __pycache__
 
 cookies.txt
+
+.opencode/
