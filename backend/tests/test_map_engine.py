@@ -1,3 +1,4 @@
+from unittest.mock import AsyncMock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -83,7 +84,7 @@ def test_detect_cycle_self_loop():
 
 
 @pytest.mark.asyncio
-async def test_save_draft_detects_cycle():
+async def test_save_draft_detects_cycle_and_passes_valid_clause_ids():
     session = FakeSession()
     engine = MapEngine(session)
     generated = [
@@ -109,6 +110,113 @@ async def test_save_draft_detects_cycle():
         {"map_index": 1, "depends_on_indices": [0]},
         {"map_index": 0, "depends_on_indices": [1]},
     ]
-    with pytest.raises(ValueError, match="Cycle detected"):
-        await engine.save_draft(str(uuid4()), [g.model_dump() for g in generated], dependencies)
-    assert session.rolled_back is True
+    valid_clause_ids = ["1", "2"]
+    map_a = MAP(id=uuid4())
+    map_b = MAP(id=uuid4())
+    with patch.object(engine, "from_agent_output", new_callable=AsyncMock, return_value=[map_a, map_b]) as mock_from:
+        with pytest.raises(ValueError, match="Cycle detected"):
+            await engine.save_draft(
+                str(uuid4()),
+                [g.model_dump() for g in generated],
+                dependencies,
+                valid_clause_ids,
+            )
+        assert session.rolled_back is True
+        mock_from.assert_awaited_once()
+        assert mock_from.call_args.args[2] == valid_clause_ids
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_preserves_valid_source_clauses():
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="IT",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=["1.1", "1.2"],
+        )
+    ]
+    maps = await engine.from_agent_output(str(uuid4()), generated, valid_clause_ids=["1.1", "1.2", "2"])
+    assert len(maps) == 1
+    assert maps[0].source_clauses == ["1.1", "1.2"]
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_drops_invalid_source_clauses(caplog):
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="IT",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=["1.1", "99", "1.2"],
+        )
+    ]
+    with caplog.at_level("WARNING"):
+        maps = await engine.from_agent_output(str(uuid4()), generated, valid_clause_ids=["1.1", "1.2"])
+    assert len(maps) == 1
+    assert maps[0].source_clauses == ["1.1", "1.2"]
+    assert "unknown clause '99'" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_allows_empty_source_clauses():
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="IT",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=[],
+        )
+    ]
+    maps = await engine.from_agent_output(str(uuid4()), generated, valid_clause_ids=["1.1", "1.2"])
+    assert len(maps) == 1
+    assert maps[0].source_clauses == []
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_skips_map_with_only_invalid_source_clauses():
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="IT",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=["99", "100"],
+        )
+    ]
+    maps = await engine.from_agent_output(str(uuid4()), generated, valid_clause_ids=["1.1", "1.2"])
+    assert len(maps) == 0
+
+
+@pytest.mark.asyncio
+async def test_from_agent_output_unchanged_without_valid_clause_ids():
+    session = FakeSession()
+    engine = MapEngine(session)
+    generated = [
+        GeneratedMAP(
+            description="A",
+            owner_department="IT",
+            deadline_days=7,
+            confidence=0.9,
+            reasoning="r1",
+            source_clauses=["1.1", "bogus"],
+        )
+    ]
+    maps = await engine.from_agent_output(str(uuid4()), generated)
+    assert len(maps) == 1
+    assert maps[0].source_clauses == ["1.1", "bogus"]

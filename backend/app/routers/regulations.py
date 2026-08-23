@@ -161,10 +161,12 @@ async def generate_maps(
 
         # Save MAPs + dependencies
         engine = MapEngine(session)
+        valid_clause_ids = [c.id for c in doc.clauses]
         maps = await engine.save_draft(
             str(regulation_id),
             result.get("generated_maps", []),
             result.get("dependencies", []),
+            valid_clause_ids,
         )
         if not maps:
             raw_resp = result.get("raw_llm_response", "Not available")
