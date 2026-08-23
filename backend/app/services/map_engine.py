@@ -22,7 +22,9 @@ class MapEngine:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def from_agent_output(self, regulation_id: str, generated: List[GeneratedMAP]) -> List[MAP]:
+    async def from_agent_output(
+        self, regulation_id: str, generated: List[GeneratedMAP], valid_clause_ids: list[str] | None = None
+    ) -> List[MAP]:
         maps = []
         for g in generated:
             if g.owner_department not in _VALID_DEPARTMENTS:
@@ -38,6 +40,27 @@ class MapEngine:
             if not dept:
                 _map_log.error("Department '%s' not seeded in DB — skipping MAP", g.owner_department)
                 continue
+
+            source_clauses = g.source_clauses
+            if valid_clause_ids is not None:
+                original = source_clauses or []
+                filtered = [c for c in original if c in valid_clause_ids]
+                for clause_id in original:
+                    if clause_id not in valid_clause_ids:
+                        _map_log.warning(
+                            "MAP references unknown clause '%s' — dropping from source_clauses", clause_id
+                        )
+                if not filtered:
+                    if original:
+                        _map_log.warning(
+                            "MAP has no valid source_clauses after traceability validation — skipping"
+                        )
+                        continue
+                    _map_log.info(
+                        "MAP has no source_clauses; traceability validation skipped (empty source allowed)"
+                    )
+                source_clauses = filtered
+
             maps.append(
                 MAP(
                     regulation_id=UUID(regulation_id),
@@ -49,13 +72,17 @@ class MapEngine:
                     approval_state="Draft",
                     confidence=g.confidence,
                     reasoning=g.reasoning,
-                    source_clauses=g.source_clauses,
+                    source_clauses=source_clauses,
                 )
             )
         return maps
 
     async def save_draft(
-        self, regulation_id: str, generated: List[dict], dependencies: List[dict]
+        self,
+        regulation_id: str,
+        generated: List[dict],
+        dependencies: List[dict],
+        valid_clause_ids: list[str] | None = None,
     ) -> List[MAP]:
         from pydantic import ValidationError
         generated_maps = []
@@ -67,7 +94,7 @@ class MapEngine:
                     "Skipping MAP with invalid fields (owner_department must be one of Compliance/Risk/IT/Operations/Audit): %s",
                     e,
                 )
-        maps = await self.from_agent_output(regulation_id, generated_maps)
+        maps = await self.from_agent_output(regulation_id, generated_maps, valid_clause_ids)
         for m in maps:
             self.session.add(m)
         await self.session.flush()  # get IDs assigned

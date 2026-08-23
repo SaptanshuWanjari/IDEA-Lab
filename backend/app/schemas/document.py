@@ -14,7 +14,7 @@ class Clause(BaseModel):
 
 class Entity(BaseModel):
     name: str
-    type: Literal["department", "date", "threshold", "regulation_ref", "term"]
+    type: Literal["department", "date", "deadline", "role", "system", "threshold", "regulation_ref", "term"]
 
 
 class TableInfo(BaseModel):

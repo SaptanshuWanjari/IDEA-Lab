@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 from app.agents.prompts import (
     DEPENDENCY_PROMPT,
@@ -113,22 +114,31 @@ class AgentNodes:
             f"{c.get('id', i)}: {c.get('text', c)}"
             for i, c in enumerate(state.get("clauses", []))
         )
-        import re
         raw_query = state.get("summary", "")[:200]
         query = re.sub(r'[^\w\s]', ' ', raw_query).strip()
-        retrieved = retrieve(query, filters={"document_type": "RBI Circular"}) if query else []
+        filters = {"document_type": state["document_type"]} if state.get("document_type") else {}
+        retrieved = retrieve(query, filters=filters) if query else []
         related_clauses = "\n".join(r.get("text", "") for r in retrieved[:5])
         graph_context = ""
-        if state.get("clauses"):
-            first_clause = state["clauses"][0].get("id")
-            regulation_id = state.get("regulation_id")
-            if first_clause and regulation_id:
-                full_clause_id = f"{regulation_id}-{first_clause}"
+        regulation_id = state.get("regulation_id")
+        if state.get("clauses") and regulation_id:
+            seen_texts = set()
+            graph_parts = []
+            for clause in state["clauses"][:20]:
+                clause_id = clause.get("id")
+                if not clause_id:
+                    continue
+                full_clause_id = f"{regulation_id}-{clause_id}"
                 graph_result = query_graph(
                     "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(r) RETURN r.text AS text LIMIT 5",
                     {"id": full_clause_id},
                 )
-                graph_context = "\n".join(r.get("text", "") for r in graph_result)
+                for r in graph_result:
+                    text = r.get("text", "")
+                    if text and text not in seen_texts:
+                        seen_texts.add(text)
+                        graph_parts.append(text)
+            graph_context = "\n".join(graph_parts)
 
         context = f"Retrieved context:\n{related_clauses}\n\nGraph context:\n{graph_context}".strip()
 
@@ -151,7 +161,8 @@ class AgentNodes:
 
     def generate_maps(self, state: dict) -> dict:
         req_text = json.dumps(state.get("requirements", []))
-        historical = retrieve("Measurable Action Point implementation plan", filters={"document_type": "RBI Circular"})
+        filters = {"document_type": state["document_type"]} if state.get("document_type") else {}
+        historical = retrieve("Measurable Action Point implementation plan", filters=filters)
         historical_context = "\n".join(h.get("text", "") for h in historical[:3])
 
         response = self.client.chat(
