@@ -16,9 +16,9 @@ export default function SettingsPage() {
 
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
       {/* Tab nav */}
-      <div className="flex items-center gap-1 mb-6 p-1" style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div className="flex items-center gap-1 mb-6 p-1" style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', alignSelf: 'flex-start' }}>
         {tabs.map(tab => (
           <button
             key={tab}
@@ -42,7 +42,7 @@ export default function SettingsPage() {
       </div>
 
       {activeTab === 'Profile' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, flex: 1 }}>
           <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 24 }}>Personal Information</h3>
             <div className="flex items-center gap-4 mb-6">

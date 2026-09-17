@@ -185,8 +185,8 @@ export default function App() {
             title={pageTitles[currentPage]}
             onPaletteOpen={() => setPaletteOpen(true)}
           />
-          <main className="flex-1 overflow-auto" style={{ padding: '28px 28px 48px' }}>
-            <div key={currentPage} style={{ animation: 'fadeInUp 0.28s ease forwards' }}>
+          <main className="flex-1 overflow-auto flex flex-col" style={{ padding: '28px 28px 48px' }}>
+            <div key={currentPage} className="flex-1 flex flex-col" style={{ animation: 'fadeInUp 0.28s ease forwards' }}>
               {renderPage()}
             </div>
           </main>

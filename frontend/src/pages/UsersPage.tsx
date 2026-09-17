@@ -101,7 +101,7 @@ export default function UsersPage() {
     <>
       {showInvite && <InviteModal onClose={() => setShowInvite(false)} onSent={email => toast('success', 'Invitation sent', `Invite sent to ${email}`)} />}
 
-      <div style={{ width: '100%' }}>
+      <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
@@ -133,7 +133,7 @@ export default function UsersPage() {
         </div>
 
         {/* Table */}
-        <div style={{ background: '#FFFFFF', borderRadius: 26, border: '1px solid #E8E8E3', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+        <div style={{ background: '#FFFFFF', flex: 1, borderRadius: 26, border: '1px solid #E8E8E3', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#FAFAF8', borderBottom: '1px solid #E8E8E3' }}>

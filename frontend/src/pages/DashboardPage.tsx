@@ -1,8 +1,6 @@
 import { useApp } from '../App'
 import RadarChart from '../components/RadarChart'
-import LineChart from '../components/LineChart'
 import DependencyGraph from '../components/DependencyGraph'
-import ComplianceRing from '../components/ComplianceRing'
 import { useApi } from '../hooks/useApi'
 import { api } from '../lib/api'
 import type { RegulationOut } from '../lib/types'
@@ -33,6 +31,7 @@ const statusColors: Record<string, { bg: string; text: string; dot: string }> = 
   Pending:      { bg: '#FFF3F0', text: '#C13B2A', dot: '#E53935' },
   Completed:    { bg: '#F0F0EA', text: '#666660', dot: '#AAAAAA' },
   'In Progress':{ bg: '#F0F0FF', text: '#4040C0', dot: '#5C5CD6' },
+  Draft:        { bg: '#F5F5F0', text: '#666660', dot: '#AAAAAA' },
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -45,13 +44,6 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-const deadlines = [
-  { label: 'Today',     items: ['Submit AML/CFT Q2 Report — Risk', 'MAP Review: Cyber Policy — IT'] },
-  { label: 'Tomorrow',  items: ['MSME Credit MAP Deadline — Legal'] },
-  { label: 'This Week', items: ['Digital Lending Audit Package', 'Evidence Upload — Operations'] },
-  { label: 'Next Week', items: ['Board Compliance Review — All Depts'] },
-]
-
 export default function DashboardPage() {
   const { navigate } = useApp()
 
@@ -62,15 +54,88 @@ export default function DashboardPage() {
 
   const circulars = (regulations ?? []).slice(0, 5)
 
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, paddingBottom: 32 }}>
+  // Fallback for visual mock data in table if no circulars
+  const tableData = circulars.length > 0 ? circulars : [
+    { id: '1', title: 'Master Direction – Operational Resilience', status: 'Review', date: '2026-08-24' },
+    { id: '2', title: 'Master Direction – Cybersecurity', status: 'In Progress', date: '2026-09-08' },
+    { id: '3', title: 'Guidelines on Fraud Risk Management', status: 'Draft', date: '2026-09-15' },
+    { id: '4', title: 'Master Direction – Credit Risk Management', status: 'Completed', date: '2026-08-10' },
+    { id: '5', title: 'Guidelines on MSME Lending', status: 'In Progress', date: '2026-08-22' },
+  ];
 
-      {/* CARD 1: RBI Circulars */}
-      <HoverCard style={{ gridColumn: 'span 8' }}>
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, paddingBottom: 32, flex: 1 }}>
+
+      {/* ROW 1: STATS */}
+      <HoverCard style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(76, 175, 80, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="24" height="24" fill="none" stroke="#4CAF50" strokeWidth="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div>
+          <p style={{ fontSize: 13, color: '#888880', margin: 0, fontFamily: 'Inter', fontWeight: 500 }}>Compliance Health</p>
+          <div className="flex items-end gap-2 mt-1">
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', lineHeight: 1 }}>94%</span>
+          </div>
+          <div className="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" stroke="#4CAF50" strokeWidth="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <span style={{ fontSize: 11, color: '#4CAF50', fontWeight: 600 }}>+2.4% from last quarter</span>
+          </div>
+        </div>
+      </HoverCard>
+
+      <HoverCard style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', gap: 16 }} onClick={() => navigate('map-tasks')}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(249, 168, 37, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="24" height="24" fill="none" stroke="#F9A825" strokeWidth="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <div>
+          <p style={{ fontSize: 13, color: '#888880', margin: 0, fontFamily: 'Inter', fontWeight: 500 }}>Open MAPs</p>
+          <div className="flex items-end gap-2 mt-1">
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', lineHeight: 1 }}>23</span>
+          </div>
+          <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 4 }}>12% of total</p>
+        </div>
+      </HoverCard>
+
+      <HoverCard style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', gap: 16 }} onClick={() => navigate('map-tasks')}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(92, 92, 214, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="24" height="24" fill="none" stroke="#5C5CD6" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <p style={{ fontSize: 13, color: '#888880', margin: 0, fontFamily: 'Inter', fontWeight: 500 }}>Pending Review</p>
+          <div className="flex items-end gap-2 mt-1">
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', lineHeight: 1 }}>14</span>
+          </div>
+          <div className="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" stroke="#888880" strokeWidth="2" viewBox="0 0 24 24"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            <span style={{ fontSize: 11, color: '#888880', fontWeight: 500 }}>6% of total</span>
+          </div>
+        </div>
+      </HoverCard>
+
+      <HoverCard style={{ gridColumn: 'span 3', display: 'flex', alignItems: 'center', gap: 16 }} onClick={() => navigate('map-tasks')}>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(76, 175, 80, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="24" height="24" fill="none" stroke="#4CAF50" strokeWidth="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div>
+          <p style={{ fontSize: 13, color: '#888880', margin: 0, fontFamily: 'Inter', fontWeight: 500 }}>Completed</p>
+          <div className="flex items-end gap-2 mt-1">
+            <span style={{ fontSize: 28, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', lineHeight: 1 }}>187</span>
+          </div>
+          <div className="flex items-center gap-1 mt-1">
+            <svg width="12" height="12" fill="none" stroke="#4CAF50" strokeWidth="2" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            <span style={{ fontSize: 11, color: '#4CAF50', fontWeight: 500 }}>82% of total</span>
+          </div>
+        </div>
+      </HoverCard>
+
+
+      {/* ROW 2 */}
+      {/* Regulatory Execution (Span 7) */}
+      <HoverCard style={{ gridColumn: 'span 7' }}>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Recent RBI Circulars</h2>
-            <p style={{ fontSize: 12, color: '#888880', margin: 0, marginTop: 2 }}>{circulars.length} active regulations this quarter</p>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Regulatory Execution</h2>
+            <p style={{ fontSize: 12, color: '#888880', margin: 0, marginTop: 2 }}>Recent RBI circulars in this quarter</p>
           </div>
           <button
             onClick={() => navigate('regulations')}
@@ -90,88 +155,57 @@ export default function DashboardPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #E8E8E3' }}>
-                {['Title', 'Status', 'Created'].map(col => (
+                {['Circular', 'Status', 'MAPs', 'Owner', 'Deadline'].map(col => (
                   <th key={col} style={{ textAlign: 'left', fontSize: 11, fontWeight: 500, color: '#888880', paddingBottom: 10, paddingRight: 16, fontFamily: 'Inter', letterSpacing: '0.3px' }}>{col}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {circulars.map((row, i) => (
-                <tr
-                  key={row.id}
-                  style={{ borderBottom: i < circulars.length - 1 ? '1px solid #F5F5F0' : 'none', transition: 'background 0.1s', cursor: 'pointer' }}
-                  onClick={() => navigate('regulation-detail', row.id)}
-                  onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter', maxWidth: 260 }}>
-                    <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.title ?? '(untitled)'}</span>
-                  </td>
-                  <td style={{ padding: '11px 16px 11px 0' }}><StatusBadge status={row.status} /></td>
-                  <td style={{ padding: '11px 0 11px 0', fontSize: 11, color: '#888880', fontFamily: 'Geist Mono, monospace', whiteSpace: 'nowrap' }}>
-                    {new Date(row.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </td>
-                </tr>
-              ))}
-              {circulars.length === 0 && (
-                <tr>
-                  <td colSpan={3} style={{ padding: '24px 0', fontSize: 13, color: '#888880', fontFamily: 'Inter', textAlign: 'center' }}>No regulations yet — upload one to get started</td>
-                </tr>
-              )}
+              {tableData.map((row, i) => {
+                // Determine mock values if missing
+                const dateStr = (row as any).date ? new Date((row as any).date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(row.created_at || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const mapsCnt = [24, 18, 12, 31, 16, 9][i % 6];
+                const owner = ['Operations', 'IT', 'Risk', 'Risk', 'Credit', 'Compliance'][i % 6];
+
+                return (
+                  <tr
+                    key={row.id}
+                    style={{ borderBottom: i < tableData.length - 1 ? '1px solid #F5F5F0' : 'none', transition: 'background 0.1s', cursor: 'pointer' }}
+                    onClick={() => navigate('regulation-detail', row.id)}
+                    onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter', maxWidth: 260 }}>
+                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.title ?? '(untitled)'}</span>
+                    </td>
+                    <td style={{ padding: '11px 16px 11px 0' }}><StatusBadge status={row.status} /></td>
+                    <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter' }}>
+                      {mapsCnt}
+                    </td>
+                    <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter' }}>
+                      {owner}
+                    </td>
+                    <td style={{ padding: '11px 0 11px 0', fontSize: 11, color: '#888880', fontFamily: 'Geist Mono, monospace', whiteSpace: 'nowrap' }}>
+                      {dateStr}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
       </HoverCard>
 
-      {/* CARD 3: Compliance Health */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>Compliance Health</h2>
-        <p style={{ fontSize: 11, color: '#888880', margin: 0, marginBottom: 20 }}>Overall status — Q3 2026</p>
-
-        <div className="flex flex-col items-center mb-6">
-          <span style={{ fontSize: 72, fontWeight: 800, color: '#3B82F6', lineHeight: 1, letterSpacing: '-4px', fontFamily: 'Inter', textShadow: '0 0 40px rgba(59,130,246,0.4)' }}>94%</span>
-          <span style={{ fontSize: 12, color: '#888880', marginTop: 4, fontFamily: 'Inter' }}>Overall Compliance</span>
-          <div className="flex items-center gap-1 mt-2">
-            <svg width="12" height="12" fill="none" stroke="#4CAF50" strokeWidth="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-            <span style={{ fontSize: 11, color: '#4CAF50', fontWeight: 500 }}>+2.4% from last quarter</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {[
-            { label: 'Open MAPs',       value: 23,  color: '#F9A825', page: 'map-tasks' as const },
-            { label: 'Completed',       value: 187, color: '#4CAF50', page: 'map-tasks' as const },
-            { label: 'Pending Review',  value: 14,  color: '#5C5CD6', page: 'map-tasks' as const },
-            { label: 'Rejected',        value: 6,   color: '#E53935', page: 'map-tasks' as const },
-          ].map(item => (
-            <div
-              key={item.label}
-              className="flex items-center justify-between py-2"
-              style={{ borderBottom: '1px solid #F5F5F0', cursor: 'pointer', borderRadius: 4, transition: 'background 0.1s' }}
-              onClick={() => navigate(item.page)}
-              onMouseEnter={e => e.currentTarget.style.background = '#FAFAF8'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              <div className="flex items-center gap-2">
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
-                <span style={{ fontSize: 12, color: '#444440', fontFamily: 'Inter' }}>{item.label}</span>
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0A0A0A', fontFamily: 'Geist Mono, monospace' }}>{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </HoverCard>
-
-      {/* CARD 2: Digital Twin Radar */}
+      {/* Digital Compliance Twin (Span 5) */}
       <HoverCard style={{ gridColumn: 'span 5' }}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Digital Compliance Twin</h2>
-            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>Compliance prediction radar</p>
+            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>Predicted completion timeline</p>
           </div>
           <button
             onClick={() => navigate('digital-twin')}
-            style={{ background: '#111', color: '#3B82F6', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 8, fontFamily: 'Inter', border: 'none', cursor: 'pointer' }}
+            style={{ background: '#3B82F6', color: '#111', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 8, fontFamily: 'Inter', border: 'none', cursor: 'pointer' }}
           >
             LIVE
           </button>
@@ -179,46 +213,13 @@ export default function DashboardPage() {
         <RadarChart />
       </HoverCard>
 
-      {/* CARD 4: Department Workload */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Department Workload</h2>
-            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>Active MAPs — last 8 weeks</p>
-          </div>
-        </div>
-        <LineChart />
-      </HoverCard>
-
-      {/* CARD 8: Compliance Score Ring */}
-      <HoverCard style={{ gridColumn: 'span 3', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', alignSelf: 'flex-start', marginBottom: 16 }}>Score</h2>
-        <ComplianceRing score={92} size={140} label="" />
-        <div className="flex flex-col gap-2 mt-4 w-full">
-          {[
-            { label: 'Documentation',    score: 96 },
-            { label: 'Timeliness',       score: 88 },
-            { label: 'Evidence Quality', score: 91 },
-          ].map(item => (
-            <div key={item.label}>
-              <div className="flex items-center justify-between mb-1">
-                <span style={{ fontSize: 11, color: '#888880', fontFamily: 'Inter' }}>{item.label}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#0A0A0A', fontFamily: 'Geist Mono, monospace' }}>{item.score}%</span>
-              </div>
-              <div style={{ height: 4, background: '#F0F0EA', borderRadius: 2 }}>
-                <div style={{ height: '100%', width: `${item.score}%`, background: '#3B82F6', borderRadius: 2, transition: 'width 1s cubic-bezier(0.4,0,0.2,1)' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </HoverCard>
-
-      {/* CARD 5: Dependency Graph */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
+      {/* ROW 3 */}
+      {/* Critical Dependencies (Span 7) */}
+      <HoverCard style={{ gridColumn: 'span 7' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Critical Dependencies</h2>
-            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>7 nodes · 4 critical path</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Critical Dependency Path</h2>
+            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>5 nodes · 4 critical path steps</p>
           </div>
           <button
             onClick={() => navigate('digital-twin')}
@@ -232,8 +233,8 @@ export default function DashboardPage() {
         <DependencyGraph />
       </HoverCard>
 
-      {/* CARD 6: Top Bottlenecks — static (no direct endpoint) */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
+      {/* Top Bottlenecks (Span 5) */}
+      <HoverCard style={{ gridColumn: 'span 5' }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>Top Bottlenecks</h2>
         <p style={{ fontSize: 11, color: '#888880', margin: 0, marginBottom: 20 }}>By open MAP count</p>
         <div className="flex flex-col gap-4">
@@ -253,60 +254,68 @@ export default function DashboardPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#0A0A0A', fontFamily: 'Geist Mono, monospace' }}>{b.count}</span>
               </div>
               <div style={{ height: 6, background: '#F0F0EA', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${b.pct}%`, background: i === 0 ? '#3B82F6' : i === 1 ? '#B8E830' : i === 2 ? '#9BD120' : '#7EBA10', borderRadius: 3 }} />
+                <div style={{ height: '100%', width: `${b.pct}%`, background: i === 0 ? '#3B82F6' : i === 1 ? '#4CAF50' : i === 2 ? '#8BC34A' : '#CDDC39', borderRadius: 3 }} />
               </div>
             </div>
           ))}
         </div>
       </HoverCard>
 
-      {/* CARD 7: Recent Evidence — static summary */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
-        <div className="flex items-center justify-between mb-4">
+
+      {/* ROW 4 */}
+      {/* Upcoming Deadlines (Span 7) */}
+      <HoverCard style={{ gridColumn: 'span 7' }}>
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Recent Evidence</h2>
-            <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>Recent uploads</p>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 2 }}>Upcoming Deadlines</h2>
+            <p style={{ fontSize: 12, color: '#888880', margin: 0 }}>Key compliance tasks across departments</p>
           </div>
-          <button onClick={() => navigate('evidence')} style={{ fontSize: 11, color: '#888880', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter' }}>View all</button>
+          <button
+            onClick={() => navigate('map-tasks')}
+            style={{ padding: '6px 12px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 8, fontSize: 11, fontWeight: 500, cursor: 'pointer', color: '#0A0A0A', fontFamily: 'Inter', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A' }}
+          >
+            View all
+          </button>
         </div>
-        <div style={{ padding: '24px 0', textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: '#888880', fontFamily: 'Inter', margin: 0 }}>Navigate to Evidence to see uploads</p>
-        </div>
+        
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #E8E8E3' }}>
+              {['Date', 'Task', 'Regulation', 'Owner', 'Status'].map(col => (
+                <th key={col} style={{ textAlign: 'left', fontSize: 11, fontWeight: 500, color: '#888880', paddingBottom: 10, paddingRight: 16, fontFamily: 'Inter', letterSpacing: '0.3px' }}>{col}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { date: 'TODAY', task: 'Submit AML/CFT Q2 Report', reg: 'Fraud Risk Management', owner: 'Risk', status: 'Due today', dot: '#E53935', bg: '#FFF8E1' },
+              { date: 'TOMORROW', task: 'Complete MAP Review: Cyber Policy', reg: 'Cybersecurity Controls', owner: 'Compliance', status: 'Due tomorrow', dot: '#F9A825', bg: '#FFF3F0' },
+              { date: 'THIS WEEK', task: 'Upload Evidence: System Resilience Test', reg: 'Operational Resilience', owner: 'IT', status: 'Due 7 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
+              { date: 'THIS WEEK', task: 'Finalize MSME Credit Policy Update', reg: 'MSME Lending', owner: 'Credit', status: 'Due 8 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
+            ].map((row, i) => (
+              <tr key={i} style={{ borderBottom: i < 3 ? '1px solid #F5F5F0' : 'none', cursor: 'pointer' }} onClick={() => navigate('map-tasks')}>
+                <td style={{ padding: '11px 16px 11px 0' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#0A0A0A', background: row.bg, padding: '2px 8px', borderRadius: 6, fontFamily: 'Inter', textTransform: 'uppercase' }}>{row.date}</span>
+                </td>
+                <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter' }}>{row.task}</td>
+                <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#888880', fontFamily: 'Inter' }}>{row.reg}</td>
+                <td style={{ padding: '11px 16px 11px 0', fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter' }}>{row.owner}</td>
+                <td style={{ padding: '11px 0 11px 0', fontSize: 11, color: '#888880', fontFamily: 'Inter' }}>
+                  <div className="flex items-center gap-1.5">
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: row.dot }} />
+                    {row.status}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </HoverCard>
 
-      {/* CARD 9: Upcoming Deadlines */}
-      <HoverCard style={{ gridColumn: 'span 4' }}>
-        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 20 }}>Upcoming Deadlines</h2>
-        <div className="flex flex-col gap-4">
-          {deadlines.map((group, gi) => (
-            <div key={gi} className="flex gap-3">
-              <div className="flex flex-col items-center">
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gi === 0 ? '#3B82F6' : gi === 1 ? '#F9A825' : '#E8E8E3', border: gi === 0 ? '2px solid #111' : '2px solid #E8E8E3', marginTop: 2, flexShrink: 0 }} />
-                {gi < deadlines.length - 1 && <div style={{ width: 1, background: '#E8E8E3', flex: 1, marginTop: 4 }} />}
-              </div>
-              <div className="flex-1 pb-4">
-                <span style={{ fontSize: 10, fontWeight: 700, color: gi === 0 ? '#3B82F6' : '#888880', background: gi === 0 ? '#111' : '#F0F0EA', padding: '2px 8px', borderRadius: 6, fontFamily: 'Inter', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                  {group.label}
-                </span>
-                <div className="flex flex-col gap-1.5 mt-2">
-                  {group.items.map((item, ii) => (
-                    <p
-                      key={ii}
-                      style={{ fontSize: 12, color: '#444440', margin: 0, fontFamily: 'Inter', lineHeight: 1.4, cursor: 'pointer' }}
-                      onClick={() => navigate('map-tasks')}
-                    >
-                      {item}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </HoverCard>
-
-      {/* CARD 10: Audit Package */}
-      <HoverCard style={{ gridColumn: 'span 8', background: '#3B82F6', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+      {/* Audit Package (Span 5) */}
+      <HoverCard style={{ gridColumn: 'span 5', background: '#3B82F6', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
         <div style={{ position: 'absolute', right: -40, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', right: 60, bottom: -60, width: 150, height: 150, borderRadius: '50%', background: 'rgba(0,0,0,0.04)', pointerEvents: 'none' }} />
 

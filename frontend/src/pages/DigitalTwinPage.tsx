@@ -80,7 +80,7 @@ export default function DigitalTwinPage() {
   const pPath = predictions.map((d, i) => `${i === 0 ? 'M' : 'L'} ${px(i).toFixed(1)} ${py(d.score).toFixed(1)}`).join(' ')
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20, width: '100%' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridTemplateRows: '1fr', gap: 20, width: '100%', flex: 1 }}>
 
       {/* Main Radar */}
       <div className="card-hover" style={{ ...card, gridColumn: 'span 6' }}>

@@ -54,7 +54,7 @@ export default function ReportsPage() {
   }))
 
   return (
-    <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 20 }}>
+    <div style={{ width: '100%', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gridTemplateRows: 'auto 1fr', gap: 20 }}>
 
       {/* Summary Ring Cards */}
       <div style={{ gridColumn: 'span 8', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
