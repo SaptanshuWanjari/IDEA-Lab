@@ -1,4 +1,4 @@
-.PHONY: setup up down logs health models test shell-api shell-web
+.PHONY: setup up down logs health models test shell-api
 
 # Read model names from .env as the single source of truth.
 ifneq (,$(wildcard .env))
@@ -65,6 +65,3 @@ print('ok  (\"' + r.strip() + '\")')"
 
 shell-api:
 	docker compose exec api bash
-
-shell-web:
-	docker compose exec web sh

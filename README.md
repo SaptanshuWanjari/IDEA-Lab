@@ -6,7 +6,7 @@ A Next.js + FastAPI platform for ingesting RBI circulars, generating human-revie
 
 ## Tech Stack
 
-- **Frontend:** Next.js 16, React, TailwindCSS
+- **Frontend:** React, Vite, TailwindCSS (Electron Desktop App)
 - **Backend:** FastAPI, SQLAlchemy (async), Pydantic, LangGraph
 - **Databases:** PostgreSQL, Qdrant (vectors), Neo4j (knowledge graph)
 - **Storage:** MinIO
@@ -49,11 +49,20 @@ This starts:
 - Neo4j (`localhost:7474`, `localhost:7687`)
 - MinIO (`localhost:9000`, console `localhost:9001`)
 - API (`localhost:8000`)
-- Web (`localhost:3000`)
 
 All services have Docker healthchecks, and the API waits for dependencies to be healthy.
 
-### 3. Pull Ollama Models
+### 4. Start Desktop App
+
+The UI is an Electron desktop application built with React and Vite.
+
+```bash
+cd frontend
+npm install
+npm run dev:desktop
+```
+
+### 5. Pull Ollama Models
 
 The Makefile does not pull models automatically so you can choose your own.
 
@@ -80,14 +89,14 @@ OLLAMA_EMBEDDING_MODEL=qwen3-embedding:0.6b
 OLLAMA_RERANK_MODEL=minimax-m3:cloud
 ```
 
-### 4. Verify Services
+### 6. Verify Services
 
 ```bash
 curl http://localhost:8000/health
 # Expected: {"status":"ok"}
 ```
 
-### 5. Run Tests
+### 7. Run Tests
 
 ```bash
 cd backend
@@ -127,7 +136,7 @@ IDEA-Lab/
 │   ├── tests/
 │   ├── pyproject.toml
 │   └── requirements.txt
-├── frontend/                 # Next.js app
+├── frontend/                 # Electron Desktop App
 ├── scripts/
 │   └── seed_demo.py         # Demo data seeder
 ├── docker-compose.yml

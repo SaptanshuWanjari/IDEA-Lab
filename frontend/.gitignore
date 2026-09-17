@@ -1,15 +1,13 @@
-# Node
 node_modules/
-.next/
-out/
-*.tsbuildinfo
-next-env.d.ts
-
-# Build
 dist/
 build/
-
-# env
-.env
-.env.local
-.env.production
+.cache/
+.env*
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*-debug.log*
+logs/
+*.log
+.claude-replay.*
+.tmp-*
