@@ -59,7 +59,7 @@ export default function MapTasksPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2 p-1" style={{ background: '#FFFFFF', border: '1px solid #E8E8E3', borderRadius: 10 }}>
           {(['list', 'kanban'] as const).map(v => (
-            <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: view === v ? 600 : 400, background: view === v ? '#111' : 'transparent', color: view === v ? '#3B82F6' : '#888880', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+            <button key={v} onClick={() => setView(v)} style={{ padding: '6px 14px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: view === v ? 600 : 400, background: view === v ? '#111' : 'transparent', color: view === v ? '#8ad8ff' : '#888880', textTransform: 'capitalize', transition: 'all 0.15s' }}>
               {v === 'list'
                 ? <span className="flex items-center gap-1.5"><svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> List</span>
                 : <span className="flex items-center gap-1.5"><svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg> Kanban</span>
@@ -123,7 +123,7 @@ export default function MapTasksPage() {
                       <button
                         onClick={e => { e.stopPropagation(); navigate('map-review', row.id) }}
                         style={{ padding: '4px 10px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 6, fontSize: 11, cursor: 'pointer', fontFamily: 'Inter', color: '#0A0A0A', transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#111' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff'; e.currentTarget.style.borderColor = '#111' }}
                         onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = '#E8E8E3' }}
                       >
                         Review

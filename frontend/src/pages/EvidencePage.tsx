@@ -66,7 +66,7 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
               <button
                 onClick={handlePick}
                 style={{ width: '100%', border: '2px dashed #E8E8E3', borderRadius: 16, padding: '32px 24px', textAlign: 'center', cursor: 'pointer', background: '#FAFAF8', transition: 'all 0.15s', marginBottom: 20 }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.background = 'rgba(59,130,246,0.04)' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#8ad8ff'; e.currentTarget.style.background = 'rgba(138,216,255,0.04)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E8E3'; e.currentTarget.style.background = '#FAFAF8' }}
               >
                 <div style={{ width: 48, height: 48, background: '#F5F5F0', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
@@ -102,7 +102,7 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
               <button
                 onClick={handleUpload}
                 disabled={uploading || !picked}
-                style={{ flex: 1, height: 42, background: picked ? '#111' : '#F5F5F0', color: picked ? '#3B82F6' : '#AAAAAA', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: picked && !uploading ? 'pointer' : 'not-allowed', fontFamily: 'Inter', opacity: uploading ? 0.7 : 1 }}
+                style={{ flex: 1, height: 42, background: picked ? '#111' : '#F5F5F0', color: picked ? '#8ad8ff' : '#AAAAAA', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: picked && !uploading ? 'pointer' : 'not-allowed', fontFamily: 'Inter', opacity: uploading ? 0.7 : 1 }}
               >
                 {uploading ? 'Uploading...' : 'Submit Evidence'}
               </button>
@@ -140,7 +140,7 @@ export default function EvidencePage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
-            { label: 'Submissions',    value: recentUploads.length.toString(), color: '#3B82F6' },
+            { label: 'Submissions',    value: recentUploads.length.toString(), color: '#8ad8ff' },
             { label: 'Accepted Types', value: '5',   color: '#4CAF50' },
             { label: 'Max File Size',  value: '20MB', color: '#F9A825' },
             { label: 'Linked to MAP',  value: selectedId ? 'Yes' : 'No', color: '#5C5CD6' },
@@ -164,7 +164,7 @@ export default function EvidencePage() {
           </div>
           <button
             onClick={() => setShowUpload(true)}
-            style={{ padding: '9px 18px', background: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '9px 18px', background: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Upload Evidence

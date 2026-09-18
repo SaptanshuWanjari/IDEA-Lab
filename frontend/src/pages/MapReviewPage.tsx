@@ -78,7 +78,7 @@ export default function MapReviewPage() {
     return (
       <div style={{ textAlign: 'center', padding: '80px 0' }}>
         <p style={{ fontSize: 14, color: '#888880', fontFamily: 'Inter' }}>No MAP selected.</p>
-        <button onClick={() => navigate('map-tasks')} style={{ marginTop: 16, padding: '8px 20px', background: '#111', color: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}>← Back</button>
+        <button onClick={() => navigate('map-tasks')} style={{ marginTop: 16, padding: '8px 20px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}>← Back</button>
       </div>
     )
   }
@@ -129,7 +129,7 @@ export default function MapReviewPage() {
                       <div style={{ position: 'relative', width: 80, height: 80 }}>
                         <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
                           <circle cx="40" cy="40" r="32" fill="none" stroke="#F0F0EA" strokeWidth="8"/>
-                          <circle cx="40" cy="40" r="32" fill="none" stroke="#3B82F6" strokeWidth="8" strokeLinecap="round"
+                          <circle cx="40" cy="40" r="32" fill="none" stroke="#8ad8ff" strokeWidth="8" strokeLinecap="round"
                             strokeDasharray={`${2 * Math.PI * 32}`} strokeDashoffset={`${2 * Math.PI * 32 * (1 - mapData.confidence)}`}/>
                         </svg>
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -170,7 +170,7 @@ export default function MapReviewPage() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('evidence', selectedId)} style={{ marginTop: 14, padding: '6px 12px', background: '#3B82F6', border: 'none', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111' }}>Upload Evidence</button>
+              <button onClick={() => navigate('evidence', selectedId)} style={{ marginTop: 14, padding: '6px 12px', background: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111' }}>Upload Evidence</button>
             </div>
           )}
 
@@ -197,7 +197,7 @@ export default function MapReviewPage() {
 
             {submitted ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ width: 44, height: 44, background: decision === 'approve' ? '#3B82F6' : '#FF6B6B', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <div style={{ width: 44, height: 44, background: decision === 'approve' ? '#8ad8ff' : '#FF6B6B', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
                   <svg width="20" height="20" fill="none" stroke={decision === 'approve' ? '#111' : '#fff'} strokeWidth="2.5" viewBox="0 0 24 24">
                     {decision === 'approve' ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
                   </svg>
@@ -212,7 +212,7 @@ export default function MapReviewPage() {
                 <div className="flex flex-col gap-2 mb-4">
                   {(['approve', 'reject'] as const).map(d => (
                     <button key={d} onClick={() => setDecision(d)}
-                      style={{ padding: '10px 16px', borderRadius: 12, border: `2px solid ${decision === d ? (d === 'approve' ? '#3B82F6' : '#FF6B6B') : 'rgba(255,255,255,0.1)'}`, background: decision === d ? (d === 'approve' ? '#3B82F6' : '#FF6B6B') : 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', color: decision === d ? '#111' : '#FFFFFF', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      style={{ padding: '10px 16px', borderRadius: 12, border: `2px solid ${decision === d ? (d === 'approve' ? '#8ad8ff' : '#FF6B6B') : 'rgba(255,255,255,0.1)'}`, background: decision === d ? (d === 'approve' ? '#8ad8ff' : '#FF6B6B') : 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', color: decision === d ? '#111' : '#FFFFFF', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8 }}>
                       <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                         {d === 'approve' ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
                       </svg>
@@ -229,7 +229,7 @@ export default function MapReviewPage() {
                 <button
                   onClick={handleSubmitReview}
                   disabled={!decision || submitting}
-                  style={{ width: '100%', padding: '11px', marginTop: 12, background: decision ? '#3B82F6' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: decision && !submitting ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: decision ? '#111' : '#666660', transition: 'all 0.15s' }}
+                  style={{ width: '100%', padding: '11px', marginTop: 12, background: decision ? '#8ad8ff' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: decision && !submitting ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: decision ? '#111' : '#666660', transition: 'all 0.15s' }}
                 >
                   {submitting ? 'Submitting…' : 'Submit Review'}
                 </button>
@@ -245,7 +245,7 @@ export default function MapReviewPage() {
                 <p style={{ fontSize: 12, color: '#AAAAAA', fontFamily: 'Inter', margin: 0 }}>No comments yet</p>
               ) : comments.map((c, i) => (
                 <div key={i} className="flex gap-3">
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#111', flexShrink: 0, fontFamily: 'Inter' }}>{c.avatar}</div>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#8ad8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#111', flexShrink: 0, fontFamily: 'Inter' }}>{c.avatar}</div>
                   <div style={{ flex: 1 }}>
                     <div className="flex items-center gap-2 mb-1">
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', fontFamily: 'Inter' }}>{c.author}</span>
@@ -263,7 +263,7 @@ export default function MapReviewPage() {
                 placeholder="Add a comment..."
                 onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handlePostComment() }}
                 style={{ width: '100%', height: 72, border: '1px solid #E8E8E3', borderRadius: 10, padding: '10px 12px', fontSize: 12, fontFamily: 'Inter', background: '#FAFAF8', color: '#0A0A0A', resize: 'none', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#3B82F6'}
+                onFocus={e => e.currentTarget.style.borderColor = '#8ad8ff'}
                 onBlur={e => e.currentTarget.style.borderColor = '#E8E8E3'}
               />
               <div className="flex items-center justify-between mt-2">
@@ -271,7 +271,7 @@ export default function MapReviewPage() {
                 <button
                   onClick={handlePostComment}
                   disabled={!commentText.trim()}
-                  style={{ padding: '7px 14px', background: commentText.trim() ? '#111' : '#F5F5F0', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: commentText.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: commentText.trim() ? '#3B82F6' : '#AAAAAA', transition: 'all 0.15s' }}
+                  style={{ padding: '7px 14px', background: commentText.trim() ? '#111' : '#F5F5F0', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: commentText.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: commentText.trim() ? '#8ad8ff' : '#AAAAAA', transition: 'all 0.15s' }}
                 >
                   Post
                 </button>

@@ -12,7 +12,7 @@ const users = [
 ]
 
 const roles = ['Compliance Officer', 'IT Risk Manager', 'Operations Lead', 'Risk Analyst', 'Legal Counsel', 'Compliance Analyst', 'Auditor', 'Viewer']
-const avatarColors = ['#3B82F6', '#4CAF50', '#5C5CD6', '#F9A825', '#FF6B6B', '#00BCD4', '#9C27B0']
+const avatarColors = ['#8ad8ff', '#4CAF50', '#5C5CD6', '#F9A825', '#FF6B6B', '#00BCD4', '#9C27B0']
 
 function InviteModal({ onClose, onSent }: { onClose: () => void; onSent: (email: string) => void }) {
   const [sent, setSent] = useState(false)
@@ -44,7 +44,7 @@ function InviteModal({ onClose, onSent }: { onClose: () => void; onSent: (email:
                 onChange={e => setEmail(e.target.value)}
                 placeholder="colleague@pvtbank.com"
                 style={{ width: '100%', height: 40, border: '1px solid #E8E8E3', borderRadius: 10, padding: '0 14px', fontSize: 13, fontFamily: 'Inter', outline: 'none', background: '#FAFAF8', color: '#0A0A0A', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#3B82F6'}
+                onFocus={e => e.currentTarget.style.borderColor = '#8ad8ff'}
                 onBlur={e => e.currentTarget.style.borderColor = '#E8E8E3'}
               />
             </div>
@@ -63,7 +63,7 @@ function InviteModal({ onClose, onSent }: { onClose: () => void; onSent: (email:
             <div className="flex items-center gap-3 mt-2">
               <button
                 onClick={() => { setSent(true); onSent(email); setTimeout(onClose, 2400) }}
-                style={{ flex: 1, height: 42, background: '#111', color: '#3B82F6', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}
+                style={{ flex: 1, height: 42, background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}
               >
                 Send Invitation
               </button>
@@ -105,7 +105,7 @@ export default function UsersPage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
-            { label: 'Total Members', value: users.length, color: '#3B82F6' },
+            { label: 'Total Members', value: users.length, color: '#8ad8ff' },
             { label: 'Active Now', value: users.filter(u => u.status === 'Active').length, color: '#4CAF50' },
             { label: 'Pending Invite', value: users.filter(u => u.status === 'Pending').length, color: '#F9A825' },
             { label: 'Departments', value: 6, color: '#5C5CD6' },
@@ -125,7 +125,7 @@ export default function UsersPage() {
           </div>
           <button
             onClick={() => setShowInvite(true)}
-            style={{ padding: '9px 18px', background: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}
+            style={{ padding: '9px 18px', background: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Invite Member
@@ -153,7 +153,7 @@ export default function UsersPage() {
                   >
                     <td style={{ padding: '14px 20px' }}>
                       <div className="flex items-center gap-3">
-                        <div style={{ width: 36, height: 36, background: avatarColor, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: avatarColor === '#3B82F6' ? '#111' : '#111', flexShrink: 0, fontFamily: 'Inter' }}>
+                        <div style={{ width: 36, height: 36, background: avatarColor, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: avatarColor === '#8ad8ff' ? '#111' : '#111', flexShrink: 0, fontFamily: 'Inter' }}>
                           {user.avatar}
                         </div>
                         <div>
@@ -183,7 +183,7 @@ export default function UsersPage() {
                         <button
                           onClick={e => { e.stopPropagation(); toast('info', 'Edit user', `Opening editor for ${user.name}`) }}
                           style={{ padding: '4px 10px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 6, fontSize: 11, cursor: 'pointer', fontFamily: 'Inter', color: '#0A0A0A', transition: 'all 0.15s' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#111' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff'; e.currentTarget.style.borderColor = '#111' }}
                           onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = '#E8E8E3' }}
                         >Edit</button>
                         {(userStatuses[user.id] || user.status) === 'Active' && (

@@ -139,7 +139,7 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={() => navigate('regulations')}
-            style={{ padding: '8px 16px', background: '#111111', color: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }}
+            style={{ padding: '8px 16px', background: '#111111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
@@ -205,7 +205,7 @@ export default function DashboardPage() {
           </div>
           <button
             onClick={() => navigate('digital-twin')}
-            style={{ background: '#3B82F6', color: '#111', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 8, fontFamily: 'Inter', border: 'none', cursor: 'pointer' }}
+            style={{ background: '#8ad8ff', color: '#111', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 8, fontFamily: 'Inter', border: 'none', cursor: 'pointer' }}
           >
             LIVE
           </button>
@@ -224,7 +224,7 @@ export default function DashboardPage() {
           <button
             onClick={() => navigate('digital-twin')}
             style={{ padding: '6px 12px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 8, fontSize: 11, fontWeight: 500, cursor: 'pointer', color: '#0A0A0A', fontFamily: 'Inter', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A' }}
           >
             Open Graph
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: '#0A0A0A', fontFamily: 'Geist Mono, monospace' }}>{b.count}</span>
               </div>
               <div style={{ height: 6, background: '#F0F0EA', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${b.pct}%`, background: i === 0 ? '#3B82F6' : i === 1 ? '#4CAF50' : i === 2 ? '#8BC34A' : '#CDDC39', borderRadius: 3 }} />
+                <div style={{ height: '100%', width: `${b.pct}%`, background: i === 0 ? '#8ad8ff' : i === 1 ? '#4CAF50' : i === 2 ? '#8BC34A' : '#CDDC39', borderRadius: 3 }} />
               </div>
             </div>
           ))}
@@ -273,7 +273,7 @@ export default function DashboardPage() {
           <button
             onClick={() => navigate('map-tasks')}
             style={{ padding: '6px 12px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 8, fontSize: 11, fontWeight: 500, cursor: 'pointer', color: '#0A0A0A', fontFamily: 'Inter', transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A' }}
           >
             View all
@@ -315,7 +315,7 @@ export default function DashboardPage() {
       </HoverCard>
 
       {/* Audit Package (Span 5) */}
-      <HoverCard style={{ gridColumn: 'span 5', background: '#3B82F6', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
+      <HoverCard style={{ gridColumn: 'span 5', background: '#8ad8ff', position: 'relative', overflow: 'hidden', minHeight: 160 }}>
         <div style={{ position: 'absolute', right: -40, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(0,0,0,0.06)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', right: 60, bottom: -60, width: 150, height: 150, borderRadius: '50%', background: 'rgba(0,0,0,0.04)', pointerEvents: 'none' }} />
 
@@ -323,7 +323,7 @@ export default function DashboardPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-3">
               <div style={{ width: 36, height: 36, background: '#111', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="18" height="18" fill="none" stroke="#3B82F6" strokeWidth="2" viewBox="0 0 24 24">
+                <svg width="18" height="18" fill="none" stroke="#8ad8ff" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
                 </svg>
               </div>
@@ -335,7 +335,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3 mt-5">
               <button
                 onClick={() => navigate('reports')}
-                style={{ padding: '10px 22px', background: '#111111', color: '#3B82F6', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }}
+                style={{ padding: '10px 22px', background: '#111111', color: '#8ad8ff', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
               >

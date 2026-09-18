@@ -5,7 +5,7 @@
   --color-background: #F8F7F2;
   --color-foreground: #0A0A0A;
   --color-card: #FFFFFF;
-  --color-primary: #3B82F6;
+  --color-primary: #8ad8ff;
   --color-border: #E8E8E3;
 }
 
@@ -85,8 +85,8 @@ body {
 
 /* Neon glow flicker for live scores */
 @keyframes neonFlicker {
-  0%, 100% { text-shadow: 0 0 30px rgba(59, 130, 246, 0.35); }
-  50% { text-shadow: 0 0 48px rgba(59, 130, 246, 0.55); }
+  0%, 100% { text-shadow: 0 0 30px rgba(138, 216, 255, 0.35); }
+  50% { text-shadow: 0 0 48px rgba(138, 216, 255, 0.55); }
 }
 
 /* Input focus outline reset */
@@ -94,7 +94,7 @@ input:focus,
 select:focus,
 textarea:focus,
 button:focus-visible {
-  outline: 2px solid #3B82F6;
+  outline: 2px solid #8ad8ff;
   outline-offset: 2px;
 }
 button:focus:not(:focus-visible) {

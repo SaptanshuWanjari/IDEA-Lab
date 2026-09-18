@@ -9,7 +9,7 @@ const axes = ['Operations', 'Risk', 'IT', 'Compliance', 'Legal', 'HR']
 type Scenario = 'current' | 'optimistic' | 'stressed'
 
 const scenarios: Record<Scenario, { label: string; color: string; data: number[] }> = {
-  current:   { label: 'Current State',      color: '#3B82F6', data: [88, 72, 91, 95, 78, 84] },
+  current:   { label: 'Current State',      color: '#8ad8ff', data: [88, 72, 91, 95, 78, 84] },
   optimistic:{ label: 'Optimistic (+30d)',   color: '#4CAF50', data: [94, 85, 96, 98, 89, 91] },
   stressed:  { label: 'Stressed Scenario',   color: '#FF6B6B', data: [71, 58, 74, 82, 61, 68] },
 }
@@ -148,7 +148,7 @@ export default function DigitalTwinPage() {
           <div className="flex flex-col gap-3" style={{ minWidth: 0, paddingTop: 8, flex: 1 }}>
             <div style={{ background: '#F8F7F2', borderRadius: 16, padding: '16px 20px', textAlign: 'center' }}>
               <p style={{ fontSize: 11, color: '#888880', margin: 0, fontFamily: 'Inter' }}>Live Score</p>
-              <p style={{ fontSize: 38, fontWeight: 800, color: '#3B82F6', margin: 0, letterSpacing: '-2px', fontFamily: 'Inter', lineHeight: 1.1, textShadow: '0 0 30px rgba(59,130,246,0.3)' }}>{liveScore.toFixed(1)}</p>
+              <p style={{ fontSize: 38, fontWeight: 800, color: '#8ad8ff', margin: 0, letterSpacing: '-2px', fontFamily: 'Inter', lineHeight: 1.1, textShadow: '0 0 30px rgba(138,216,255,0.3)' }}>{liveScore.toFixed(1)}</p>
               <p style={{ fontSize: 10, color: '#4CAF50', margin: 0, fontFamily: 'Inter', fontWeight: 500 }}>trending up</p>
             </div>
             {axes.map((label, i) => (
@@ -207,21 +207,21 @@ export default function DigitalTwinPage() {
               <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>8-Week Prediction Trajectory</h3>
               <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>AI model confidence: 91%</p>
             </div>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#3B82F6', fontFamily: 'Inter', letterSpacing: '-1px' }}>+7.2%</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: '#8ad8ff', fontFamily: 'Inter', letterSpacing: '-1px' }}>+7.2%</span>
           </div>
           <svg width={PW} height={PH} style={{ overflow: 'visible' }}>
             <defs>
               <linearGradient id="predGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="#8ad8ff" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#8ad8ff" stopOpacity="0.02" />
               </linearGradient>
             </defs>
             {[85, 90, 95, 100].map(v => <line key={v} x1={pPL} y1={py(v)} x2={PW - pPR} y2={py(v)} stroke="#F0F0EA" strokeWidth={1} />)}
             <path d={pPath + ` L ${px(predictions.length - 1)} ${pPT + pCH} L ${px(0)} ${pPT + pCH} Z`} fill="url(#predGrad)" />
-            <path d={pPath} fill="none" stroke="#3B82F6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+            <path d={pPath} fill="none" stroke="#8ad8ff" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
             {predictions.map((d, i) => (
               <g key={i}>
-                <circle cx={px(i)} cy={py(d.score)} r={3} fill="#3B82F6" stroke="#111" strokeWidth={1.5} />
+                <circle cx={px(i)} cy={py(d.score)} r={3} fill="#8ad8ff" stroke="#111" strokeWidth={1.5} />
                 <text x={px(i)} y={PH - 4} textAnchor="middle" fontSize={8} fill="#BBBBBB" fontFamily="Geist Mono, monospace">{d.week}</text>
               </g>
             ))}

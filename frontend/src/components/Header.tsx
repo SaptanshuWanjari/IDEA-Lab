@@ -45,7 +45,7 @@ export default function Header({ title, onPaletteOpen }: HeaderProps) {
             cursor: 'pointer',
             transition: 'border-color 0.15s',
           }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = '#3B82F6'}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#8ad8ff'}
           onMouseLeave={e => e.currentTarget.style.borderColor = '#E8E8E3'}
         >
           <svg width="13" height="13" fill="none" stroke="#888880" strokeWidth="2" viewBox="0 0 24 24">
@@ -61,14 +61,14 @@ export default function Header({ title, onPaletteOpen }: HeaderProps) {
             onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false) }}
             className="flex items-center justify-center relative"
             style={{ width: 36, height: 36, background: '#FFFFFF', border: '1px solid #E8E8E3', borderRadius: 10, cursor: 'pointer', transition: 'border-color 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#3B82F6'}
+            onMouseEnter={e => e.currentTarget.style.borderColor = '#8ad8ff'}
             onMouseLeave={e => e.currentTarget.style.borderColor = '#E8E8E3'}
           >
             <svg width="15" height="15" fill="none" stroke="#0A0A0A" strokeWidth="1.8" viewBox="0 0 24 24">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            <span style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, background: '#3B82F6', borderRadius: '50%', border: '1.5px solid #F8F7F2' }} />
+            <span style={{ position: 'absolute', top: 7, right: 7, width: 7, height: 7, background: '#8ad8ff', borderRadius: '50%', border: '1.5px solid #F8F7F2' }} />
           </button>
 
           {notifOpen && (
@@ -78,7 +78,7 @@ export default function Header({ title, onPaletteOpen }: HeaderProps) {
                 <span style={{ fontSize: 10, color: '#888880', background: '#F0F0EA', padding: '2px 7px', borderRadius: 10, fontFamily: 'Inter' }}>3 new</span>
               </div>
               {[
-                { title: 'RBI/2026-27/45 requires immediate action', time: '2h ago', dot: '#3B82F6' },
+                { title: 'RBI/2026-27/45 requires immediate action', time: '2h ago', dot: '#8ad8ff' },
                 { title: 'MAP #1234 overdue — IT Department', time: '4h ago', dot: '#FF6B6B' },
                 { title: 'Evidence batch upload completed (18 files)', time: '6h ago', dot: '#4CAF50' },
               ].map((n, i) => (
@@ -107,7 +107,7 @@ export default function Header({ title, onPaletteOpen }: HeaderProps) {
             className="flex items-center gap-2.5"
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
-            <div style={{ width: 34, height: 34, background: '#3B82F6', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>
+            <div style={{ width: 34, height: 34, background: '#8ad8ff', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>
               AK
             </div>
             <div className="text-left">

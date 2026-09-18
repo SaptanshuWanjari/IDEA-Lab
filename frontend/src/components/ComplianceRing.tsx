@@ -43,12 +43,12 @@ export default function ComplianceRing({ score, size = 130, label = 'Compliance 
             cy={size / 2}
             r={r}
             fill="none"
-            stroke="#3B82F6"
+            stroke="#8ad8ff"
             strokeWidth={12}
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 0.05s ease', filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.5))' }}
+            style={{ transition: 'stroke-dashoffset 0.05s ease', filter: 'drop-shadow(0 0 8px rgba(138, 216, 255, 0.5))' }}
           />
         </svg>
         <div

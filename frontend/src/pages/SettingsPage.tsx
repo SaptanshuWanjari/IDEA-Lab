@@ -32,7 +32,7 @@ export default function SettingsPage() {
               fontFamily: 'Inter',
               fontWeight: activeTab === tab ? 600 : 400,
               background: activeTab === tab ? '#111' : 'transparent',
-              color: activeTab === tab ? '#3B82F6' : '#888880',
+              color: activeTab === tab ? '#8ad8ff' : '#888880',
               transition: 'all 0.15s',
             }}
           >
@@ -46,13 +46,13 @@ export default function SettingsPage() {
           <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 24 }}>Personal Information</h3>
             <div className="flex items-center gap-4 mb-6">
-              <div style={{ width: 64, height: 64, background: '#3B82F6', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>
+              <div style={{ width: 64, height: 64, background: '#8ad8ff', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>
                 {name.slice(0, 2).toUpperCase()}
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{name}</p>
                 <p style={{ fontSize: 12, color: '#888880', margin: 0, fontFamily: 'Inter' }}>{user?.role ?? 'User'}</p>
-                <button style={{ fontSize: 11, color: '#3B82F6', background: '#111', border: 'none', borderRadius: 6, padding: '3px 8px', marginTop: 6, cursor: 'pointer', fontFamily: 'Inter', fontWeight: 600 }}>
+                <button style={{ fontSize: 11, color: '#8ad8ff', background: '#111', border: 'none', borderRadius: 6, padding: '3px 8px', marginTop: 6, cursor: 'pointer', fontFamily: 'Inter', fontWeight: 600 }}>
                   Change Avatar
                 </button>
               </div>
@@ -67,7 +67,7 @@ export default function SettingsPage() {
                   value={field.value}
                   onChange={e => field.setter(e.target.value)}
                   style={{ width: '100%', height: 40, border: '1px solid #E8E8E3', borderRadius: 10, padding: '0 14px', fontSize: 13, color: '#0A0A0A', fontFamily: 'Inter', outline: 'none', boxSizing: 'border-box', background: '#FAFAF8', transition: 'border-color 0.15s' }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#3B82F6'}
+                  onFocus={e => e.currentTarget.style.borderColor = '#8ad8ff'}
                   onBlur={e => e.currentTarget.style.borderColor = '#E8E8E3'}
                 />
               </div>
@@ -81,7 +81,7 @@ export default function SettingsPage() {
                 <option>Viewer</option>
               </select>
             </div>
-            <button onClick={() => toast('success', 'Changes saved', 'Your profile has been updated.')} style={{ padding: '10px 20px', background: '#111', color: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.85'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+            <button onClick={() => toast('success', 'Changes saved', 'Your profile has been updated.')} style={{ padding: '10px 20px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.85'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
               Save Changes
             </button>
           </div>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                   borderRadius: 12,
                   border: 'none',
                   cursor: 'pointer',
-                  background: item.val ? '#3B82F6' : '#E8E8E3',
+                  background: item.val ? '#8ad8ff' : '#E8E8E3',
                   position: 'relative',
                   transition: 'background 0.2s',
                   flexShrink: 0,

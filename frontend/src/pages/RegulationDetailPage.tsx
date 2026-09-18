@@ -92,7 +92,7 @@ export default function RegulationDetailPage() {
     return (
       <div style={{ textAlign: 'center', padding: '80px 0' }}>
         <p style={{ fontSize: 14, color: '#888880', fontFamily: 'Inter' }}>No regulation selected. Go back to Regulations.</p>
-        <button onClick={() => navigate('regulations')} style={{ marginTop: 16, padding: '8px 20px', background: '#111', color: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}>← Back</button>
+        <button onClick={() => navigate('regulations')} style={{ marginTop: 16, padding: '8px 20px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}>← Back</button>
       </div>
     )
   }
@@ -113,13 +113,13 @@ export default function RegulationDetailPage() {
 
       {/* Hero card */}
       <div style={{ background: '#111111', borderRadius: 26, padding: '28px 32px', marginBottom: 20, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', right: -40, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(59,130,246,0.06)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: -40, top: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(138,216,255,0.06)', pointerEvents: 'none' }} />
 
         {regLoading ? <SkeletonBlock h={140} /> : regulation && (
           <div className="flex items-start justify-between relative z-10">
             <div style={{ flex: 1 }}>
               <div className="flex items-center gap-3 mb-3">
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#3B82F6', fontFamily: 'Geist Mono, monospace', background: 'rgba(59,130,246,0.12)', padding: '3px 10px', borderRadius: 7 }}>{regulation.id.slice(0, 8)}…</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#8ad8ff', fontFamily: 'Geist Mono, monospace', background: 'rgba(138,216,255,0.12)', padding: '3px 10px', borderRadius: 7 }}>{regulation.id.slice(0, 8)}…</span>
                 <span style={{ background: statusStyle[regulation.status]?.bg, color: statusStyle[regulation.status]?.text, fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 20, fontFamily: 'Inter' }}>{regulation.status}</span>
               </div>
               <h1 style={{ fontSize: 20, fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.5px', lineHeight: 1.3, maxWidth: 640 }}>{regulation.title ?? '(untitled)'}</h1>
@@ -141,7 +141,7 @@ export default function RegulationDetailPage() {
           <button
             onClick={handleGenerate}
             disabled={generating}
-            style={{ padding: '8px 16px', background: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', opacity: generating ? 0.7 : 1 }}
+            style={{ padding: '8px 16px', background: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', opacity: generating ? 0.7 : 1 }}
           >
             {generating ? 'Generating…' : 'Generate MAPs'}
           </button>
@@ -151,9 +151,9 @@ export default function RegulationDetailPage() {
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-5 p-1" style={{ background: '#FFFFFF', borderRadius: 12, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
         {(['maps', 'graph', 'history'] as const).map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '7px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: activeTab === tab ? 600 : 400, background: activeTab === tab ? '#111' : 'transparent', color: activeTab === tab ? '#3B82F6' : '#888880', textTransform: 'capitalize', transition: 'all 0.15s' }}>
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '7px 18px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: activeTab === tab ? 600 : 400, background: activeTab === tab ? '#111' : 'transparent', color: activeTab === tab ? '#8ad8ff' : '#888880', textTransform: 'capitalize', transition: 'all 0.15s' }}>
             {tab}
-            {tab === 'maps' && maps && <span style={{ marginLeft: 6, background: activeTab === tab ? 'rgba(59,130,246,0.2)' : '#F0F0EA', color: activeTab === tab ? '#3B82F6' : '#888880', fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 8, fontFamily: 'Geist Mono, monospace' }}>{maps.length}</span>}
+            {tab === 'maps' && maps && <span style={{ marginLeft: 6, background: activeTab === tab ? 'rgba(138,216,255,0.2)' : '#F0F0EA', color: activeTab === tab ? '#8ad8ff' : '#888880', fontSize: 10, fontWeight: 700, padding: '1px 5px', borderRadius: 8, fontFamily: 'Geist Mono, monospace' }}>{maps.length}</span>}
           </button>
         ))}
       </div>
@@ -191,7 +191,7 @@ export default function RegulationDetailPage() {
             )
           })}
           <button onClick={() => navigate('map-tasks')} style={{ padding: '10px', background: '#F5F5F0', border: '2px dashed #E8E8E3', borderRadius: 16, fontSize: 13, cursor: 'pointer', fontFamily: 'Inter', color: '#888880', fontWeight: 500, transition: 'all 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF8'; e.currentTarget.style.borderColor = '#3B82F6'; e.currentTarget.style.color = '#0A0A0A' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#FAFAF8'; e.currentTarget.style.borderColor = '#8ad8ff'; e.currentTarget.style.color = '#0A0A0A' }}
             onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.borderColor = '#E8E8E3'; e.currentTarget.style.color = '#888880' }}>
             View all MAP Tasks
           </button>
@@ -246,7 +246,7 @@ export default function RegulationDetailPage() {
           {regulation ? (
             <div className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#3B82F6', border: '2px solid #111', flexShrink: 0, marginTop: 2 }} />
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#8ad8ff', border: '2px solid #111', flexShrink: 0, marginTop: 2 }} />
               </div>
               <div>
                 <p style={{ fontSize: 13, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}><strong>System</strong> regulation uploaded</p>

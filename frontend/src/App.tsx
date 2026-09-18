@@ -99,10 +99,17 @@ export default function App() {
 
   // Check session on mount
   useEffect(() => {
-    api.get<UserOut>('/auth/me')
-      .then(u => setUser(u))
-      .catch(() => setUser(null))
-      .finally(() => setAuthLoading(false))
+    const checkSession = async () => {
+      if (import.meta.env.DEV && !sessionStorage.getItem('dev-started')) {
+        sessionStorage.setItem('dev-started', 'true')
+        try { await api.post('/auth/logout') } catch { /* ignore */ }
+      }
+      api.get<UserOut>('/auth/me')
+        .then(u => setUser(u))
+        .catch(() => setUser(null))
+        .finally(() => setAuthLoading(false))
+    }
+    checkSession()
   }, [])
 
   // Listen for navigate-to-login event from api.ts 401 handler
@@ -128,8 +135,8 @@ export default function App() {
     return (
       <div className="grid-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="rgba(59,130,246,0.3)" strokeWidth="3"/>
-          <path d="M12 2a10 10 0 0 1 10 10" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round">
+          <circle cx="12" cy="12" r="10" stroke="rgba(138,216,255,0.3)" strokeWidth="3"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="#8ad8ff" strokeWidth="3" strokeLinecap="round">
             <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
           </path>
         </svg>

@@ -6,34 +6,10 @@ interface LoginPageProps {
   onLogin: (user: UserOut) => void
 }
 
-function FeatureIcon({ path }: { path: string }) {
-  return (
-    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-      <path d={path} />
-    </svg>
-  )
-}
-
-const features = [
-  {
-    path: 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
-    text: 'Real-time RBI circular tracking',
-  },
-  {
-    path: 'M13 2L3 14h9l-1 8 10-12h-9l1-8z',
-    text: 'AI-driven compliance prediction',
-  },
-  {
-    path: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
-    text: 'One-click RBI audit package generation',
-  },
-]
-
 export default function LoginPage({ onLogin }: LoginPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,123 +30,120 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
-    <div
-      className="grid-bg"
-      style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}
-    >
-      <div style={{ position: 'absolute', top: '10%', left: '18%', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.10) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '12%', right: '14%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      <div style={{ display: 'flex', gap: 72, alignItems: 'center', maxWidth: 980, width: '100%', padding: '0 40px' }}>
-
-        {/* Brand panel */}
-        <div style={{ flex: 1 }}>
-          <div className="flex items-center gap-3 mb-10">
-            <div style={{ width: 44, height: 44, background: '#3B82F6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 18, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>P</span>
-            </div>
-            <span style={{ fontSize: 22, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', letterSpacing: '-0.5px' }}>PravahOS</span>
+    <>
+      <style>{`
+        * { box-sizing: border-box; }
+        .login-body { margin: 0; background: #fafbf9; color: #101410; font-family: Inter, system-ui, sans-serif; }
+        .page { min-height: 100vh; display: grid; grid-template-columns: 1.05fr .95fr; }
+        .hero { padding: 64px 8%; position: relative; overflow: hidden; background: linear-gradient(145deg, #fff, #f0f8ff); }
+        .brand { display: flex; gap: 14px; align-items: center; font-size: 25px; font-weight: 800; }
+        .mark { width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; background: #8ad8ff; color: #101410; }
+        .subbrand { font-size: 10px; letter-spacing: .28em; color: #7d867f; }
+        .kicker { margin-top: 90px; letter-spacing: .25em; color: #6d786f; }
+        .hero h1 { font-size: 64px; line-height: .98; letter-spacing: -.05em; margin: 24px 0; }
+        .hero h1 span { color: #8ad8ff; }
+        .hero p { max-width: 560px; color: #667168; font-size: 18px; line-height: 1.55; }
+        .features { margin-top: 48px; display: grid; gap: 20px; }
+        .feature { display: flex; gap: 15px; align-items: center; }
+        .icon { width: 44px; height: 44px; border: 1px solid #dce8f2; border-radius: 13px; display: grid; place-items: center; background: #f4f9fd; }
+        .feature b, .feature small { display: block; }
+        .feature small { color: #737d76; }
+        .auth { display: grid; place-items: center; padding: 42px; background: #fff; }
+        .auth-inner { width: 100%; max-width: 520px; }
+        .card { width: 100%; padding: 46px 50px; border: 1px solid #e8ebe7; border-radius: 26px; box-shadow: 0 24px 70px #15201512; }
+        .card h2 { font-size: 34px; margin: 0 0 8px; }
+        .muted { color: #8a928c; }
+        .field { margin: 22px 0; }
+        .label { display: flex; justify-content: space-between; margin-bottom: 9px; font-size: 14px; font-weight: 650; }
+        .label a, .footer a { color: #0284c7; text-decoration: none; }
+        .label a:hover, .footer a:hover { text-decoration: underline; }
+        .input { width: 100%; height: 56px; border: 1px solid #dce1dc; border-radius: 12px; padding: 0 16px; font-size: 15px; outline: none; }
+        .input:focus { border-color: #8ad8ff; box-shadow: 0 0 0 3px rgba(138, 216, 255, 0.35); }
+        .remember { display: flex; gap: 9px; margin: 25px 0; color: #606a63; font-size: 14px; }
+        .remember input { accent-color: #8ad8ff; cursor: pointer; }
+        .submit { width: 100%; height: 58px; border: 0; border-radius: 12px; background: #111; color: #8ad8ff; font-weight: 800; font-size: 15px; cursor: pointer; transition: opacity 0.15s; }
+        .submit:hover { opacity: 0.9; }
+        .submit:disabled { opacity: 0.7; cursor: not-allowed; }
+        .footer { text-align: center; color: #8d958f; margin-top: 26px; font-size: 14px; }
+        .secure { text-align: center; color: #8b948d; font-size: 13px; margin-top: 28px; }
+        @media(max-width: 900px) {
+          .page { grid-template-columns: 1fr; }
+          .hero { padding: 40px; }
+          .hero h1 { font-size: 48px; }
+          .kicker { margin-top: 55px; }
+          .auth { padding: 35px 20px; }
+        }
+      `}</style>
+      <main className="page login-body">
+        <section className="hero">
+          <div className="brand">
+            <div className="mark">P</div>
+            <div>PravahOS<div className="subbrand">BANKING COMPLIANCE INTELLIGENCE</div></div>
           </div>
-
-          <h1 style={{ fontSize: 44, fontWeight: 800, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-2px', lineHeight: 1.08 }}>
-            AI-Powered<br />
-            <span style={{ color: '#BBBBBB' }}>Banking</span><br />
-            Compliance
-          </h1>
-          <p style={{ fontSize: 15, color: '#888880', marginTop: 18, fontFamily: 'Inter', lineHeight: 1.65, maxWidth: 340 }}>
-            Streamline RBI regulation management, MAP tracking, and audit preparation — all in one intelligent platform.
-          </p>
-
-          <div className="flex flex-col gap-3 mt-8">
-            {features.map((f, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div style={{ width: 32, height: 32, background: '#FFFFFF', border: '1px solid #E8E8E3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#444440', flexShrink: 0 }}>
-                  <FeatureIcon path={f.path} />
+          <div className="kicker">COMPLIANT TODAY. STRONGER TOMORROW.</div>
+          <h1>AI-Powered<br /><span>Banking</span><br />Compliance</h1>
+          <p>Streamline RBI regulation management, MAP tracking, and audit preparation, all in one intelligent platform.</p>
+          <div className="features">
+            <div className="feature">
+              <div className="icon">▤</div>
+              <div><b>From Circulars to Action</b><small>Extract, interpret and assign MAPs</small></div>
+            </div>
+            <div className="feature">
+              <div className="icon">⌁</div>
+              <div><b>Predict &amp; Plan</b><small>Simulate timelines and identify risks early</small></div>
+            </div>
+            <div className="feature">
+              <div className="icon">◇</div>
+              <div><b>Audit Ready</b><small>Complete traceability and evidence logs</small></div>
+            </div>
+          </div>
+        </section>
+        <section className="auth">
+          <div className="auth-inner">
+            <div className="card">
+              <h2>Welcome back</h2>
+              <p className="muted">Sign in to your PravahOS account</p>
+              <form onSubmit={handleSubmit}>
+                <div className="field">
+                  <div className="label"><label>Email address</label></div>
+                  <input
+                    className="input"
+                    type="email"
+                    placeholder="name@bankname.com"
+                    required
+                    value={email}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                  />
                 </div>
-                <span style={{ fontSize: 13, color: '#444440', fontFamily: 'Inter' }}>{f.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Login card */}
-        <div style={{ background: '#FFFFFF', border: '1px solid #E8E8E3', borderRadius: 28, padding: 36, width: 400, flexShrink: 0, boxShadow: '0 8px 48px rgba(0,0,0,0.08)' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.4px' }}>Welcome back</h2>
-          <p style={{ fontSize: 13, color: '#888880', margin: '4px 0 28px', fontFamily: 'Inter' }}>Sign in to your PravahOS account</p>
-
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#444440', display: 'block', marginBottom: 6, fontFamily: 'Inter' }}>Email address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError('') }}
-                placeholder="aisha.khan@bankname.com"
-                style={{ width: '100%', height: 42, border: `1px solid ${error && !email ? '#E53935' : '#E8E8E3'}`, borderRadius: 10, padding: '0 14px', fontSize: 13, color: '#0A0A0A', fontFamily: 'Inter', outline: 'none', background: '#FAFAF8', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#3B82F6'}
-                onBlur={e => e.currentTarget.style.borderColor = error && !email ? '#E53935' : '#E8E8E3'}
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label style={{ fontSize: 12, fontWeight: 500, color: '#444440', fontFamily: 'Inter' }}>Password</label>
-                <button type="button" style={{ fontSize: 11, color: '#888880', fontFamily: 'Inter', background: 'none', border: 'none', cursor: 'pointer' }}>Forgot password?</button>
-              </div>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setError('') }}
-                  placeholder="••••••••••"
-                  style={{ width: '100%', height: 42, border: `1px solid ${error && !password ? '#E53935' : '#E8E8E3'}`, borderRadius: 10, padding: '0 42px 0 14px', fontSize: 13, color: '#0A0A0A', fontFamily: 'Inter', outline: 'none', background: '#FAFAF8', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#3B82F6'}
-                  onBlur={e => e.currentTarget.style.borderColor = error && !password ? '#E53935' : '#E8E8E3'}
-                />
-                <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#888880', padding: 0 }}>
-                  {showPass
-                    ? <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    : <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  }
+                <div className="field">
+                  <div className="label"><label>Password</label><a href="#">Forgot password?</a></div>
+                  <input
+                    className="input"
+                    type="password"
+                    placeholder="Enter your password"
+                    required
+                    value={password}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  />
+                </div>
+                {error && (
+                  <div style={{ color: '#C13B2A', fontSize: 13, marginBottom: 15 }}>
+                    {error}
+                  </div>
+                )}
+                <label className="remember">
+                  <input type="checkbox" /> Remember me for 30 days
+                </label>
+                <button className="submit" disabled={loading}>
+                  {loading ? 'Signing In...' : 'Sign In to PravahOS →'}
                 </button>
-              </div>
+              </form>
+              <div className="footer">New to PravahOS? <a href="#">Request access</a></div>
             </div>
-
-            {error && (
-              <div style={{ background: '#FFF3F0', border: '1px solid #FFD7D7', borderRadius: 8, padding: '8px 12px' }}>
-                <p style={{ fontSize: 12, color: '#C13B2A', margin: 0, fontFamily: 'Inter' }}>{error}</p>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="remember" style={{ accentColor: '#3B82F6', width: 14, height: 14, cursor: 'pointer' }} />
-              <label htmlFor="remember" style={{ fontSize: 12, color: '#444440', fontFamily: 'Inter', cursor: 'pointer' }}>Remember me for 30 days</label>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ height: 44, background: '#111111', color: '#3B82F6', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s', opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-            >
-              {loading
-                ? <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="rgba(59,130,246,0.3)" strokeWidth="3"/>
-                      <path d="M12 2a10 10 0 0 1 10 10" stroke="#3B82F6" strokeWidth="3" strokeLinecap="round">
-                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
-                      </path>
-                    </svg>
-                    Signing in...
-                  </>
-                : 'Sign In to PravahOS'
-              }
-            </button>
-          </form>
-
-
-
-        </div>
-      </div>
-    </div>
+            <div className="secure">◈ Secure &nbsp;|&nbsp; Compliant &nbsp;|&nbsp; Confidential</div>
+          </div>
+        </section>
+      </main>
+    </>
   )
 }

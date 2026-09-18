@@ -120,7 +120,7 @@ export default function Sidebar({ currentPage, onNavigate, onLogout, onPalette }
         style={{
           width: 36,
           height: 36,
-          background: '#3B82F6',
+          background: '#8ad8ff',
           borderRadius: '50%',
         }}
       >
@@ -141,7 +141,7 @@ export default function Sidebar({ currentPage, onNavigate, onLogout, onPalette }
                 width: '100%',
                 height: 40,
                 borderRadius: 12,
-                background: isActive ? '#3B82F6' : 'transparent',
+                background: isActive ? '#8ad8ff' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 color: isActive ? '#111111' : '#666660',

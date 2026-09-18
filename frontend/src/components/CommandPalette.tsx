@@ -141,7 +141,7 @@ export default function CommandPalette({ open, onClose, onNavigate }: CommandPal
                       width: 30,
                       height: 30,
                       borderRadius: 8,
-                      background: isSelected ? '#3B82F6' : '#F0F0EA',
+                      background: isSelected ? '#8ad8ff' : '#F0F0EA',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',

@@ -68,7 +68,7 @@ export default function RegulationsPage() {
           </div>
           <div className="flex items-center gap-1 p-1" style={{ background: '#FFFFFF', border: '1px solid #E8E8E3', borderRadius: 10 }}>
             {['All', 'Active', 'In Progress', 'Review', 'Pending', 'Completed'].map(s => (
-              <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: filterStatus === s ? 600 : 400, background: filterStatus === s ? '#111' : 'transparent', color: filterStatus === s ? '#3B82F6' : '#888880', transition: 'all 0.15s' }}>
+              <button key={s} onClick={() => setFilterStatus(s)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontFamily: 'Inter', fontWeight: filterStatus === s ? 600 : 400, background: filterStatus === s ? '#111' : 'transparent', color: filterStatus === s ? '#8ad8ff' : '#888880', transition: 'all 0.15s' }}>
                 {s}
               </button>
             ))}
@@ -77,7 +77,7 @@ export default function RegulationsPage() {
         <button
           onClick={handleUpload}
           disabled={uploading}
-          style={{ padding: '9px 18px', background: '#3B82F6', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: uploading ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6, opacity: uploading ? 0.7 : 1 }}
+          style={{ padding: '9px 18px', background: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: uploading ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', display: 'flex', alignItems: 'center', gap: 6, opacity: uploading ? 0.7 : 1 }}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           {uploading ? 'Uploading...' : 'Upload Regulation'}
@@ -126,7 +126,7 @@ export default function RegulationsPage() {
                       <button
                         onClick={e => { e.stopPropagation(); navigate('regulation-detail', row.id) }}
                         style={{ padding: '5px 12px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 7, fontSize: 11, cursor: 'pointer', fontFamily: 'Inter', color: '#0A0A0A', transition: 'all 0.15s' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#111' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff'; e.currentTarget.style.borderColor = '#111' }}
                         onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = '#E8E8E3' }}
                       >
                         View →

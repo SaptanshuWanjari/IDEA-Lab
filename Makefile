@@ -38,6 +38,10 @@ models:
 test:
 	cd backend && uv run pytest -v
 
+test-e2e:
+	./test-e2e.sh
+
+
 smoke:
 	@echo "=== Neo4j (from api container) ==="
 	@docker compose exec -T api uv run python -c "\

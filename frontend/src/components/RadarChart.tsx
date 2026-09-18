@@ -69,8 +69,8 @@ export default function RadarChart() {
         {/* P90 area */}
         <path
           d={pointsToPath(p90Pts)}
-          fill="rgba(59, 130, 246, 0.08)"
-          stroke="rgba(59, 130, 246, 0.3)"
+          fill="rgba(138, 216, 255, 0.08)"
+          stroke="rgba(138, 216, 255, 0.3)"
           strokeWidth={1}
           strokeDasharray="4 3"
         />
@@ -78,8 +78,8 @@ export default function RadarChart() {
         {/* Median area */}
         <path
           d={pointsToPath(medianPts)}
-          fill="rgba(59, 130, 246, 0.12)"
-          stroke="rgba(59, 130, 246, 0.5)"
+          fill="rgba(138, 216, 255, 0.12)"
+          stroke="rgba(138, 216, 255, 0.5)"
           strokeWidth={1}
           strokeDasharray="3 2"
         />
@@ -87,8 +87,8 @@ export default function RadarChart() {
         {/* Predicted (main) area */}
         <path
           d={pointsToPath(predictedPts)}
-          fill="rgba(59, 130, 246, 0.28)"
-          stroke="#3B82F6"
+          fill="rgba(138, 216, 255, 0.28)"
+          stroke="#8ad8ff"
           strokeWidth={2}
         />
 
@@ -99,7 +99,7 @@ export default function RadarChart() {
             cx={p.x}
             cy={p.y}
             r={hoveredAxis === i ? 5 : 3.5}
-            fill="#3B82F6"
+            fill="#8ad8ff"
             stroke="#111"
             strokeWidth={1.5}
             style={{ cursor: 'pointer', transition: 'r 0.15s ease' }}
@@ -136,9 +136,9 @@ export default function RadarChart() {
       {/* Legend */}
       <div className="flex flex-col gap-1 mt-2">
         {[
-          { label: 'Predicted Completion', color: '#3B82F6', dash: false, value: '88%' },
-          { label: 'Median', color: 'rgba(59,130,246,0.6)', dash: true, value: '74%' },
-          { label: 'P90', color: 'rgba(59,130,246,0.4)', dash: true, value: '94%' },
+          { label: 'Predicted Completion', color: '#8ad8ff', dash: false, value: '88%' },
+          { label: 'Median', color: 'rgba(138,216,255,0.6)', dash: true, value: '74%' },
+          { label: 'P90', color: 'rgba(138,216,255,0.4)', dash: true, value: '94%' },
         ].map((item) => (
           <div key={item.label} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export default function RadarChart() {
         ))}
         <div className="flex items-center justify-between mt-1 pt-2" style={{ borderTop: '1px solid #E8E8E3' }}>
           <span style={{ fontSize: 11, color: '#888880' }}>Confidence</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6', background: '#111', borderRadius: 6, padding: '2px 8px', fontFamily: 'Geist Mono, monospace' }}>91%</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#8ad8ff', background: '#111', borderRadius: 6, padding: '2px 8px', fontFamily: 'Geist Mono, monospace' }}>91%</span>
         </div>
       </div>
     </div>

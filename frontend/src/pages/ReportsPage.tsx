@@ -72,7 +72,7 @@ export default function ReportsPage() {
       {/* Generate Report CTA */}
       <div style={{ gridColumn: 'span 4', background: '#111111', borderRadius: 24, padding: 24, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
         <div>
-          <div style={{ width: 40, height: 40, background: '#3B82F6', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{ width: 40, height: 40, background: '#8ad8ff', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
             <svg width="20" height="20" fill="none" stroke="#111" strokeWidth="2.2" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
             </svg>
@@ -87,7 +87,7 @@ export default function ReportsPage() {
         <button
           onClick={handleGenerate}
           disabled={generating}
-          style={{ padding: '11px 0', background: report ? '#4CAF50' : '#3B82F6', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', marginTop: 20, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: generating ? 0.8 : 1 }}
+          style={{ padding: '11px 0', background: report ? '#4CAF50' : '#8ad8ff', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: generating ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', marginTop: 20, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: generating ? 0.8 : 1 }}
         >
           {generating ? (
             <><div style={{ width: 12, height: 12, border: '2px solid rgba(0,0,0,0.3)', borderTopColor: '#111', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />Generating...</>
@@ -111,7 +111,7 @@ export default function ReportsPage() {
                 </div>
               </div>
               <div style={{ height: 5, background: '#F0F0EA', borderRadius: 3 }}>
-                <div style={{ height: '100%', width: `${d.score}%`, background: d.score >= 90 ? '#3B82F6' : d.score >= 80 ? '#F9A825' : '#E53935', borderRadius: 3 }} />
+                <div style={{ height: '100%', width: `${d.score}%`, background: d.score >= 90 ? '#8ad8ff' : d.score >= 80 ? '#F9A825' : '#E53935', borderRadius: 3 }} />
               </div>
             </div>
           ))}
@@ -126,8 +126,8 @@ export default function ReportsPage() {
 
         {/* Show generated report at top if available */}
         {report && (
-          <div className="flex items-center gap-4 p-3 rounded-xl mb-3" style={{ border: '1px solid #3B82F6', background: 'rgba(59,130,246,0.05)' }}>
-            <div style={{ width: 36, height: 36, background: '#3B82F6', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div className="flex items-center gap-4 p-3 rounded-xl mb-3" style={{ border: '1px solid #8ad8ff', background: 'rgba(138,216,255,0.05)' }}>
+            <div style={{ width: 36, height: 36, background: '#8ad8ff', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="16" height="16" fill="none" stroke="#111" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
               </svg>
@@ -160,7 +160,7 @@ export default function ReportsPage() {
                 <button
                   onClick={e => { e.stopPropagation(); toast('info', 'Report download', r.name + ' — available via backend endpoint.') }}
                   style={{ padding: '5px 12px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 7, fontSize: 11, cursor: 'pointer', fontFamily: 'Inter', color: '#0A0A0A', flexShrink: 0, transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#3B82F6'; e.currentTarget.style.borderColor = '#111' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#111'; e.currentTarget.style.color = '#8ad8ff'; e.currentTarget.style.borderColor = '#111' }}
                   onMouseLeave={e => { e.currentTarget.style.background = '#F5F5F0'; e.currentTarget.style.color = '#0A0A0A'; e.currentTarget.style.borderColor = '#E8E8E3' }}
                 >
                   Download

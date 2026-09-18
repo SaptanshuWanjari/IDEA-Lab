@@ -35,7 +35,7 @@ export default function DependencyGraph() {
             key={`${a}-${b}`}
             x1={na.x} y1={na.y}
             x2={nb.x} y2={nb.y}
-            stroke={isCritical ? '#3B82F6' : '#E8E8E3'}
+            stroke={isCritical ? '#8ad8ff' : '#E8E8E3'}
             strokeWidth={isCritical ? 2 : 1}
             opacity={hovered && !([a, b].includes(hovered)) ? 0.3 : 1}
             style={{ transition: 'opacity 0.15s ease' }}
@@ -58,7 +58,7 @@ export default function DependencyGraph() {
               cx={node.x}
               cy={node.y}
               r={isHovered ? 22 : 18}
-              fill={isCritical ? '#3B82F6' : '#FFFFFF'}
+              fill={isCritical ? '#8ad8ff' : '#FFFFFF'}
               stroke={isCritical ? '#111' : '#E8E8E3'}
               strokeWidth={isCritical ? 2 : 1}
               style={{ transition: 'all 0.15s ease', filter: isHovered ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' : 'none' }}
@@ -92,7 +92,7 @@ export default function DependencyGraph() {
 
       {/* Legend */}
       <g transform="translate(0, 308)">
-        <circle cx={8} cy={6} r={5} fill="#3B82F6" stroke="#111" strokeWidth={1.5} />
+        <circle cx={8} cy={6} r={5} fill="#8ad8ff" stroke="#111" strokeWidth={1.5} />
         <text x={18} y={10} fontSize={9} fontFamily="Inter, sans-serif" fill="#888880">Critical Path</text>
         <circle cx={90} cy={6} r={5} fill="#FFF" stroke="#E8E8E3" strokeWidth={1} />
         <text x={100} y={10} fontSize={9} fontFamily="Inter, sans-serif" fill="#888880">Standard</text>
