@@ -1,9 +1,10 @@
+import { useMemo } from 'react'
 import { useApp } from '../App'
 import RadarChart from '../components/RadarChart'
 import DependencyGraph from '../components/DependencyGraph'
 import { useApi } from '../hooks/useApi'
 import { api } from '../lib/api'
-import type { RegulationOut } from '../lib/types'
+import type { MAPOut, RegulationOut, SimulationResponse } from '../lib/types'
 
 const card = {
   background: '#FFFFFF',
@@ -47,15 +48,147 @@ function StatusBadge({ status }: { status: string }) {
 export default function DashboardPage() {
   const { navigate } = useApp()
 
-  const { data: regulations, loading } = useApi<RegulationOut[]>(
+  const { data: regulations, loading, error: regsError } = useApi<RegulationOut[]>(
     () => api.get<RegulationOut[]>('/regulations/'),
     [],
   )
 
   const circulars = (regulations ?? []).slice(0, 5)
+  const regIdsKey = circulars.map(r => r.id).join(',')
+
+  // Per-regulation details: MAP counts + owner depts (via simulate workloads)
+  // and bottleneck/deadline inputs. Each fetch is best-effort so one bad reg
+  // doesn't blank the whole dashboard.
+  const { data: extras, loading: extrasLoading, error: extrasError } = useApi<{
+    mapsByReg: Record<string, MAPOut[]>
+    simByReg: Record<string, SimulationResponse>
+  }>(
+    async () => {
+      const mapsByReg: Record<string, MAPOut[]> = {}
+      const simByReg: Record<string, SimulationResponse> = {}
+      await Promise.all(
+        circulars.map(async (reg) => {
+          try {
+            mapsByReg[reg.id] = await api.get<MAPOut[]>(`/maps/?regulation_id=${reg.id}`)
+          } catch {
+            mapsByReg[reg.id] = []
+          }
+          try {
+            simByReg[reg.id] = await api.get<SimulationResponse>(`/regulations/${reg.id}/simulate`)
+          } catch {
+            /* leave missing — treated as no data for this reg */
+          }
+        }),
+      )
+      return { mapsByReg, simByReg }
+    },
+    [regIdsKey],
+  )
+
+  const mapsByReg = extras?.mapsByReg ?? {}
+  const simByReg = extras?.simByReg ?? {}
+  const totalMaps = useMemo(
+    () => Object.values(mapsByReg).reduce((n, arr) => n + arr.length, 0),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [extras],
+  )
+
+  // Real data only when regs loaded AND at least one MAP/sim came back.
+  // Otherwise (loading===false + empty/error) show static demo fallback.
+  const stillLoading = loading || extrasLoading
+  const usingDemoData = !stillLoading && (circulars.length === 0 || regsError !== null || totalMaps === 0)
+
+  // Top workload dept per regulation (dept names come from simulate).
+  const topDeptFor = (regId: string): string => {
+    const workloads = simByReg[regId]?.department_workloads
+    if (!workloads) return '—'
+    const entries = Object.entries(workloads)
+    if (entries.length === 0) return '—'
+    return entries.sort((a, b) => b[1] - a[1])[0][0]
+  }
+
+  const earliestDeadlineFor = (regId: string, fallback?: string): string => {
+    const dated = (mapsByReg[regId] ?? []).filter(m => m.deadline)
+    if (dated.length === 0) return fallback ?? new Date().toISOString()
+    return dated.map(m => m.deadline as string).sort()[0]
+  }
+
+  // Aggregate department workloads across regs → top bottlenecks.
+  const bottlenecks = useMemo(() => {
+    const totals: Record<string, number> = {}
+    for (const sim of Object.values(simByReg)) {
+      for (const [dept, w] of Object.entries(sim?.department_workloads ?? {})) {
+        totals[dept] = (totals[dept] ?? 0) + (w as number)
+      }
+    }
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    if (sorted.length === 0) return null
+    const max = sorted[0][1] || 1
+    return sorted.map(([dept, count]) => ({
+      dept,
+      count: Math.round(count),
+      pct: Math.max(8, Math.round((count / max) * 100)),
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extras])
+
+  const staticBottlenecks = [
+    { dept: 'IT',         count: 14, pct: 78 },
+    { dept: 'Risk',       count: 11, pct: 62 },
+    { dept: 'Operations', count: 9,  pct: 51 },
+    { dept: 'Branches',   count: 7,  pct: 40 },
+    { dept: 'Legal',      count: 5,  pct: 29 },
+  ]
+  const bottleneckRows = bottlenecks ?? staticBottlenecks
+  const showBottleneckHint = usingDemoData || bottlenecks === null
+
+  // Upcoming deadlines from MAP deadline fields, earliest first.
+  const deadlines = useMemo(() => {
+    const regTitleById: Record<string, string> = {}
+    for (const r of circulars) regTitleById[r.id] = r.title ?? '(untitled)'
+    const all = Object.entries(mapsByReg).flatMap(([regId, maps]) =>
+      (maps ?? [])
+        .filter(m => m.deadline)
+        .map(m => ({ map: m, regId, regTitle: regTitleById[regId] ?? '(untitled)' })),
+    )
+    if (all.length === 0) return null
+    all.sort((a, b) => String(a.map.deadline).localeCompare(String(b.map.deadline)))
+    const now = new Date()
+    const dayMs = 86400000
+    return all.slice(0, 4).map(({ map, regTitle, regId }) => {
+      const d = new Date(map.deadline as string)
+      const diffDays = Math.round((d.getTime() - now.getTime()) / dayMs)
+      const bucket = diffDays <= 0 ? 'TODAY' : diffDays === 1 ? 'TOMORROW' : 'THIS WEEK'
+      const status = diffDays <= 0 ? 'Due today' : diffDays === 1 ? 'Due tomorrow'
+        : `Due ${d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`
+      const dot = diffDays <= 0 ? '#E53935' : diffDays === 1 ? '#F9A825' : '#AAAAAA'
+      const bg = diffDays <= 0 ? '#FFF8E1' : diffDays === 1 ? '#FFF3F0' : '#F5F5F0'
+      return {
+        id: map.id,
+        date: bucket,
+        task: map.description.length > 60 ? map.description.slice(0, 57) + '…' : map.description,
+        reg: regTitle,
+        owner: topDeptFor(regId),
+        status,
+        dot,
+        bg,
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extras, regIdsKey])
+
+  const staticDeadlines = [
+    { date: 'TODAY', task: 'Submit AML/CFT Q2 Report', reg: 'Fraud Risk Management', owner: 'Risk', status: 'Due today', dot: '#E53935', bg: '#FFF8E1' },
+    { date: 'TOMORROW', task: 'Complete MAP Review: Cyber Policy', reg: 'Cybersecurity Controls', owner: 'Compliance', status: 'Due tomorrow', dot: '#F9A825', bg: '#FFF3F0' },
+    { date: 'THIS WEEK', task: 'Upload Evidence: System Resilience Test', reg: 'Operational Resilience', owner: 'IT', status: 'Due 7 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
+    { date: 'THIS WEEK', task: 'Finalize MSME Credit Policy Update', reg: 'MSME Lending', owner: 'Credit', status: 'Due 8 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
+  ]
+  const deadlineRows = deadlines ?? staticDeadlines
+  const showDeadlineHint = usingDemoData || deadlines === null
+  void extrasError
 
   // Fallback for visual mock data in table if no circulars
-  const tableData = circulars.length > 0 ? circulars : [
+  const tableData: Array<RegulationOut | { id: string; title: string; status: string; date: string; created_at?: string }> = !usingDemoData && circulars.length > 0 ? circulars : [
     { id: '1', title: 'Master Direction – Operational Resilience', status: 'Review', date: '2026-08-24' },
     { id: '2', title: 'Master Direction – Cybersecurity', status: 'In Progress', date: '2026-09-08' },
     { id: '3', title: 'Guidelines on Fraud Risk Management', status: 'Draft', date: '2026-09-15' },
@@ -136,6 +269,11 @@ export default function DashboardPage() {
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Regulatory Execution</h2>
             <p style={{ fontSize: 12, color: '#888880', margin: 0, marginTop: 2 }}>Recent RBI circulars in this quarter</p>
+            {usingDemoData && !loading && (
+              <p style={{ fontSize: 11, color: '#C17B00', margin: 0, marginTop: 4, fontFamily: 'Inter' }}>
+                Demo data — run seeder
+              </p>
+            )}
           </div>
           <button
             onClick={() => navigate('regulations')}
@@ -162,10 +300,16 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {tableData.map((row, i) => {
-                // Determine mock values if missing
-                const dateStr = (row as any).date ? new Date((row as any).date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date(row.created_at || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                const mapsCnt = [24, 18, 12, 31, 16, 9][i % 6];
-                const owner = ['Operations', 'IT', 'Risk', 'Risk', 'Credit', 'Compliance'][i % 6];
+                // Real API-derived values when available; static demo only in fallback mode.
+                const isFallbackRow = usingDemoData
+                const mapsForRow = !isFallbackRow ? (mapsByReg[row.id] ?? null) : null
+                const fallbackDate = (row as any).date ?? (row as any).created_at
+                const dateSrc = !isFallbackRow && mapsForRow
+                  ? earliestDeadlineFor(row.id, (row as any).created_at)
+                  : fallbackDate
+                const dateStr = new Date(dateSrc || Date.now()).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                const mapsCnt = !isFallbackRow && mapsForRow ? mapsForRow.length : [24, 18, 12, 31, 16, 9][i % 6];
+                const owner = !isFallbackRow ? topDeptFor(row.id) : ['Operations', 'IT', 'Risk', 'Risk', 'Credit', 'Compliance'][i % 6];
 
                 return (
                   <tr
@@ -237,14 +381,13 @@ export default function DashboardPage() {
       <HoverCard style={{ gridColumn: 'span 5' }}>
         <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>Top Bottlenecks</h2>
         <p style={{ fontSize: 11, color: '#888880', margin: 0, marginBottom: 20 }}>By open MAP count</p>
+        {showBottleneckHint && (
+          <p style={{ fontSize: 11, color: '#C17B00', margin: 0, marginBottom: 12, fontFamily: 'Inter' }}>
+            Demo data — run seeder
+          </p>
+        )}
         <div className="flex flex-col gap-4">
-          {[
-            { dept: 'IT',         count: 14, pct: 78 },
-            { dept: 'Risk',       count: 11, pct: 62 },
-            { dept: 'Operations', count: 9,  pct: 51 },
-            { dept: 'Branches',   count: 7,  pct: 40 },
-            { dept: 'Legal',      count: 5,  pct: 29 },
-          ].map((b, i) => (
+          {bottleneckRows.map((b, i) => (
             <div key={b.dept} style={{ cursor: 'pointer' }} onClick={() => navigate('map-tasks')}>
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
@@ -269,6 +412,11 @@ export default function DashboardPage() {
           <div>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 2 }}>Upcoming Deadlines</h2>
             <p style={{ fontSize: 12, color: '#888880', margin: 0 }}>Key compliance tasks across departments</p>
+            {showDeadlineHint && (
+              <p style={{ fontSize: 11, color: '#C17B00', margin: 0, marginTop: 4, fontFamily: 'Inter' }}>
+                Demo data — run seeder
+              </p>
+            )}
           </div>
           <button
             onClick={() => navigate('map-tasks')}
@@ -289,13 +437,8 @@ export default function DashboardPage() {
             </tr>
           </thead>
           <tbody>
-            {[
-              { date: 'TODAY', task: 'Submit AML/CFT Q2 Report', reg: 'Fraud Risk Management', owner: 'Risk', status: 'Due today', dot: '#E53935', bg: '#FFF8E1' },
-              { date: 'TOMORROW', task: 'Complete MAP Review: Cyber Policy', reg: 'Cybersecurity Controls', owner: 'Compliance', status: 'Due tomorrow', dot: '#F9A825', bg: '#FFF3F0' },
-              { date: 'THIS WEEK', task: 'Upload Evidence: System Resilience Test', reg: 'Operational Resilience', owner: 'IT', status: 'Due 7 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
-              { date: 'THIS WEEK', task: 'Finalize MSME Credit Policy Update', reg: 'MSME Lending', owner: 'Credit', status: 'Due 8 Aug', dot: '#AAAAAA', bg: '#F5F5F0' },
-            ].map((row, i) => (
-              <tr key={i} style={{ borderBottom: i < 3 ? '1px solid #F5F5F0' : 'none', cursor: 'pointer' }} onClick={() => navigate('map-tasks')}>
+            {deadlineRows.map((row, i) => (
+              <tr key={(row as any).id ?? i} style={{ borderBottom: i < 3 ? '1px solid #F5F5F0' : 'none', cursor: 'pointer' }} onClick={() => navigate('map-tasks')}>
                 <td style={{ padding: '11px 16px 11px 0' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#0A0A0A', background: row.bg, padding: '2px 8px', borderRadius: 6, fontFamily: 'Inter', textTransform: 'uppercase' }}>{row.date}</span>
                 </td>

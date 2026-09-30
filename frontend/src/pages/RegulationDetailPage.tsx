@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
 import { api } from '../lib/api'
+import { getPoliciesForReg } from '../lib/bankDemoManifest'
+import PolicyDrawer from '../components/PolicyDrawer'
 import type { RegulationOut, MAPOut, GraphResponse, IngestResponse } from '../lib/types'
 
 const statusStyle: Record<string, { bg: string; text: string }> = {
@@ -34,6 +36,7 @@ export default function RegulationDetailPage() {
   const [activeTab, setActiveTab] = useState<'maps' | 'graph' | 'history'>('maps')
   const [ingesting, setIngesting] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [policyOpen, setPolicyOpen] = useState(false)
 
   const { data: regulation, loading: regLoading, error: regError, refetch: regRefetch } = useApi<RegulationOut>(
     () => {
@@ -57,6 +60,11 @@ export default function RegulationDetailPage() {
       return api.get<GraphResponse>(`/regulations/${selectedId}/graph`)
     },
     [selectedId, activeTab],
+  )
+
+  const linkedPolicies = useMemo(
+    () => getPoliciesForReg(selectedId ?? '', regulation?.title ?? ''),
+    [selectedId, regulation?.title],
   )
 
   const handleIngest = async () => {
@@ -145,8 +153,20 @@ export default function RegulationDetailPage() {
           >
             {generating ? 'Generating…' : 'Generate MAPs'}
           </button>
+          {linkedPolicies.length > 0 ? (
+            <button
+              onClick={() => setPolicyOpen(true)}
+              style={{ padding: '8px 16px', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter', color: '#FFFFFF' }}
+            >
+              Internal Policy ({linkedPolicies[0].version})
+            </button>
+          ) : (
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', fontFamily: 'Inter' }}>No linked policy</span>
+          )}
         </div>
       </div>
+
+      <PolicyDrawer open={policyOpen} policies={linkedPolicies} onClose={() => setPolicyOpen(false)} />
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-5 p-1" style={{ background: '#FFFFFF', borderRadius: 12, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>

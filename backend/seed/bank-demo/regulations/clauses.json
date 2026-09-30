@@ -1,0 +1,116 @@
+{
+  "kyc-aml-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities including scheduled commercial banks, and every branch shall designate a Principal Officer who will be responsible for compliance with customer identification and record-keeping requirements."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall complete Customer Due Diligence for all new account relationships before account activation, and no account shall be operated until verification of identity and address is recorded in the central KYC registry."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall undertake periodic updation of KYC at least once every two years for high-risk customers, once every eight years for medium-risk customers, and once every ten years for low-risk customers from the date of last KYC update."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall refresh KYC for high-risk accounts within 30 days of a risk-category change, and the Compliance Department shall file a monthly exception report on overdue refresh cases to the Risk Management Committee."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall monitor transactions on an ongoing basis for complexity and unusual patterns, and shall retain account records and transaction data for a minimum period of five years from the date of transaction."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall file Cash Transaction Reports for all transactions above rupees ten lakh and Suspicious Transaction Reports within 7 days of reaching a conclusion that a transaction is suspicious, and the Principal Officer shall approve each filing."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall screen all customers and beneficial owners against the UNSC sanctions lists and domestic watchlists before onboarding and on a daily basis thereafter, and shall freeze matching accounts without prior notice."
+    },
+    {
+      "id": "3.1",
+      "text": "The Board of Directors shall review KYC and AML compliance at least once every six months, and the Chief Risk Officer shall present trend analysis of alerts, STR filings, and overdue refresh cases at each review."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall conduct an independent audit of KYC and AML controls at least once every twelve months, and audit findings shall be closed within 90 days with evidence retained for supervisory inspection."
+    }
+  ],
+  "cyber-controls-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities operating critical systems, and each entity shall appoint a Chief Information Security Officer who will be responsible for the cyber security posture and incident response readiness of the organisation."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall maintain a board-approved Information Security policy covering all internet-facing systems, privileged accounts, and remote administrative access, and the policy shall be reviewed at least once every twelve months."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall report all cyber security incidents to the Reserve Bank within 6 hours of detection, and a detailed root-cause report shall be submitted within 30 days of containment of the incident."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall enforce multi-factor authentication for all privileged accounts and remote administrative access, and single-factor access to critical systems shall be disabled within 60 days of issuance of these Directions."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall retain immutable audit logs of all access to sensitive customer information for a minimum period of twelve months, and logs shall be reviewed for anomalies on a daily basis by the security operations function."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall conduct vulnerability assessment and penetration testing of internet-facing systems at least once every six months, and critical vulnerabilities shall be remediated within 15 days of identification."
+    },
+    {
+      "id": "2.5",
+      "text": "Regulated Entities shall implement network segmentation isolating critical systems from general office networks, and all inter-zone traffic shall pass through inspected gateways with deny-by-default rules reviewed every 90 days."
+    },
+    {
+      "id": "3.1",
+      "text": "The Board of Directors shall constitute an IT Strategy Committee that meets at least once every three months, and the Chief Information Security Officer shall report incident trends and control maturity to the committee."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall conduct a cyber crisis simulation exercise at least once every twelve months covering ransomware and data-breach scenarios, and gaps identified shall be remediated within 90 days with evidence retained for supervisory review."
+    }
+  ],
+  "op-resilience-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities, and each entity shall identify its critical operations and map the people, processes, technology, and third parties supporting each critical operation within 6 months of issuance of these Directions."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall set impact tolerances for each critical operation expressed as maximum tolerable disruption, and the Board of Directors shall approve the tolerances at least once every twelve months."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall define a Recovery Time Objective not exceeding 4 hours and a Recovery Point Objective not exceeding 2 hours for each critical operation, and recovery capability shall be demonstrated through testing at least once every six months."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall maintain alternate processing sites with independent power and connectivity capable of assuming critical operations within the approved Recovery Time Objective, and switchover drills shall be conducted within every twelve months."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall assess the resilience of material third-party service providers at least once every twelve months, and contracts shall include the right to audit and a termination clause exercisable within 90 days for persistent resilience failures."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall maintain a business continuity plan documenting communication protocols, and the plan shall be activated for any disruption expected to exceed 2 hours with notification to the Reserve Bank within 24 hours of activation."
+    },
+    {
+      "id": "2.5",
+      "text": "Regulated Entities shall preserve backup copies of critical data in at least two geographically separate locations, and restoration from backup shall be tested for at least one critical operation within every three months on a rotational basis."
+    },
+    {
+      "id": "3.1",
+      "text": "The Risk Management Committee shall review resilience testing outcomes at least once every six months, and the Operations function shall report breaches of impact tolerance with remediation timelines at each review."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall conduct a full-scope resilience self-assessment at least once every twelve months, and deficiencies rated high shall be remediated within 90 days with closure evidence retained for supervisory inspection."
+    }
+  ]
+}
