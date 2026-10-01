@@ -1,1 +1,74 @@
-{"departments":["Compliance","Risk","IT","Operations","Legal","Credit","Audit"],"name":"Pravah Demo Bank","users":[{"dept":"Compliance","email":"admin@demobank.in","role":"admin"},{"dept":"Compliance","email":"compliance@demobank.in","role":"compliance_officer"},{"dept":"IT","email":"it-head@demobank.in","role":"dept_head"},{"dept":"Risk","email":"risk-head@demobank.in","role":"dept_head"},{"dept":"Audit","email":"auditor@demobank.in","role":"auditor"}]}
+{
+  "name": "Pravah Demo Bank",
+  "departments": [
+    "Compliance",
+    "Risk",
+    "IT",
+    "Operations",
+    "Legal",
+    "Credit",
+    "Audit"
+  ],
+  "users": [
+    {
+      "email": "admin@demobank.in",
+      "role": "admin",
+      "dept": "Compliance"
+    },
+    {
+      "email": "compliance@demobank.in",
+      "role": "compliance_officer",
+      "dept": "Compliance"
+    },
+    {
+      "email": "compliance-2@demobank.in",
+      "role": "compliance_officer",
+      "dept": "Compliance"
+    },
+    {
+      "email": "compliance-head@demobank.in",
+      "role": "dept_head",
+      "dept": "Compliance"
+    },
+    {
+      "email": "risk-head@demobank.in",
+      "role": "dept_head",
+      "dept": "Risk"
+    },
+    {
+      "email": "it-head@demobank.in",
+      "role": "dept_head",
+      "dept": "IT"
+    },
+    {
+      "email": "operations-head@demobank.in",
+      "role": "dept_head",
+      "dept": "Operations"
+    },
+    {
+      "email": "audit-head@demobank.in",
+      "role": "dept_head",
+      "dept": "Audit"
+    },
+    {
+      "email": "auditor@demobank.in",
+      "role": "auditor",
+      "dept": "Audit"
+    },
+    {
+      "email": "auditor-2@demobank.in",
+      "role": "auditor",
+      "dept": "Audit"
+    },
+    {
+      "email": "risk-analyst@demobank.in",
+      "role": "dept_staff",
+      "dept": "Risk"
+    },
+    {
+      "email": "ops-officer@demobank.in",
+      "role": "dept_staff",
+      "dept": "Operations"
+    }
+  ]
+}
