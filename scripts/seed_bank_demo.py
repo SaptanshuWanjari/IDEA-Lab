@@ -39,6 +39,13 @@ REGULATION_TITLES = {
     "kyc-aml-2026": "RBI KYC/AML Directions 2026",
     "cyber-controls-2026": "RBI Cyber Security Controls 2026",
     "op-resilience-2026": "RBI Operational Resilience Framework 2026",
+    "aml-cft-2026": "RBI AML/CFT Directions 2026",
+    "it-outsourcing-2026": "RBI IT Outsourcing Directions 2026",
+    "fraud-risk-2026": "RBI Fraud Risk Management Directions 2026",
+    "credit-risk-2026": "RBI Credit Risk and Large Exposures Directions 2026",
+    "msme-lending-2026": "RBI MSME Lending Directions 2026",
+    "business-continuity-2026": "RBI Business Continuity Management Directions 2026",
+    "data-privacy-2026": "RBI Customer Data Privacy Directions 2026",
 }
 
 
@@ -268,8 +275,8 @@ def verify_bank_demo(client: "httpx.Client", base_url: str) -> int:
     if not isinstance(regs, list):
         print(f"FAIL: GET /regulations/ returned non-list: {type(regs).__name__}")
         return 1
-    if len(regs) != 3:
-        print(f"FAIL: GET /regulations/ count={len(regs)}, expected 3")
+    if len(regs) != len(load_seed()[1].get("regulations", [])):
+        print(f"FAIL: GET /regulations/ count={len(regs)}, expected {len(load_seed()[1].get('regulations', []))}")
         return 1
 
     total_maps = 0
@@ -306,7 +313,7 @@ def verify_bank_demo(client: "httpx.Client", base_url: str) -> int:
         for line in failures:
             print(line)
         return 1
-    print(f"VERIFY OK: 3 regs, {total_maps} maps, reports ok")
+    print(f"VERIFY OK: {len(regs)} regs, {total_maps} maps, reports ok")
     return 0
 
 
@@ -352,7 +359,8 @@ def main(argv: list[str] | None = None) -> int:
             return verify_bank_demo(client, base_url)
 
     if args.verify and args.dry_run:
-        print("DRY-RUN: --verify would check 3 regs (graph nodes>0, simulate median, report counts); no API calls made.")
+        _manifest = load_seed()[1]
+        print(f"DRY-RUN: --verify would check {len(_manifest.get('regulations', []))} regs (graph nodes>0, simulate median, report counts); no API calls made.")
         return 0
 
     bank, manifest = load_seed()

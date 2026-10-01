@@ -112,5 +112,291 @@
       "id": "3.2",
       "text": "Regulated Entities shall conduct a full-scope resilience self-assessment at least once every twelve months, and deficiencies rated high shall be remediated within 90 days with closure evidence retained for supervisory inspection."
     }
+  ],
+  "aml-cft-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities, and every entity shall designate a Money Laundering Reporting Officer who will be responsible for oversight of anti-money laundering controls and liaison with the Financial Intelligence Unit."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall conduct an enterprise-wide money laundering and terrorist financing risk assessment at least once every twelve months, and the assessment summary shall be placed before the Risk Management Committee for approval of residual-risk actions."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall apply enhanced due diligence to correspondent banking relationships, including understanding nested downstream use of correspondent accounts, and shall terminate relationships where transparency of respondent controls cannot be established."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall capture complete originator and beneficiary information for all wire transfers above rupees fifty thousand, and transfers lacking required information shall be held for review before credit to the beneficiary account."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall obtain senior-management approval before establishing relationships with Politically Exposed Persons, and such relationships shall be subject to enhanced ongoing monitoring reviewed at least once every six months."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall implement red-flag rules for trade-based money laundering covering over-invoicing, under-invoicing and round-tripping patterns, and alerts generated shall be investigated within 30 days of generation."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall identify customer exposures to virtual-asset service providers, and transactions routing through unregistered providers shall be blocked or escalated to the Money Laundering Reporting Officer within 24 hours."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall report attempted suspicious transactions to the Financial Intelligence Unit within 7 days of detection, and no employee shall disclose to the customer that a report has been or will be filed."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall retain all anti-money laundering records for a minimum period of five years from the date of transaction or account closure, and shall furnish information sought by the Financial Intelligence Unit within the stipulated time."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall operate an ongoing staff training and screening programme on money laundering typologies, and completion records shall be maintained for supervisory inspection at least once every twelve months."
+    }
+  ],
+  "it-outsourcing-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all outsourcing of information technology services by Regulated Entities, and each entity shall maintain a central register of all outsourcing arrangements with materiality flags reviewed at least once every six months."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall conduct a documented risk assessment before entering any material outsourcing arrangement, and the assessment shall be approved by the Board of Directors or a Board-constituted committee before contract execution."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall perform due diligence on service providers covering ownership structure, financial soundness, incident history and information-security posture, and diligence shall be refreshed at least once every twenty-four months."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall ensure outsourcing contracts confer the right to audit, ownership of data generated, and termination rights exercisable within 90 days for persistent service or control failures."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall measure concentration risk where a single provider supports multiple critical operations, and documented exit strategies with data-return timelines shall exist for every material arrangement."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall ensure customer data processed by cloud service providers remains stored within India, and localisation compliance shall be attested by the provider at least once every twelve months."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall require prior written approval for subcontracting of outsourced critical activities, and subcontractors shall be subject to the same control and audit requirements as the primary provider."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall subject material outsourcing arrangements to independent audit at least once every twelve months, and high-rated findings shall be remediated within 90 days with closure evidence retained."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall require service providers to report outages and security incidents affecting the entity within 4 hours of detection, and joint tabletop exercises shall be conducted at least once every twelve months."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall align business continuity plans of outsourced critical functions with the entity recovery objectives, and switchover capability shall be tested at least once every twelve months."
+    }
+  ],
+  "fraud-risk-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all scheduled commercial banks, and each bank shall constitute a Fraud Monitoring Group which will review fraud cases and monitoring outcomes at least once every month."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall operate an Early Warning Signal framework for loan accounts, and accounts exhibiting red-flag indicators shall be labelled as Red Flagged Accounts with enhanced monitoring within 15 days of detection."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall complete staff-accountability examination for frauds above rupees fifty lakh within 6 months of detection, and findings shall be placed before the Board-level committee overseeing frauds."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall report frauds of rupees one lakh and above to the Reserve Bank through Fraud Monitoring Reports within the stipulated timelines, and delays shall be escalated to the Chief Compliance Officer with reasons recorded."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall provide in full for fraud-declared accounts as per the mandated provisioning schedule, and provisioning computations shall be independently verified before finalisation of quarterly results."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall commission forensic audits for frauds above the Board-approved threshold, and the scope shall cover fund trails, related-party linkages and control failures contributing to the fraud."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall report confirmed frauds to the Central Fraud Registry with complete borrower particulars, and registry data shall be consulted during credit appraisal of new exposures above rupees fifty lakh."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall provide zero liability to customers for unauthorised transactions reported within the stipulated time, and eligible claims shall be settled within 10 working days of reporting by the customer."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall conduct fraud-awareness programmes for customers across digital and branch channels at least once every twelve months, and campaign reach records shall be maintained for supervisory review."
+    },
+    {
+      "id": "3.3",
+      "text": "The Board of Directors shall review fraud risk at least once every six months covering modus operandi trends, recovery position and control improvements, and minutes shall record time-bound remediation actions."
+    }
+  ],
+  "credit-risk-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all scheduled commercial banks, and each bank shall maintain a Board-approved credit policy articulating risk appetite, delegation of sanctioning powers and exposure norms for each major segment."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall operate internal rating systems for corporate and institutional exposures, and models shall be validated through back-testing at least once every twelve months with results reported to the Risk Management Committee."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall limit exposure to a single counterparty to 20 percent of Tier 1 capital and to a group of connected counterparties to 25 percent, and breaches shall be reported to the Board within 7 days with a rectification plan."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall identify connected counterparties using control and economic-dependence criteria, and group exposures shall be aggregated for limit monitoring on a daily basis through the risk system."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall subject credit proposals to sensitivity analysis across adverse economic scenarios, and appraisal notes shall record through-the-cycle assumptions for cyclical sectors before sanction."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall value mortgaged collateral using prescribed haircuts, and revaluation of collateral for exposures above rupees twenty-five crore shall be completed at least once every twelve months."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall maintain a stressed-asset watchlist reviewed at least once every month, and provisions for watchlist accounts shall be topped up where collateral cover has deteriorated."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall operate an independent loan review mechanism covering sanctions above the Board-approved cut-off, and review findings shall be closed within 90 days with evidence retained for supervisory inspection."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall report exposures above rupees five crore to the Central Repository of Information on Large Credits within the stipulated timelines, and data quality shall be certified by the Chief Risk Officer every quarter."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall monitor sector-concentration against Board-approved caps, and breaches shall trigger enhanced appraisal and a cap-revision proposal within 30 days of detection."
+    }
+  ],
+  "msme-lending-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all scheduled commercial banks, and each bank shall fix branch-wise priority-sector lending targets for micro, small and medium enterprises with achievement monitored at least once every quarter."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall extend collateral-free loans up to rupees ten lakh to eligible micro and small enterprises with cover under the Credit Guarantee Fund Trust for Micro and Small Enterprises, and guarantee claims shall be filed within stipulated timelines."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall onboard to Trade Receivables Discounting System platforms and extend receivables financing to micro, small and medium enterprise sellers, with counter-offers priced transparently and settled within 7 days of acceptance."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall offer restructuring of stressed micro, small and medium enterprise advances under the approved framework where viability is established, and viability assessments shall be documented with cash-flow projections."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall operate a grievance redressal mechanism for micro, small and medium enterprise borrowers with referral to Credit Counselling Centres, and complaints shall be resolved within 21 days of receipt."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall use standardised loan application forms for micro, small and medium enterprise credit, and decisions shall be communicated within 30 days of receipt of complete applications with reasons recorded for rejections."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall designate specialised micro, small and medium enterprise branches staffed with trained officers, and the directory of such branches shall be published and updated at least once every twelve months."
+    },
+    {
+      "id": "3.2",
+      "text": "The Board of Directors shall review the micro, small and medium enterprise portfolio at least once every six months covering disbursement, non-performing asset trends and restructuring outcomes."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall verify Udyam registration before classifying advances as micro, small and medium enterprise lending, and unverified classifications shall be excluded from priority-sector reporting."
+    }
+  ],
+  "business-continuity-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities, and each entity shall maintain a Board-approved business continuity policy overseen by a Business Continuity Committee meeting at least once every three months."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall conduct a Business Impact Analysis for critical functions at least once every two years, and the analysis shall quantify financial, customer-service and regulatory consequences of disruption scenarios."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall document Recovery Time Objectives and Recovery Point Objectives for each critical function, and objectives shall be approved by the Board with dependency notes on people, systems and vendors."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall conduct disaster-recovery drills for core banking and payment systems at least twice every twelve months, and drill results shall be measured against approved Recovery Time Objectives with gaps remediated within 90 days."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall maintain pandemic and alternate work-site readiness, including seating capacity for at least 40 percent of critical-function staff and tested remote-access scaling for concurrent work-from-home load."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall maintain a crisis communication tree covering internal teams, customers and regulators, and disruptions expected to exceed 12 hours shall be notified to the Reserve Bank within 12 hours of invocation."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall subject business continuity arrangements to independent audit at least once every twelve months, and findings shall be placed before the Board with time-bound remediation plans."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall deliver business continuity awareness training to all staff at least once every twelve months, with role-based modules for incident-response team members and completion tracked centrally."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall map utility and vendor dependencies for each critical function, and single points of failure shall carry documented mitigations reviewed at least once every twelve months."
+    }
+  ],
+  "data-privacy-2026": [
+    {
+      "id": "1.1",
+      "text": "These Directions shall apply to all Regulated Entities processing customer personal data, and each entity shall appoint a Data Protection Officer and maintain an inventory of personal-data processing activities reviewed at least once every twelve months."
+    },
+    {
+      "id": "1.2",
+      "text": "Regulated Entities shall collect customer data only for stated purposes with recorded consent, and consent-management records shall demonstrate purpose limitation across digital onboarding journeys."
+    },
+    {
+      "id": "1.3",
+      "text": "Regulated Entities shall honour customer requests for access, correction and erasure of personal data within 30 days of receipt, and request fulfilment records shall be retained for supervisory inspection."
+    },
+    {
+      "id": "2.1",
+      "text": "Regulated Entities shall protect customer data with encryption at rest and in transit, and stored card data shall be tokenised with coverage certified at least once every twelve months."
+    },
+    {
+      "id": "2.2",
+      "text": "Regulated Entities shall notify the Reserve Bank of personal-data breaches within 24 hours of confirmation and affected customers within 72 hours, with root-cause reports submitted within 30 days of containment."
+    },
+    {
+      "id": "2.3",
+      "text": "Regulated Entities shall define retention and anonymisation schedules for customer datasets, and data retained beyond the schedule shall carry documented justification approved by the Data Protection Officer."
+    },
+    {
+      "id": "2.4",
+      "text": "Regulated Entities shall govern third-party sharing of customer data through agreements covering purpose, security controls and audit rights, and processors shall be audited at least once every twelve months."
+    },
+    {
+      "id": "3.1",
+      "text": "Regulated Entities shall conduct Data Protection Impact Assessments before launching new digital products handling customer data, and high residual risks shall require mitigation sign-off before launch approval."
+    },
+    {
+      "id": "3.2",
+      "text": "Regulated Entities shall deliver privacy training to customer-facing staff at least once every twelve months, and completion shall be reported to the Board with consequences for persistent non-completion."
+    },
+    {
+      "id": "3.3",
+      "text": "Regulated Entities shall control cross-border transfers of customer data through documented safeguards, and transfers to jurisdictions lacking adequate protection shall require Board-level approval with customer notice."
+    }
   ]
 }

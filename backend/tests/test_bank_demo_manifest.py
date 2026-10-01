@@ -27,7 +27,7 @@ def test_manifest_referenced_files_exist():
     assert (BASE / manifest["bank"]).is_file()
     # every policy entry must declare a file link under policies/
     # and the referenced markdown file must exist on disk
-    assert len(manifest["policies"]) == 3
+    assert len(manifest["policies"]) >= 3
     for p in manifest["policies"]:
         assert "file" in p and p["file"].startswith("policies/")
         assert (BASE / p["file"]).is_file(), f"missing policy file: {p['file']}"

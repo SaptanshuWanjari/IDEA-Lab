@@ -1,1 +1,59 @@
-{"bank":"bank.json","policies":[{"file":"policies/internal-kyc-policy.md","id":"pol-kyc-01","linked_regulation":"kyc-aml-2026","owner_dept":"Compliance","version":"v2.1"},{"file":"policies/cyber-incident-policy.md","id":"pol-cyber-01","linked_regulation":"cyber-controls-2026","owner_dept":"IT","version":"v1.4"},{"file":"policies/operational-resilience-policy.md","id":"pol-ops-01","linked_regulation":"op-resilience-2026","owner_dept":"Operations","version":"v1.0"}],"regulations":["kyc-aml-2026","cyber-controls-2026","op-resilience-2026"]}
+{
+  "bank": "bank.json",
+  "policies": [
+    {
+      "file": "policies/internal-kyc-policy.md",
+      "id": "pol-kyc-01",
+      "linked_regulation": "kyc-aml-2026",
+      "owner_dept": "Compliance",
+      "version": "v2.1"
+    },
+    {
+      "file": "policies/cyber-incident-policy.md",
+      "id": "pol-cyber-01",
+      "linked_regulation": "cyber-controls-2026",
+      "owner_dept": "IT",
+      "version": "v1.4"
+    },
+    {
+      "file": "policies/operational-resilience-policy.md",
+      "id": "pol-ops-01",
+      "linked_regulation": "op-resilience-2026",
+      "owner_dept": "Operations",
+      "version": "v1.0"
+    },
+    {
+      "id": "pol-aml-01",
+      "linked_regulation": "aml-cft-2026",
+      "owner_dept": "Compliance",
+      "version": "v1.0",
+      "file": "policies/aml-cft-policy.md"
+    },
+    {
+      "id": "pol-outsource-01",
+      "linked_regulation": "it-outsourcing-2026",
+      "owner_dept": "IT",
+      "version": "v1.0",
+      "file": "policies/it-outsourcing-policy.md"
+    },
+    {
+      "id": "pol-privacy-01",
+      "linked_regulation": "data-privacy-2026",
+      "owner_dept": "Compliance",
+      "version": "v1.0",
+      "file": "policies/customer-data-privacy-policy.md"
+    }
+  ],
+  "regulations": [
+    "kyc-aml-2026",
+    "cyber-controls-2026",
+    "op-resilience-2026",
+    "aml-cft-2026",
+    "it-outsourcing-2026",
+    "fraud-risk-2026",
+    "credit-risk-2026",
+    "msme-lending-2026",
+    "business-continuity-2026",
+    "data-privacy-2026"
+  ]
+}
