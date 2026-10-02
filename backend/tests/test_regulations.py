@@ -38,7 +38,7 @@ class FakeSession:
 async def test_upload_same_pdf_rejected():
     session = FakeSession()
     service = RegulationService(session, FakeStorage())
-    pdf = b"same pdf bytes"
+    pdf = b"%PDF-1.4 same pdf bytes\n%%EOF"
     user_id = "cdf0cb9b-3b74-44d5-9df7-fa75137467b5"
     await service.create(pdf, "a.pdf", "t", user_id)
     session.duplicate = True

@@ -12,6 +12,7 @@ from app.models.user import User
 from app.schemas.map import MAPOut, MAPReviewAction
 from app.services.audit import AuditService
 from app.services.authorization import AuthorizationError, Capability, RequestScope, authorize
+from app.services.document_pipeline import FileRejectedError
 from app.services.evidence_service import EvidenceService
 from app.services.map_engine import MapEngine
 from app.services.storage import StorageService
@@ -131,7 +132,12 @@ async def complete_map(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large (max 20MB)")
 
     storage = StorageService()
-    await EvidenceService(session, storage).upload(str(map_id), str(user.id), file.filename, content)
+    try:
+        await EvidenceService(session, storage).upload(
+            str(map_id), str(user.id), file.filename, content, file.content_type
+        )
+    except FileRejectedError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
     validation = ValidationService(session, LLMClient())
     completeness = await validation.check_completeness(str(map_id), file.filename)

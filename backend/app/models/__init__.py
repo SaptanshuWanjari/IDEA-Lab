@@ -9,3 +9,4 @@ from app.models.map import MAP  # noqa: F401
 from app.models.map_dependency import MapDependency  # noqa: F401
 from app.models.evidence import Evidence  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401
+from app.models.document_artifact import DocumentArtifact  # noqa: F401

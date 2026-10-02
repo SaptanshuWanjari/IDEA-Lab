@@ -6,7 +6,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.regulation import Regulation
-from app.services.storage import StorageService
+from app.services.document_pipeline import FileRejectedError
+from app.services.file_security import FileSecurityService, UploadInput
+from app.services.storage import StorageService, opaque_object_key
 
 
 class RegulationService:
@@ -17,13 +19,18 @@ class RegulationService:
     async def create(
         self, file_bytes: bytes, filename: str, title: str | None, user_id: str, scope=None
     ) -> Regulation:
+        inspection = FileSecurityService().inspect(
+            UploadInput(name=filename, declared_mime="application/pdf", data=file_bytes)
+        )
+        if inspection.state.value == "REJECTED":
+            raise FileRejectedError(inspection.reason or "regulation file rejected by inspection")
         content_hash = hashlib.sha256(file_bytes).hexdigest()
         result = await self.session.execute(select(Regulation).where(Regulation.content_hash == content_hash))
         if result.scalar_one_or_none():
             raise ValueError("This PDF has already been uploaded")
 
         regulation_id = str(uuid.uuid4())
-        object_name = f"{regulation_id}/{filename}"
+        object_name = opaque_object_key(regulation_id, ".pdf")
         path = self.storage.upload("regulations", object_name, file_bytes, "application/pdf")
         # New rows must carry scope; fall back to the legacy single-bank
         # scope when no scope is supplied (dev/backfill compat).

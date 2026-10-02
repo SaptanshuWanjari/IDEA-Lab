@@ -25,6 +25,7 @@ from app.services.embeddings import EmbeddingService
 from app.services.graph_service import GraphService
 from app.services.ingestion import IngestionService
 from app.services.map_engine import MapEngine
+from app.services.document_pipeline import FileRejectedError
 from app.services.regulation_service import RegulationService
 from app.services.storage import StorageService
 from app.vector.client import HybridVectorStore
@@ -47,6 +48,8 @@ async def upload_regulation(
     service = RegulationService(session, StorageService())
     try:
         regulation = await service.create(content, file.filename, title, str(user.id))
+    except FileRejectedError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
     return regulation

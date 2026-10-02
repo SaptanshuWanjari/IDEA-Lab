@@ -1,9 +1,16 @@
 from io import BytesIO
 from typing import Optional
+from uuid import uuid4
 
 from minio import Minio
 
 from app.config import settings
+
+
+def opaque_object_key(prefix: str, extension: str = "") -> str:
+    """Server-generated opaque key. Never embeds client filenames."""
+    safe_prefix = (prefix or "verified").strip("/").replace("..", "")
+    return f"{safe_prefix}/{uuid4().hex}{extension}"
 
 
 class StorageService:

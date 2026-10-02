@@ -200,6 +200,6 @@ async def test_regulation_service_create_tags_new_rows_with_scope():
 
     scope = _scope(bank="bank-a", entities=("entity-a",))
     svc = RegulationService(_FakeSession(), _FakeStorage())
-    reg = await svc.create(b"pdf-bytes", "r.pdf", "T", str(uuid.uuid4()), scope=scope)
+    reg = await svc.create(b"%PDF-1.4 pdf-bytes\n%%EOF", "r.pdf", "T", str(uuid.uuid4()), scope=scope)
     assert reg.bank_id == "bank-a"
     assert reg.legal_entity_id == "entity-a"
