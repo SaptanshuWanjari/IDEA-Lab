@@ -28,6 +28,22 @@ cp .env.example .env
 
 Edit `.env` and change `SECRET_KEY` for any non-local use.
 
+### 1a. Pilot Runtime Profile
+
+The backend validates its runtime profile at startup (`validate_runtime_settings`
+in `backend/app/config_profiles.py`, wired into `backend/app/main.py`):
+
+| `ENVIRONMENT` | Public registration | Secure cookies | Secrets | CORS origins |
+|---|---|---|---|---|
+| `development` / `test` | allowed | not required | defaults allowed | defaults allowed |
+| `pilot` / `production` | disabled | `COOKIE_SECURE=true` required | non-default `SECRET_KEY` (min 32 chars, injected via secret management) required | explicit non-`*` `ALLOWED_ORIGINS` list required |
+
+Pilot startup refuses insecure defaults: a default `SECRET_KEY`, `COOKIE_SECURE=false`,
+or a wildcard/empty `ALLOWED_ORIGINS` raises `ValueError` before the app serves traffic.
+For pilot deployments, keep data services (Postgres/Qdrant/Neo4j/MinIO) on the private
+compose network only (no published data ports) and set `ENVIRONMENT=pilot`,
+`COOKIE_SECURE=true`, `ALLOWED_ORIGINS=https://<pilot-host>`, plus an injected `SECRET_KEY`.
+
 ### 2. Install Ollama (Local)
 
 Ollama runs on the host, not in Docker. Install it from [ollama.com](https://ollama.com), then start it:

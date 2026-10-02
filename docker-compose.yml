@@ -1,4 +1,9 @@
 services:
+  # NOTE (dev profile): data ports are published for local development.
+  # For pilot deployments, use an overlay / `docker-compose -f docker-compose.yml -f docker-compose.pilot.yml`
+  # that removes these published data ports so Postgres/Qdrant/Neo4j/MinIO are
+  # reachable only on the private compose network (only the API port is published
+  # behind TLS termination), and injects all secrets via secret management.
   postgres:
     image: postgres:17
     environment:
@@ -82,6 +87,9 @@ services:
       OLLAMA_CHAT_MAX_TOKENS: ${OLLAMA_CHAT_MAX_TOKENS:-16384}
       OLLAMA_CHAT_TIMEOUT: ${OLLAMA_CHAT_TIMEOUT:-600}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8443}
     depends_on:
       postgres:
         condition: service_healthy
