@@ -13,3 +13,4 @@ from app.models.document_artifact import DocumentArtifact  # noqa: F401
 from app.models.job import Job, JobKind, JobStatus  # noqa: F401
 from app.models.regulation_version import RegulationVersion  # noqa: F401
 from app.models.obligation import Obligation, ObligationStatus  # noqa: F401
+from app.models.map_plan import MAPPlan, MAPPlanItem, MAPPlanStatus, MAPStatus  # noqa: F401

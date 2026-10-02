@@ -348,6 +348,59 @@ class ObligationReviewBody(BaseModel):
     clauses: dict[str, dict] = {}
 
 
+class RegulationPlanCandidateBody(BaseModel):
+    regulation_version_id: str | None = None
+    obligation_ids: list[str]
+    rationale: str | None = None
+    owner_department_id: str | None = None
+    due_date_basis: str | None = None
+
+
+@router.post("/{regulation_id}/plans/candidate")
+async def create_regulation_plan_candidate(
+    regulation_id: UUID,
+    body: RegulationPlanCandidateBody,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
+):
+    """Regulation-scoped alias for candidate-plan generation.
+
+    Builds a DRAFT plan only from APPROVED obligations; never mutates
+    the active approved plan.
+    """
+    from app.services.authorization import AuthorizationError as _AuthError
+    from app.services.map_plan_service import create_candidate_plan as _create_candidate
+
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+    if not isinstance(scope, RequestScope):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No scope")
+    try:
+        plan = await _create_candidate(
+            session,
+            body.regulation_version_id or str(regulation_id),
+            body.obligation_ids,
+            scope,
+            rationale=body.rationale,
+            owner_department_id=body.owner_department_id,
+            due_date_basis=body.due_date_basis,
+        )
+    except _AuthError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)
+        )
+    return {
+        "plan_id": str(plan.id),
+        "regulation_version_id": plan.regulation_version_id,
+        "version_number": plan.version_number,
+        "status": plan.status,
+    }
+
+
 @router.post("/{regulation_id}/obligations/candidates")
 async def create_obligation_candidate(
     regulation_id: UUID,

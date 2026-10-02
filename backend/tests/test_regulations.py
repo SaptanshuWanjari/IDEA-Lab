@@ -128,6 +128,9 @@ async def test_generate_maps_passes_valid_clause_ids():
         saved_map.description = "A"
         saved_map.deadline = None
         saved_map.evidence_required = None
+        saved_map.evidence_requirement_type = None
+        saved_map.map_plan_id = None
+        saved_map.submitted_by = None
         saved_map.confidence = 0.9
         saved_map.reasoning = "r1"
         saved_map.source_clauses = ["1.1"]
