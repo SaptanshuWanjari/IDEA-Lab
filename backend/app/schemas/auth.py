@@ -6,7 +6,12 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
-    role: str = "department_manager"
+
+
+class InviteRequest(BaseModel):
+    email: EmailStr
+    bank_id: str
+    roles: list[str]
 
 
 class UserLogin(BaseModel):
