@@ -57,6 +57,13 @@ export interface SimulationResponse {
   bottleneck_department: string | null
   bottleneck_frequency_pct: number | null
   department_workloads: Record<string, number>
+  // Task 12: scenario-estimate safeguards (present on /simulate).
+  label?: string | null
+  calibrated?: boolean | null
+  seed?: number | null
+  input_snapshot_id?: string | null
+  data_completeness?: number | null
+  data_quality_notes?: string[] | null
 }
 
 export interface ReportOut {

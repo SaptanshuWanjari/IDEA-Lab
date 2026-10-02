@@ -20,6 +20,7 @@ class SnapshotRequest(BaseModel):
     plan_id: str
     rationale: Optional[str] = None
     correlation_id: Optional[str] = None
+    evaluation: Optional[dict] = None
 
 
 @router.post("/snapshots", status_code=status.HTTP_201_CREATED)
@@ -39,6 +40,7 @@ async def create_snapshot(
             created_by=str(user.id),
             correlation_id=body.correlation_id,
             rationale=body.rationale,
+            evaluation=body.evaluation,
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
@@ -94,4 +96,6 @@ async def get_report(
         actor_id=str(user.id),
         payload={"generated_at": report["generated_at"]},
     )
+    report["evaluation_protocol"] = "pilot-eval-v1 (see docs/pilot-evaluation-protocol.md)"
+    report["evaluation"] = None
     return report

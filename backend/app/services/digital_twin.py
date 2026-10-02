@@ -16,7 +16,17 @@ class SimulationMAP:
 
 
 class DigitalTwin:
-    def __init__(self, maps: list[dict], iterations: int = 100):
+    """Monte Carlo twin. Outputs are Implementation Scenario Estimates.
+
+    Outputs are labelled "(uncalibrated)" unless a calibrated
+    ScenarioEstimator backtest has passed; use scenario_estimator for any
+    calibrated claim.
+    """
+
+    def __init__(self, maps: list[dict], iterations: int = 100, seed: int | None = None,
+                 input_snapshot_id: str | None = None):
+        self.seed = seed
+        self.input_snapshot_id = input_snapshot_id or ""
         self.sim_maps = {
             str(m["id"]): SimulationMAP(
                 id=str(m["id"]),
@@ -32,9 +42,19 @@ class DigitalTwin:
         }
         self.iterations = iterations
 
-    def simulate(self) -> dict:
+    def simulate(self, seed: int | None = None, input_snapshot_id: str | None = None) -> dict:
+        active_seed = seed if seed is not None else self.seed
+        if active_seed is not None:
+            random.seed(active_seed)
+        snapshot = input_snapshot_id or self.input_snapshot_id or ""
         if not self.sim_maps:
             return {
+                "label": "Implementation Scenario Estimate (uncalibrated)",
+                "calibrated": False,
+                "seed": active_seed,
+                "input_snapshot_id": snapshot,
+                "data_completeness": 0.0,
+                "data_quality_notes": ["no MAP inputs provided"],
                 "median_completion_days": 0,
                 "p90_completion_days": 0,
                 "optimistic_completion_days": 0,
@@ -97,6 +117,14 @@ class DigitalTwin:
         bottleneck_pct = (bottlenecks[bottleneck_dept] / self.iterations) * 100
 
         return {
+            "label": "Implementation Scenario Estimate (uncalibrated)",
+            "calibrated": False,
+            "seed": active_seed,
+            "input_snapshot_id": snapshot,
+            "data_completeness": 1.0,
+            "data_quality_notes": [
+                "uncalibrated twin output: no historical backtest; use ScenarioEstimator for calibrated claims"
+            ],
             "median_completion_days": median,
             "p90_completion_days": p90,
             "optimistic_completion_days": sorted_times[0],

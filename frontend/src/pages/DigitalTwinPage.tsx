@@ -86,8 +86,8 @@ export default function DigitalTwinPage() {
       <div className="card-hover" style={{ ...card, gridColumn: 'span 6' }}>
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.4px' }}>Digital Compliance Twin</h2>
-            <p style={{ fontSize: 12, color: '#888880', margin: 0, marginTop: 2 }}>Live model · updates every 15 min</p>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.4px' }}>Implementation Scenario Estimate</h2>
+            <p style={{ fontSize: 12, color: '#888880', margin: 0, marginTop: 2 }}>Advisory scenario model · not a forecast · updates every 15 min</p>
           </div>
           <div className="flex items-center gap-1.5">
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4CAF50', animation: 'pulse 2s infinite' }} />
@@ -175,19 +175,46 @@ export default function DigitalTwinPage() {
           <div className="card-hover" style={{ ...card }}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Monte Carlo Simulation</h3>
-                <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>{sim.iterations.toLocaleString()} iterations</p>
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>Implementation Scenario Estimate</h3>
+                <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>
+                  {sim.label ?? 'Implementation Scenario Estimate (uncalibrated)'} · {sim.iterations.toLocaleString()} iterations
+                  {typeof sim.seed === 'number' ? ` · seed ${sim.seed}` : ''}
+                  {sim.input_snapshot_id ? ` · snapshot ${sim.input_snapshot_id}` : ''}
+                </p>
               </div>
-              {sim.bottleneck_department && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#C13B2A', background: '#FFF3F0', padding: '3px 10px', borderRadius: 20, fontFamily: 'Inter' }}>
-                  Bottleneck: {sim.bottleneck_department}
+              <div className="flex items-center gap-1.5">
+                <span
+                  title={(sim.data_quality_notes ?? []).join('; ')}
+                  style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, fontFamily: 'Inter',
+                    color: sim.calibrated ? '#1E7E34' : '#856404', background: sim.calibrated ? '#E6F4EA' : '#FFF3CD' }}>
+                  {sim.calibrated ? 'Calibrated' : 'Uncalibrated'}
                 </span>
-              )}
+                {sim.bottleneck_department && (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#C13B2A', background: '#FFF3F0', padding: '3px 10px', borderRadius: 20, fontFamily: 'Inter' }}>
+                    Bottleneck: {sim.bottleneck_department}
+                  </span>
+                )}
+              </div>
             </div>
+            {(sim.data_quality_notes ?? []).length > 0 && (
+              <div style={{ background: '#FFFBEB', border: '1px solid #F5E6A8', borderRadius: 12, padding: '10px 14px', marginBottom: 12 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#856404', margin: 0, fontFamily: 'Inter' }}>Data quality</p>
+                <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                  {(sim.data_quality_notes ?? []).map((note, i) => (
+                    <li key={i} style={{ fontSize: 11, color: '#856404', fontFamily: 'Inter' }}>{note}</li>
+                  ))}
+                </ul>
+                {typeof sim.data_completeness === 'number' && (
+                  <p style={{ fontSize: 11, color: '#856404', margin: '4px 0 0', fontFamily: 'Inter' }}>
+                    Data completeness: {(sim.data_completeness * 100).toFixed(0)}%
+                  </p>
+                )}
+              </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               {[
                 { label: 'Median Completion', value: `${sim.median_completion_days}d` },
-                { label: 'P90 Completion',    value: `${sim.p90_completion_days}d` },
+                { label: 'Scenario P90 (estimate)',    value: `${sim.p90_completion_days}d` },
                 { label: 'Optimistic',         value: `${sim.optimistic_completion_days}d` },
                 { label: 'Pessimistic',        value: `${sim.pessimistic_completion_days}d` },
               ].map(item => (
@@ -204,8 +231,8 @@ export default function DigitalTwinPage() {
         <div className="card-hover" style={{ ...card }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>8-Week Prediction Trajectory</h3>
-              <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>AI model confidence: 91%</p>
+              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px' }}>8-Week Scenario Trajectory</h3>
+              <p style={{ fontSize: 11, color: '#888880', margin: 0, marginTop: 2 }}>Advisory scenario signal · not a calibrated forecast</p>
             </div>
             <span style={{ fontSize: 22, fontWeight: 800, color: '#8ad8ff', fontFamily: 'Inter', letterSpacing: '-1px' }}>+7.2%</span>
           </div>

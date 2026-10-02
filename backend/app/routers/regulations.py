@@ -2,6 +2,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -287,6 +288,8 @@ async def get_regulation_graph(
 @router.get("/{regulation_id}/simulate")
 async def simulate_regulation(
     regulation_id: UUID,
+    seed: int | None = None,
+    input_snapshot_id: str | None = None,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
@@ -324,7 +327,119 @@ async def simulate_regulation(
     ]
 
     twin = DigitalTwin(map_data, iterations=100)
-    return twin.simulate()
+    return twin.simulate(seed=seed, input_snapshot_id=input_snapshot_id)
+
+
+# ---- Task 12: gold-set evaluation + scenario estimate pilot gates ----
+
+class GoldItemBody(BaseModel):
+    obligation_id: str
+    obligation_text: str = ""
+    quote: str = ""
+    page: int | None = None
+    deadline: str | None = None
+    owner: str | None = None
+
+
+class PredictionBody(BaseModel):
+    obligation_id: str
+    obligation_text: str = ""
+    citation_valid: bool = False
+    deadline: str | None = None
+    owner: str | None = None
+    edited_by_reviewer: bool = False
+
+
+class EvaluateBody(BaseModel):
+    predictions: list[PredictionBody] = []
+    gold_set: list[GoldItemBody] = []
+    protocol_version: str = "pilot-eval-v1"
+
+
+class ScenarioEstimateBody(BaseModel):
+    seed: int = 42
+    input_snapshot_id: str | None = None
+    history: list[dict] = []
+
+
+@router.post("/evaluate")
+async def evaluate_obligations_route(
+    body: EvaluateBody,
+    user: User = Depends(get_current_user),
+):
+    """Score predictions against a versioned gold set (read-only results).
+
+    Only citation-valid predictions count as true positives. See
+    docs/pilot-evaluation-protocol.md for the versioned protocol.
+    """
+    from dataclasses import asdict
+
+    from app.services.evaluation import (
+        GoldSetItem,
+        PredictedObligation,
+        evaluate_obligations,
+    )
+
+    report = evaluate_obligations(
+        [PredictedObligation(**p.model_dump()) for p in body.predictions],
+        [GoldSetItem(**g.model_dump()) for g in body.gold_set],
+        protocol_version=body.protocol_version,
+    )
+    return asdict(report)
+
+
+@router.post("/{regulation_id}/scenario-estimate")
+async def scenario_estimate_regulation(
+    regulation_id: UUID,
+    body: ScenarioEstimateBody,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """Implementation Scenario Estimate with calibration gate.
+
+    Returns calibrated=false with data-quality notes until the historical
+    backtest threshold is met. Never labelled a forecast.
+    """
+    from dataclasses import asdict
+
+    from app.services.scenario_estimator import ScenarioEstimator
+
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+
+    result = await session.execute(
+        select(MAP, Department.name.label("department_name"))
+        .outerjoin(Department, MAP.owner_department_id == Department.id)
+        .where(MAP.regulation_id == regulation_id)
+    )
+    rows = result.all()
+    maps = [row.MAP for row in rows]
+    dept_names = {row.MAP.id: row.department_name for row in rows}
+
+    dep_result = await session.execute(
+        select(MapDependency).where(MapDependency.map_id.in_([m.id for m in maps]))
+    )
+    deps_by_map = {m.id: [] for m in maps}
+    for dep in dep_result.scalars().all():
+        deps_by_map[dep.map_id].append(str(dep.depends_on_map_id))
+
+    map_data = [
+        {
+            "id": str(m.id),
+            "department": dept_names.get(m.id) or str(m.owner_department_id),
+            "status": m.status,
+            "dependencies": deps_by_map.get(m.id, []),
+            "optimistic_days": m.estimated_days or 3,
+            "most_likely_days": m.estimated_days or 7,
+            "pessimistic_days": (m.estimated_days or 7) * 2,
+        }
+        for m in maps
+    ]
+    estimate = ScenarioEstimator(map_data, history=body.history).run(
+        seed=body.seed, input_snapshot_id=body.input_snapshot_id
+    )
+    return asdict(estimate)
 
 
 # ---- Task 7: cited obligation ledger review endpoints ----

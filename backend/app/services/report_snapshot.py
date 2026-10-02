@@ -50,6 +50,7 @@ async def build_report_snapshot(
     created_by: Optional[str] = None,
     correlation_id: Optional[str] = None,
     rationale: Optional[str] = None,
+    evaluation: Optional[dict] = None,
 ) -> ReportSnapshot:
     """Deep-copy current versioned state into an immutable snapshot payload."""
     plan = await session.get(MAPPlan, plan_id)
@@ -166,6 +167,9 @@ async def build_report_snapshot(
         "artifact_hashes": artifact_hashes,
         "snapshot_correlation_id": correlation_id,
         "generated_by": created_by,
+        # Task 12: latest gold-set evaluation attached to the frozen snapshot.
+        "evaluation": evaluation,
+        "evaluation_protocol": "pilot-eval-v1",
     }
 
     snapshot = ReportSnapshot(
