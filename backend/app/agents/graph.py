@@ -7,6 +7,8 @@ from app.llm.client import LLMClient
 
 class AgentState(TypedDict, total=False):
     regulation_id: str
+    regulation_version_id: str | None
+    correlation_id: str | None
     document_type: str | None
     text: str
     clauses: list
@@ -17,11 +19,12 @@ class AgentState(TypedDict, total=False):
     dependencies: list
     raw_req_response: str
     raw_llm_response: str
+    ai_runs: list
 
 
 class AgentGraph:
-    def __init__(self):
-        self.nodes = AgentNodes(LLMClient())
+    def __init__(self, run_recorder=None):
+        self.nodes = AgentNodes(LLMClient(), run_recorder=run_recorder)
         builder = StateGraph(AgentState)
         builder.add_node("understanding", self.nodes.understanding)
         builder.add_node("requirements", self.nodes.requirements)

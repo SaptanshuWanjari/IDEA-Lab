@@ -9,6 +9,7 @@ from alembic import context
 from app.config import settings
 from app.models.base import Base
 from app.models import user, department, regulation, map, map_dependency, evidence, audit  # noqa: F401
+from app.models import ai_run  # noqa: F401 - AIRun + ReportSnapshot (Task 10)
 
 config = context.config
 if config.config_file_name is not None:

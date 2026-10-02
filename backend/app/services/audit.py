@@ -43,16 +43,24 @@ class AuditService:
         actor_id: Optional[str] = None,
         payload: Optional[dict] = None,
         correlation_id: Optional[str] = None,
+        reason: Optional[str] = None,
+        before: Optional[dict] = None,
+        after: Optional[dict] = None,
     ) -> Optional[AuditLog]:
         """Best-effort audit write; never raises (job/version paths must not break)."""
         try:
+            merged = dict(payload or {})
+            if reason is not None:
+                merged.setdefault("reason", reason)
             entry = AuditLog(
                 regulation_id=UUID(regulation_id) if regulation_id else None,
                 map_id=UUID(map_id) if map_id else None,
                 actor_id=UUID(actor_id) if actor_id else None,
                 action=action,
-                payload=payload,
+                payload=merged,
                 correlation_id=correlation_id,
+                before=before,
+                after=after,
             )
             self.session.add(entry)
             await self.session.commit()
@@ -64,8 +72,45 @@ class AuditService:
         except Exception:
             return None
 
-    async def build_report(self, regulation_id: str, scope=None) -> dict:
+    async def latest_snapshot_for_regulation(self, regulation_id: str):
+        """Newest immutable snapshot covering this regulation, if any."""
+        from app.models.regulation_version import RegulationVersion
+        from app.services.report_snapshot import latest_snapshot
+
+        try:
+            result = await self.session.execute(
+                select(RegulationVersion).where(
+                    RegulationVersion.regulation_id == UUID(regulation_id)
+                )
+            )
+            versions = list(result.scalars().all())
+        except Exception:
+            return None
+        for version in sorted(
+            versions, key=lambda v: getattr(v, "created_at", None) or "", reverse=True
+        ):
+            snapshot = await latest_snapshot(self.session, str(version.id))
+            if snapshot is not None:
+                return snapshot
+        return None
+
+    async def build_report(self, regulation_id: str, scope=None, use_snapshot: bool = True) -> dict:
+        import copy
+
         from app.models.department import Department
+
+        if use_snapshot:
+            # Prefer the immutable snapshot when one exists so historical
+            # reports are reproducible even after later MAP edits.
+            try:
+                snapshot = await self.latest_snapshot_for_regulation(regulation_id)
+                if snapshot is not None and isinstance(snapshot.payload, dict):
+                    frozen = copy.deepcopy(snapshot.payload)
+                    frozen["snapshot_id"] = str(snapshot.id)
+                    frozen["reproducible"] = True
+                    return frozen
+            except Exception:
+                pass
 
         regulation = await self.session.get(Regulation, UUID(regulation_id))
         if not regulation:

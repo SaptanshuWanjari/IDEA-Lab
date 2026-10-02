@@ -9,10 +9,34 @@ from app.agents.prompts import (
     UNDERSTANDING_PROMPT,
 )
 from app.agents.tools import query_graph, retrieve
-from app.llm.client import LLMClient
+from app.llm.client import LLMClient, record_ai_run
 from app.schemas.agent import GeneratedMAP, Requirement
 
 _json_log = logging.getLogger(__name__)
+
+# Prompt template versions pinned for AI run provenance (Task 10). Bump the
+# version string whenever the corresponding template text changes.
+PROMPT_VERSIONS = {
+    "understanding": "understanding_prompt/v1",
+    "requirements": "requirement_prompt/v1",
+    "generate_maps": "map_prompt/v1",
+    "dependencies": "dependency_prompt/v1",
+}
+
+
+def _model_id(client) -> str:
+    model = getattr(client, "model", None)
+    return model if isinstance(model, str) and model else "unknown"
+
+
+def _chunk_ids(results) -> list[str]:
+    ids = []
+    for i, hit in enumerate(results or []):
+        if isinstance(hit, dict):
+            ids.append(str(hit.get("chunk_id") or hit.get("id") or f"hit-{i}"))
+        else:
+            ids.append(str(getattr(hit, "chunk_id", None) or f"hit-{i}"))
+    return ids
 
 
 def _remove_trailing_commas(text: str) -> str:
@@ -83,8 +107,21 @@ def _extract_json(text: str, default: list | dict = None) -> list | dict:
 
 
 class AgentNodes:
-    def __init__(self, client: LLMClient):
+    def __init__(self, client: LLMClient, run_recorder=None):
         self.client = client
+        # In-memory provenance of every LLM stage executed by this node set.
+        # Optional run_recorder(run) hook lets callers persist each AIRun.
+        self.runs: list = []
+        self.run_recorder = run_recorder
+
+    def _record(self, run):
+        self.runs.append(run)
+        if self.run_recorder is not None:
+            try:
+                self.run_recorder(run)
+            except Exception:
+                _json_log.warning("run_recorder failed for stage %s", run.stage)
+        return run
 
     def understanding(self, state: dict) -> dict:
         response = self.client.chat(
@@ -164,6 +201,12 @@ class AgentNodes:
         filters = {"document_type": state["document_type"]} if state.get("document_type") else {}
         historical = retrieve("Measurable Action Point implementation plan", filters=filters)
         historical_context = "\n".join(h.get("text", "") for h in historical[:3])
+        chunk_ids = _chunk_ids(historical)
+        user_prompt = MAP_PROMPT.format(
+            requirements=req_text,
+            historical_context=historical_context,
+            schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
+        )
 
         response = self.client.chat(
             [
@@ -177,26 +220,42 @@ class AgentNodes:
                 },
                 {
                     "role": "user",
-                    "content": MAP_PROMPT.format(
-                        requirements=req_text,
-                        historical_context=historical_context,
-                        schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
-                    ),
+                    "content": user_prompt,
                 },
             ]
         )
         _json_log.debug("MAPS LLM RESPONSE (len=%d): %s", len(response), response[:300])
         parsed = _extract_json(response, default=[])
-        
+
         # Robust unwrap if LLM returned {"maps": [...]} instead of [...]
         if isinstance(parsed, dict):
             if len(parsed) == 1 and isinstance(list(parsed.values())[0], list):
                 parsed = list(parsed.values())[0]
             else:
                 parsed = [parsed]
-                
+
         _json_log.debug("MAPS PARSED: %d items", len(parsed))
-        return {"generated_maps": parsed, "raw_llm_response": response}
+        # Task 10 provenance: every generate_maps LLM call records model,
+        # prompt version, input/output hashes, retrieval chunk IDs and the
+        # parse-validator outcome. Human review happens downstream, so the
+        # run starts life as pending_review.
+        run = self._record(
+            record_ai_run(
+                stage="generate_maps",
+                model_id=_model_id(self.client),
+                prompt_version=PROMPT_VERSIONS["generate_maps"],
+                input_text=user_prompt,
+                output_text=response,
+                retrieval_chunk_ids=chunk_ids,
+                retrieval_manifest={"query": "Measurable Action Point implementation plan"},
+                validator_result={"parsed": len(parsed) if isinstance(parsed, list) else 0,
+                                  "accepted": isinstance(parsed, list)},
+                reviewer_outcome="pending_review",
+                correlation_id=state.get("correlation_id"),
+                regulation_version_id=state.get("regulation_version_id") or state.get("regulation_id"),
+            )
+        )
+        return {"generated_maps": parsed, "raw_llm_response": response, "ai_runs": [run.to_dict()]}
 
     def validate_obligations(self, state: dict) -> dict:
         """Task 7: validate LLM-extracted obligation candidates against the
