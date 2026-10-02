@@ -88,7 +88,32 @@ class AuditService:
         evidence_by_map: dict[UUID, list[Evidence]] = {}
         for e in ev_result.scalars().all():
             evidence_by_map.setdefault(e.map_id, []).append(e)
+        # Distinguish attached evidence from human-approved evidence: only
+        # the latest APPROVED EvidenceAssessment counts toward completion.
+        from app.services.evidence_assessment import latest_assessments_for_evidence
+
+        all_evidence = [e for items in evidence_by_map.values() for e in items]
+        latest = await latest_assessments_for_evidence(
+            self.session, [e.id for e in all_evidence]
+        )
         completed_count = sum(1 for m in maps if m.status == "Completed")
+
+        def _evidence_entry(e: Evidence) -> dict:
+            decision = None
+            hit = latest.get(str(e.id))
+            if hit is None:
+                for key, value in latest.items():
+                    if str(key) == str(e.id):
+                        hit = value
+                        break
+            if hit is not None:
+                decision = getattr(hit, "decision", None)
+            return {
+                "file_name": e.file_name,
+                "uploaded_at": e.created_at.isoformat() if e.created_at else None,
+                "decision": decision or getattr(e, "assessment_decision", None) or "attached",
+                "approved": (decision or getattr(e, "assessment_decision", None)) == "APPROVED",
+            };
 
         return {
             "regulation_id": str(regulation.id),
@@ -105,13 +130,11 @@ class AuditService:
                     "confidence": m.confidence,
                     "source_clauses": m.source_clauses or [],
                     "reasoning": m.reasoning,
-                    "evidence": [
-                        {
-                            "file_name": e.file_name,
-                            "uploaded_at": e.created_at.isoformat() if e.created_at else None,
-                        }
-                        for e in evidence_by_map.get(m.id, [])
-                    ],
+                    "evidence": [_evidence_entry(e) for e in evidence_by_map.get(m.id, [])],
+                    "evidence_attached_count": len(evidence_by_map.get(m.id, [])),
+                    "evidence_approved_count": sum(
+                        1 for e in evidence_by_map.get(m.id, []) if _evidence_entry(e)["approved"]
+                    ),
                 }
                 for m in maps
             ],

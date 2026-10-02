@@ -9,6 +9,12 @@ from app.dependencies import get_current_user, get_request_scope, get_session, r
 from app.llm.client import LLMClient
 from app.models.map import MAP
 from app.models.user import User
+from app.schemas.evidence import (
+    AssessmentDraft,
+    AssessmentOut,
+    EvidenceApproveRequest,
+    EvidenceAssessRequest,
+)
 from app.schemas.map import (
     MAPOut,
     MAPPlanApprove,
@@ -21,6 +27,7 @@ from app.schemas.map import (
 from app.services.audit import AuditService
 from app.services.authorization import AuthorizationError, Capability, RequestScope, authorize
 from app.services.document_pipeline import FileRejectedError
+from app.services.evidence_assessment import approve_evidence, assess_evidence
 from app.services.evidence_service import EvidenceService
 from app.services.map_engine import MapEngine
 from app.services.map_plan_service import approve_plan, create_candidate_plan, diff_plans
@@ -92,6 +99,59 @@ async def diff_plan_versions(
 ):
     diff = await diff_plans(session, against, plan_id)
     return diff
+
+
+@router.post("/evidence/{evidence_id}/assess", response_model=AssessmentDraft)
+async def assess_map_evidence(
+    evidence_id: str,
+    body: EvidenceAssessRequest,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
+):
+    """Run an advisory content-backed assessment (never completes a MAP)."""
+    if not isinstance(scope, RequestScope):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No scope")
+    try:
+        evidence, _ = await EvidenceService(session, StorageService()).get_with_assessment(evidence_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found")
+    try:
+        authorize(scope, Capability.SUBMIT_EVIDENCE, evidence)
+    except AuthorizationError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found")
+    try:
+        draft = await assess_evidence(session, evidence_id, body.checklist, body.content_text)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return draft
+
+
+@router.post("/evidence/{evidence_id}/approve", response_model=AssessmentOut)
+async def approve_map_evidence(
+    evidence_id: str,
+    body: EvidenceApproveRequest,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
+):
+    """Record the binding approval decision; only APPROVED enables completion."""
+    if not isinstance(scope, RequestScope):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No scope")
+    try:
+        assessment = await approve_evidence(
+            session, evidence_id, body.decision, scope, body.rationale
+        )
+    except AuthorizationError as e:
+        if "maker-checker" in str(e):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evidence not found")
+    except ValueError as e:
+        msg = str(e)
+        if "Evidence not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=msg)
+    return assessment
 
 
 @router.post("/{map_id}/transition", response_model=MAPOut)
@@ -228,15 +288,18 @@ async def complete_map(
 
     storage = StorageService()
     try:
-        await EvidenceService(session, storage).upload(
+        evidence = await EvidenceService(session, storage).upload(
             str(map_id), str(user.id), file.filename, content, file.content_type
         )
     except FileRejectedError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
 
+    # Filename signals are advisory only: an upload never completes a MAP,
+    # nor does it move the formal workflow state. Completion requires an
+    # APPROVED EvidenceAssessment from a different approver via
+    # POST /maps/evidence/{id}/approve + workflow transition.
     validation = ValidationService(session, LLMClient())
     completeness = await validation.check_completeness(str(map_id), file.filename)
-    m.status = "Completed" if completeness["complete"] else "InProgress"
     await session.flush()
 
     functional_coverage = await validation.functional_coverage(str(m.regulation_id))
@@ -250,16 +313,23 @@ async def complete_map(
     await session.commit()
     audit = AuditService(session)
     await audit.log(
-        action="map_completed",
+        action="evidence_submitted",
         regulation_id=str(m.regulation_id),
         map_id=str(map_id),
         actor_id=str(user.id),
-        payload={"complete": completeness["complete"], "method": completeness.get("method")},
+        payload={
+            "evidence_id": str(evidence.id),
+            "advisory_filename_match": completeness["complete"],
+            "method": completeness.get("method"),
+            "completion_requires": "APPROVED EvidenceAssessment from a different approver",
+        },
     )
     await session.refresh(m)
     return {
         "map": MAPOut.model_validate(m),
+        "evidence_id": str(evidence.id),
         "completeness_check": completeness,
         "functional_coverage": functional_coverage,
         "integrity_checks": integrity_checks,
+        "completion_requires": "APPROVED EvidenceAssessment from a different approver",
     }

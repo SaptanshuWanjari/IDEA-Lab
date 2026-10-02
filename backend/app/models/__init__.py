@@ -8,6 +8,7 @@ from app.models.regulation import Regulation  # noqa: F401
 from app.models.map import MAP  # noqa: F401
 from app.models.map_dependency import MapDependency  # noqa: F401
 from app.models.evidence import Evidence  # noqa: F401
+from app.models.evidence_assessment import EvidenceAssessment  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401
 from app.models.document_artifact import DocumentArtifact  # noqa: F401
 from app.models.job import Job, JobKind, JobStatus  # noqa: F401

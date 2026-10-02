@@ -38,9 +38,10 @@ class _Result:
 
 
 class FakeSession:
-    def __init__(self, maps=None, deps=None):
+    def __init__(self, maps=None, deps=None, assessments=None):
         self.maps = {str(m.id): m for m in (maps or [])}
         self.deps = list(deps or [])
+        self.assessments = list(assessments or [])
         self.added = []
         self.committed = False
 
@@ -63,6 +64,11 @@ class FakeSession:
         compiled = str(stmt.compile(compile_kwargs={"literal_binds": True}))
         if "map_dependencies" in compiled:
             return _Result(list(self.deps))
+        if "evidence_assessments" in compiled:
+            rows = list(self.assessments)
+            if "APPROVED" in compiled:
+                rows = [a for a in rows if getattr(a, "decision", None) == "APPROVED"]
+            return _Result(rows)
         return _Result([])
 
 
@@ -117,8 +123,11 @@ async def test_completion_requires_a_reason():
 
 @pytest.mark.asyncio
 async def test_valid_lifecycle_reaches_completed_with_audit_trail():
+    from types import SimpleNamespace
+
     m = _map(status="Pending", submitted_by="owner-1")
-    session = FakeSession(maps=[m])
+    approval = SimpleNamespace(decision="APPROVED", assessor_id="approver-9", map_id=m.id)
+    session = FakeSession(maps=[m], assessments=[approval])
     m = await transition_map(session, str(m.id), MAPStatus.IN_PROGRESS, _scope(), None)
     assert m.status == MAPStatus.IN_PROGRESS.value
     m = await transition_map(

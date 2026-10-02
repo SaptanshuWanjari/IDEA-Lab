@@ -1,3 +1,4 @@
+from hashlib import sha256
 from uuid import UUID
 
 from sqlalchemy import select
@@ -15,7 +16,15 @@ class EvidenceService:
         self.storage = storage
 
     async def upload(
-        self, map_id: str, user_id: str, filename: str, data: bytes, declared_mime: str | None = None
+        self,
+        map_id: str,
+        user_id: str,
+        filename: str,
+        data: bytes,
+        declared_mime: str | None = None,
+        content_text: str | None = None,
+        source_system: str | None = None,
+        evidence_period: str | None = None,
     ) -> Evidence:
         inspection = FileSecurityService().inspect(
             UploadInput(
@@ -36,6 +45,10 @@ class EvidenceService:
             file_url=path,
             file_name=filename,
             uploaded_by=UUID(user_id),
+            content_text=content_text,
+            content_checksum=sha256(data).hexdigest(),
+            source_system=source_system,
+            evidence_period=evidence_period,
         )
         self.session.add(evidence)
         await self.session.commit()
@@ -45,3 +58,24 @@ class EvidenceService:
     async def list_for_map(self, map_id: str) -> list[Evidence]:
         result = await self.session.execute(select(Evidence).where(Evidence.map_id == UUID(map_id)))
         return result.scalars().all()
+
+    @staticmethod
+    def submitter(evidence: Evidence) -> str:
+        """Expose the maker (uploader) for maker-checker enforcement."""
+        return str(evidence.uploaded_by)
+
+    async def get_with_assessment(self, evidence_id: str):
+        """Return ``(evidence, latest_assessment_or_None)`` for review UIs."""
+        from app.services.evidence_assessment import latest_assessments_for_evidence
+
+        evidence = await self.session.get(Evidence, evidence_id)
+        if evidence is None:
+            raise ValueError(f"Evidence not found: {evidence_id}")
+        latest = await latest_assessments_for_evidence(self.session, [evidence.id])
+        assessment = latest.get(str(evidence.id))
+        if assessment is None:
+            for key, value in latest.items():
+                if str(key) == str(evidence.id):
+                    assessment = value
+                    break
+        return evidence, assessment

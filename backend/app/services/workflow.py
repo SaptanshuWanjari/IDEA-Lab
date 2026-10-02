@@ -72,6 +72,35 @@ async def _dependency_blockers(session, map_row: MAP) -> list:
     return blockers
 
 
+async def _has_approved_evidence(session, map_row: MAP) -> bool:
+    """Return True when the MAP owns a binding APPROVED evidence assessment.
+
+    Only a persisted ``EvidenceAssessment`` with ``decision == APPROVED``
+    and a human assessor counts — advisory drafts and bare attachments do
+    not. Sessions that cannot execute the lookup report no approval.
+    """
+    try:
+        from sqlalchemy import select
+
+        from app.models.evidence_assessment import EvidenceAssessment
+
+        result = await session.execute(
+            select(EvidenceAssessment).where(
+                EvidenceAssessment.map_id == map_row.id,
+                EvidenceAssessment.decision == "APPROVED",
+                EvidenceAssessment.assessor_id.is_not(None),
+            )
+        )
+        rows = result.scalars().all()
+    except Exception:
+        return False
+    return any(
+        getattr(row, "decision", None) == "APPROVED"
+        and getattr(row, "assessor_id", None)
+        for row in rows
+    )
+
+
 async def transition_map(session, map_id, target, scope: RequestScope, reason=None) -> MAP:
     """Move a MAP to ``target`` state under scope/maker-checker control.
 
@@ -112,6 +141,11 @@ async def transition_map(session, map_id, target, scope: RequestScope, reason=No
         if blockers:
             raise InvalidTransition(
                 "cannot complete: %d depended-on MAP(s) are not completed" % len(blockers)
+            )
+        if not await _has_approved_evidence(session, map_row):
+            raise InvalidTransition(
+                "cannot complete: map requires approved evidence "
+                "(an APPROVED EvidenceAssessment from a different approver)"
             )
 
     before = {"status": from_status.value}
