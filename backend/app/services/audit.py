@@ -35,6 +35,35 @@ class AuditService:
         await self.session.refresh(entry)
         return entry
 
+    async def log_event(
+        self,
+        action: str,
+        regulation_id: Optional[str] = None,
+        map_id: Optional[str] = None,
+        actor_id: Optional[str] = None,
+        payload: Optional[dict] = None,
+        correlation_id: Optional[str] = None,
+    ) -> Optional[AuditLog]:
+        """Best-effort audit write; never raises (job/version paths must not break)."""
+        try:
+            entry = AuditLog(
+                regulation_id=UUID(regulation_id) if regulation_id else None,
+                map_id=UUID(map_id) if map_id else None,
+                actor_id=UUID(actor_id) if actor_id else None,
+                action=action,
+                payload=payload,
+                correlation_id=correlation_id,
+            )
+            self.session.add(entry)
+            await self.session.commit()
+            try:
+                await self.session.refresh(entry)
+            except Exception:
+                pass
+            return entry
+        except Exception:
+            return None
+
     async def build_report(self, regulation_id: str, scope=None) -> dict:
         from app.models.department import Department
 

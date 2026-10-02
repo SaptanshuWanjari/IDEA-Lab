@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -26,6 +26,7 @@ from app.services.graph_service import GraphService
 from app.services.ingestion import IngestionService
 from app.services.map_engine import MapEngine
 from app.services.document_pipeline import FileRejectedError
+from app.services.job_service import JobService, create_reprocessing_version
 from app.services.regulation_service import RegulationService
 from app.services.storage import StorageService
 from app.vector.client import HybridVectorStore
@@ -118,6 +119,45 @@ async def ingest_regulation(
         "clause_count": len(doc.clauses),
         "entity_count": len(doc.entities),
     }
+
+
+@router.post("/{regulation_id}/reprocess", status_code=status.HTTP_202_ACCEPTED)
+async def reprocess_regulation(
+    regulation_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """Enqueue asynchronous reprocessing; creates a NEW regulation version.
+
+    Returns 202 Accepted with the idempotent job ID. Re-ingestion never
+    overwrites prior versions. Existing sync endpoints are unchanged.
+    """
+    import json
+
+    from app.models.job import JobKind
+
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+
+    content_hash = getattr(regulation, "content_hash", None) or "unknown"
+    version = await create_reprocessing_version(session, regulation.id, content_hash)
+    service = JobService(session)
+    job = await service.enqueue_unique(
+        JobKind.index_document, str(version.id), content_hash
+    )
+    return Response(
+        status_code=status.HTTP_202_ACCEPTED,
+        media_type="application/json",
+        content=json.dumps(
+            {
+                "job_id": str(job.id),
+                "regulation_version_id": str(version.id),
+                "version_number": version.version_number,
+                "status": "accepted",
+            }
+        ).encode(),
+    )
 
 
 @router.post("/{regulation_id}/generate", response_model=list[MAPOut])

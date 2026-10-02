@@ -24,3 +24,6 @@ class Regulation(Base, TimestampMixin):
 
     created_by_user = relationship("User", back_populates="regulations")
     maps = relationship("MAP", back_populates="regulation", cascade="all, delete-orphan")
+    versions = relationship(
+        "RegulationVersion", back_populates="regulation", cascade="all, delete-orphan"
+    )

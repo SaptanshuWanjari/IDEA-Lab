@@ -65,6 +65,34 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build: ./backend
+    command: dramatiq app.workers --queues pravah --processes 1 --threads 4
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pravah}:${POSTGRES_PASSWORD:-pravah}@postgres:5432/${POSTGRES_DB:-pravah}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
   api:
     build: ./backend
     extra_hosts:
@@ -80,6 +108,7 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      REDIS_URL: redis://redis:6379/0
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-qwen3:8b}
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
@@ -99,6 +128,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - tantivy_data:/tmp/pravah_tantivy
@@ -108,4 +139,5 @@ volumes:
   qdrant_data:
   neo4j_data:
   minio_data:
+  redis_data:
   tantivy_data:
