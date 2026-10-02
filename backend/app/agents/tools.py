@@ -23,10 +23,26 @@ def _get_graph_client() -> GraphClient:
     return _graph_client
 
 
-def retrieve(query: str, filters: dict = None) -> list[dict]:
-    """Hybrid retrieval: dense + BM25 + rerank + KG expansion."""
+def retrieve(query: str, filters: dict = None, scope: dict = None) -> list[dict]:
+    """Hybrid retrieval: dense + BM25 + rerank + KG expansion.
+
+    ``scope`` optionally carries ``bank_id``/``legal_entity_ids``/
+    ``regulation_version_ids``/``classification`` and is forwarded as a
+    :class:`RetrievalScope` so every backend applies identical filters.
+    Legacy ``filters`` (document_type/department/...) keep working.
+    """
+    from app.services.retrieval import RetrievalScope
+
     service = _get_retrieval_service()
-    results = service.search(query, **(filters or {}))
+    kwargs: dict = dict(filters or {})
+    if scope:
+        kwargs["scope"] = RetrievalScope(
+            bank_id=scope.get("bank_id", ""),
+            legal_entity_ids=list(scope.get("legal_entity_ids", []) or []),
+            regulation_version_ids=list(scope.get("regulation_version_ids", []) or []),
+            classification=scope.get("classification"),
+        )
+    results = service.search(query, **kwargs)
     return [
         {
             "id": r.get("id") or r.get("chunk_id"),
