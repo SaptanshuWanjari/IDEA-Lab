@@ -9,6 +9,23 @@ Text:
 REQUIREMENT_PROMPT = """You are a compliance analyst. Given the regulation summary and clauses, extract each obligation as a structured requirement.
 For each requirement, provide: clause_id, obligation, deadline_days (if specified), threshold (if any), entity involved, confidence (0.0-1.0).
 
+CITATION RULES (mandatory, Task 7 pilot gate):
+- Every requirement MUST include:
+  - "quote": the EXACT verbatim sentence(s) from the cited clause (copy, do not paraphrase);
+  - "page": the page number where the quote appears (integer, or null if unknown);
+  - "clause_id": the exact clause identifier (e.g. "2.1").
+- A requirement whose quote does not appear verbatim in the canonical text is
+  INVALID and will be rejected by the citation validator — it will persist only
+  as a review error, never as an approved obligation.
+- Classify deadlines deterministically:
+  - retention/storage duties ("retain ... for at least 12 months", "maintain logs
+    for a minimum period of ...") are RETENTION periods, never implementation
+    due dates;
+  - "within 30 days of X" is RELATIVE and MUST keep its anchor event X;
+  - "quarterly"/"every month" is PERIODIC; calendar dates are ABSOLUTE.
+- Note modal language (shall/must/should/may), exceptions ("unless", "except",
+  "notwithstanding") and cross-references ("as per clause ...", "under section ...").
+
 Summary:
 {summary}
 

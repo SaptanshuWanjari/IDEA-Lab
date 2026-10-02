@@ -18,6 +18,11 @@ from app.agents.graph import AgentGraph
 from app.config import settings
 from app.graph.client import GraphClient
 from app.schemas.map import MAPOut
+from app.schemas.obligation import (
+    ObligationCandidate,
+    ObligationOut,
+    ValidationResult,
+)
 from app.schemas.regulation import RegulationOut
 from app.services.dependency_graph import DependencyGraph
 from app.services.document_classifier import classify_document
@@ -320,3 +325,145 @@ async def simulate_regulation(
 
     twin = DigitalTwin(map_data, iterations=100)
     return twin.simulate()
+
+
+# ---- Task 7: cited obligation ledger review endpoints ----
+
+from pydantic import BaseModel  # noqa: E402
+
+
+class CandidateReviewBody(BaseModel):
+    candidate: ObligationCandidate
+    pages: dict[int, str] = {}
+    clauses: dict[str, dict] = {}
+    regulation_version_id: str | None = None
+    created_by: str | None = None
+
+
+class ObligationReviewBody(BaseModel):
+    decision: str  # "approve" | "reject"
+    reviewer_id: str
+    rationale: str | None = None
+    pages: dict[int, str] = {}
+    clauses: dict[str, dict] = {}
+
+
+@router.post("/{regulation_id}/obligations/candidates")
+async def create_obligation_candidate(
+    regulation_id: UUID,
+    body: CandidateReviewBody,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """Validate an extracted candidate against the canonical document and
+    persist it as DRAFT (valid citation) or REVIEWED-with-rationale
+    (invalid citation — a review error, never an approved obligation)."""
+    from app.models.obligation import Obligation
+    from app.services.citation_validator import CanonicalDocument
+    from app.services.obligation_service import create_candidate, validate_and_review
+
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+    document = CanonicalDocument(
+        source_version_id=body.regulation_version_id or str(regulation_id),
+        pages={int(k): str(v) for k, v in (body.pages or {}).items()},
+        clauses=dict(body.clauses or {}),
+    )
+    validation = validate_and_review(body.candidate, document)
+    obligation = create_candidate(
+        body.candidate, document,
+        regulation_version_id=body.regulation_version_id or str(regulation_id),
+        created_by=body.created_by or str(user.id),
+    )
+    session.add(obligation)
+    await session.commit()
+    await session.refresh(obligation)
+    return {
+        "obligation": ObligationOut.model_validate(obligation),
+        "validation": validation.model_dump(),
+    }
+
+
+@router.get("/{regulation_id}/obligations", response_model=list[ObligationOut])
+async def list_obligations(
+    regulation_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """List ledger obligations across all versions of this regulation."""
+    from app.models.obligation import Obligation
+    from app.models.regulation_version import RegulationVersion
+
+    regulation = await session.get(Regulation, regulation_id)
+    if not regulation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+    result = await session.execute(
+        select(RegulationVersion.id).where(RegulationVersion.regulation_id == regulation_id)
+    )
+    version_ids = [str(v) for v in result.scalars().all()] + [str(regulation_id)]
+    result = await session.execute(
+        select(Obligation).where(Obligation.regulation_version_id.in_(version_ids))
+    )
+    return [ObligationOut.model_validate(o) for o in result.scalars().all()]
+
+
+@router.post("/{regulation_id}/obligations/{obligation_id}/review")
+async def review_obligation(
+    regulation_id: UUID,
+    obligation_id: str,
+    body: ObligationReviewBody,
+    session: AsyncSession = Depends(get_session),
+    user: User = Depends(get_current_user),
+):
+    """Reviewer decision on a ledger obligation. Approval requires a valid
+    citation (re-validated server-side) plus a reviewer different from the
+    creator; violations return 422/403, never an approved row."""
+    from app.models.obligation import Obligation
+    from app.services.citation_validator import CanonicalDocument
+    from app.services.obligation_service import (
+        CitationError,
+        MakerCheckerError,
+        approve_obligation,
+        reject_obligation,
+        validate_and_review,
+    )
+
+    obligation = await session.get(Obligation, obligation_id)
+    if not obligation:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Obligation not found")
+    if body.decision == "reject":
+        if not body.rationale:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="rejection requires a rationale",
+            )
+        reject_obligation(obligation, reviewer_id=body.reviewer_id, rationale=body.rationale)
+        await session.commit()
+        return {"obligation": ObligationOut.model_validate(obligation)}
+    if body.decision != "approve":
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="decision must be approve or reject")
+    document = CanonicalDocument(
+        source_version_id=obligation.regulation_version_id,
+        pages={int(k): str(v) for k, v in (body.pages or {}).items()},
+        clauses=dict(body.clauses or {}),
+    )
+    candidate = ObligationCandidate(
+        clause_id=obligation.clause_id, quote=obligation.quote, page=obligation.page,
+        obligation_text=obligation.obligation_text,
+    )
+    validation = validate_and_review(candidate, document)
+    try:
+        approve_obligation(
+            obligation, reviewer_id=body.reviewer_id,
+            validation=validation, rationale=body.rationale,
+        )
+    except MakerCheckerError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
+    except CitationError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e)) from e
+    await session.commit()
+    return {
+        "obligation": ObligationOut.model_validate(obligation),
+        "validation": validation.model_dump(),
+    }

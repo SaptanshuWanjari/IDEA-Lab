@@ -10,6 +10,10 @@ class Clause(BaseModel):
     section: Optional[str] = None
     subsection: Optional[str] = None
     page: Optional[int] = None
+    # Task 7: canonical source spans + extraction quality.
+    char_start: Optional[int] = None
+    char_end: Optional[int] = None
+    extraction_quality: dict = Field(default_factory=dict)
 
 
 class Entity(BaseModel):
@@ -32,6 +36,10 @@ class DocumentStructure(BaseModel):
     entities: List[Entity] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
     raw_markdown: Optional[str] = None
+    # Task 7: canonical source-version structure.
+    source_version_id: Optional[str] = None
+    pages: dict = Field(default_factory=dict)
+    extraction_quality: dict = Field(default_factory=dict)
 
 
 class DocumentClass:

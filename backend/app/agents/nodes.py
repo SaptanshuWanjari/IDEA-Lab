@@ -198,6 +198,57 @@ class AgentNodes:
         _json_log.debug("MAPS PARSED: %d items", len(parsed))
         return {"generated_maps": parsed, "raw_llm_response": response}
 
+    def validate_obligations(self, state: dict) -> dict:
+        """Task 7: validate LLM-extracted obligation candidates against the
+        canonical document. Accepted candidates become draft obligations;
+        rejected ones persist only as review errors, never as approved
+        obligations."""
+        from app.schemas.obligation import ObligationCandidate
+        from app.services.citation_validator import CanonicalDocument, validate_candidate
+
+        clauses = state.get("clauses", [])
+        pages = state.get("pages") or {}
+        if not pages:
+            # Rebuild a sparse page map from clause page annotations.
+            for c in clauses:
+                if isinstance(c, dict) and c.get("page") is not None and c.get("text"):
+                    pages.setdefault(c["page"], "")
+            for c in clauses:
+                if isinstance(c, dict) and c.get("page") in pages and c.get("text"):
+                    pages[c["page"]] += (" " + str(c["text"]))
+        document = CanonicalDocument(
+            source_version_id=str(state.get("regulation_id", "unknown")),
+            pages={int(k): str(v) for k, v in pages.items()},
+            clauses={
+                str(c.get("id", i)): {"text": str(c.get("text", "")), "page": c.get("page")}
+                for i, c in enumerate(clauses)
+                if isinstance(c, dict)
+            },
+        )
+        obligations: list = []
+        review_errors: list = []
+        for raw in state.get("requirements", []):
+            if not isinstance(raw, dict):
+                continue
+            try:
+                candidate = ObligationCandidate(
+                    clause_id=str(raw.get("clause_id", "")),
+                    quote=str(raw.get("quote", raw.get("obligation", ""))),
+                    page=raw.get("page"),
+                    obligation_text=str(raw.get("obligation", "")),
+                )
+            except Exception as e:  # malformed model output -> review error
+                review_errors.append({"raw": raw, "reasons": [f"malformed candidate: {e}"]})
+                continue
+            result = validate_candidate(candidate, document)
+            if result.accepted:
+                obligations.append(candidate.model_dump())
+            else:
+                review_errors.append(
+                    {"candidate": candidate.model_dump(), "reasons": result.reasons}
+                )
+        return {"obligations": obligations, "obligation_review_errors": review_errors}
+
     def dependencies(self, state: dict) -> dict:
         maps_text = json.dumps(
             [
