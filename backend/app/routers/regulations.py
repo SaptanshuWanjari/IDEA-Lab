@@ -6,12 +6,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from app.dependencies import get_current_user, get_session
+from app.dependencies import get_current_user, get_request_scope, get_session
 from app.models.department import Department
 from app.models.map import MAP
 from app.models.map_dependency import MapDependency
 from app.models.regulation import Regulation
 from app.models.user import User
+from app.services.authorization import AuthorizationError, Capability, RequestScope, authorize, scoped_select
 from app.services.digital_twin import DigitalTwin
 from app.agents.graph import AgentGraph
 from app.config import settings
@@ -56,10 +57,17 @@ async def get_regulation(
     regulation_id: UUID,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
 ):
     regulation = await session.get(Regulation, regulation_id)
     if not regulation:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
+    if isinstance(scope, RequestScope):
+        try:
+            authorize(scope, Capability.VIEW_REGULATION, regulation)
+        except AuthorizationError:
+            # Confidentiality: hide existence of out-of-scope objects.
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Regulation not found")
     return regulation
 
 
@@ -67,8 +75,12 @@ async def get_regulation(
 async def list_regulations(
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
 ):
-    result = await session.execute(select(Regulation))
+    if isinstance(scope, RequestScope):
+        result = await session.execute(scoped_select(Regulation, scope))
+    else:
+        result = await session.execute(select(Regulation))
     return result.scalars().all()
 
 

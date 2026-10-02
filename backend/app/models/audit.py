@@ -13,3 +13,8 @@ class AuditLog(Base, TimestampMixin):
     actor_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     action = Column(String(200), nullable=False)
     payload = Column(JSON, nullable=True)
+    bank_id = Column(String(100), nullable=True, index=True)
+    legal_entity_id = Column(String(100), nullable=True, index=True)
+    correlation_id = Column(String(100), nullable=True, index=True)
+    before = Column(JSON, nullable=True)
+    after = Column(JSON, nullable=True)

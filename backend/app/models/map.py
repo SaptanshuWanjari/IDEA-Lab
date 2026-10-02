@@ -20,6 +20,8 @@ class MAP(Base, TimestampMixin):
     source_clauses = Column(ARRAY(String), nullable=True)
     evidence_required = Column(Text, nullable=True)
     estimated_days = Column(Integer, nullable=True, default=7)
+    bank_id = Column(String(100), nullable=True, index=True)
+    legal_entity_id = Column(String(100), nullable=True, index=True)
 
     regulation = relationship("Regulation", back_populates="maps")
     department = relationship("Department", back_populates="maps")

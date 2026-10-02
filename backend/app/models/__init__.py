@@ -1,6 +1,8 @@
 from app.models.base import Base, TimestampMixin, new_uuid  # noqa: F401
 from app.models.user import User  # noqa: F401
 from app.models.role import RoleAssignment, RoleCode  # noqa: F401
+from app.models.scope import Bank, LegalEntity  # noqa: F401
+from app.models.membership import DepartmentMembership  # noqa: F401
 from app.models.department import Department  # noqa: F401
 from app.models.regulation import Regulation  # noqa: F401
 from app.models.map import MAP  # noqa: F401

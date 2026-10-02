@@ -35,12 +35,16 @@ class AuditService:
         await self.session.refresh(entry)
         return entry
 
-    async def build_report(self, regulation_id: str) -> dict:
+    async def build_report(self, regulation_id: str, scope=None) -> dict:
         from app.models.department import Department
 
         regulation = await self.session.get(Regulation, UUID(regulation_id))
         if not regulation:
             raise ValueError("Regulation not found")
+        if scope is not None:
+            from app.services.authorization import Capability, authorize
+
+            authorize(scope, Capability.VIEW_REPORT, regulation)
 
         result = await self.session.execute(
             select(MAP, Department.name.label("department_name"))

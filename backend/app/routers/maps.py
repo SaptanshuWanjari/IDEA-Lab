@@ -5,12 +5,13 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.dependencies import get_current_user, get_session, require_role
+from app.dependencies import get_current_user, get_request_scope, get_session, require_role
 from app.llm.client import LLMClient
 from app.models.map import MAP
 from app.models.user import User
 from app.schemas.map import MAPOut, MAPReviewAction
 from app.services.audit import AuditService
+from app.services.authorization import AuthorizationError, Capability, RequestScope, authorize
 from app.services.evidence_service import EvidenceService
 from app.services.map_engine import MapEngine
 from app.services.storage import StorageService
@@ -37,10 +38,16 @@ async def get_map(
     map_id: UUID,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
 ):
     m = await session.get(MAP, map_id)
     if not m:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
+    if isinstance(scope, RequestScope):
+        try:
+            authorize(scope, Capability.VIEW_REGULATION, m)
+        except AuthorizationError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
     return m
 
 
@@ -50,11 +57,20 @@ async def review_map(
     action: MAPReviewAction,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(require_role("compliance_officer", "admin")),
+    scope: RequestScope | None = Depends(get_request_scope),
 ):
     engine = MapEngine(session)
     m = await session.get(MAP, map_id)
     if not m:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
+
+    if isinstance(scope, RequestScope):
+        try:
+            authorize(scope, Capability.APPROVE_MAP, m)
+        except AuthorizationError as e:
+            if "maker-checker" in str(e):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
 
     if action.action == "approve":
         m = await engine.approve(str(map_id))
@@ -90,10 +106,16 @@ async def complete_map(
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
+    scope: RequestScope | None = Depends(get_request_scope),
 ):
     m = await session.get(MAP, map_id)
     if not m:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
+    if isinstance(scope, RequestScope):
+        try:
+            authorize(scope, Capability.SUBMIT_EVIDENCE, m)
+        except AuthorizationError:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="MAP not found")
 
     allowed = {
         "application/pdf",

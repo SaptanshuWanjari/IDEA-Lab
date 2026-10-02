@@ -13,5 +13,7 @@ class Evidence(Base, TimestampMixin):
     file_url = Column(Text, nullable=False)
     file_name = Column(String(500), nullable=False)
     uploaded_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    bank_id = Column(String(100), nullable=True, index=True)
+    legal_entity_id = Column(String(100), nullable=True, index=True)
 
     map = relationship("MAP", back_populates="evidence")
