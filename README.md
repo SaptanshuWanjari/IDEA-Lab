@@ -28,6 +28,44 @@ cp .env.example .env
 
 Edit `.env` and change `SECRET_KEY` for any non-local use.
 
+### 1a. Pilot Runtime Profile
+
+The backend validates its runtime profile at startup (`validate_runtime_settings`
+in `backend/app/config_profiles.py`, wired into `backend/app/main.py`):
+
+| `ENVIRONMENT` | Public registration | Secure cookies | Secrets | CORS origins |
+|---|---|---|---|---|
+| `development` / `test` | allowed | not required | defaults allowed | defaults allowed |
+| `pilot` / `production` | disabled | `COOKIE_SECURE=true` required | non-default `SECRET_KEY` (min 32 chars, injected via secret management) required | explicit non-`*` `ALLOWED_ORIGINS` list required |
+
+Pilot startup refuses insecure defaults: a default `SECRET_KEY`, `COOKIE_SECURE=false`,
+or a wildcard/empty `ALLOWED_ORIGINS` raises `ValueError` before the app serves traffic.
+For pilot deployments, keep data services (Postgres/Qdrant/Neo4j/MinIO) on the private
+compose network only (no published data ports) and set `ENVIRONMENT=pilot`,
+`COOKIE_SECURE=true`, `ALLOWED_ORIGINS=https://<pilot-host>`, plus an injected `SECRET_KEY`.
+
+### 1a. Pilot Evaluation and Scenario Estimates
+
+Obligation quality is measured against a versioned gold set
+(`docs/pilot-evaluation-protocol.md`, protocol `pilot-eval-v1`):
+
+```bash
+curl -X POST http://localhost:8000/regulations/evaluate -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -d '{"predictions":[],"gold_set":[]}'
+```
+
+Metrics: `recall`, `citation_precision` (citation-invalid predictions are never
+true positives), `deadline_exact_match`, `owner_agreement`, `reviewer_edit_rate`.
+Pilot thresholds: recall >= 0.80, precision >= 0.90, deadline >= 0.90, owner >= 0.80.
+
+Timeline outputs are **Implementation Scenario Estimates**, never forecasts.
+`GET /regulations/$REG/simulate?seed=17` and
+`POST /regulations/$REG/scenario-estimate` return `calibrated: false` with
+`data_quality_notes` (including "missing historical actuals") until 30
+historical actuals are collected and backtest MAPE <= 0.25. The UI shows the
+Calibrated/Uncalibrated badge, notes, seed, and input snapshot ID.
+
 ### 2. Install Ollama (Local)
 
 Ollama runs on the host, not in Docker. Install it from [ollama.com](https://ollama.com), then start it:

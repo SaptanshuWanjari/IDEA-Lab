@@ -9,10 +9,34 @@ from app.agents.prompts import (
     UNDERSTANDING_PROMPT,
 )
 from app.agents.tools import query_graph, retrieve
-from app.llm.client import LLMClient
+from app.llm.client import LLMClient, record_ai_run
 from app.schemas.agent import GeneratedMAP, Requirement
 
 _json_log = logging.getLogger(__name__)
+
+# Prompt template versions pinned for AI run provenance (Task 10). Bump the
+# version string whenever the corresponding template text changes.
+PROMPT_VERSIONS = {
+    "understanding": "understanding_prompt/v1",
+    "requirements": "requirement_prompt/v1",
+    "generate_maps": "map_prompt/v1",
+    "dependencies": "dependency_prompt/v1",
+}
+
+
+def _model_id(client) -> str:
+    model = getattr(client, "model", None)
+    return model if isinstance(model, str) and model else "unknown"
+
+
+def _chunk_ids(results) -> list[str]:
+    ids = []
+    for i, hit in enumerate(results or []):
+        if isinstance(hit, dict):
+            ids.append(str(hit.get("chunk_id") or hit.get("id") or f"hit-{i}"))
+        else:
+            ids.append(str(getattr(hit, "chunk_id", None) or f"hit-{i}"))
+    return ids
 
 
 def _remove_trailing_commas(text: str) -> str:
@@ -83,8 +107,21 @@ def _extract_json(text: str, default: list | dict = None) -> list | dict:
 
 
 class AgentNodes:
-    def __init__(self, client: LLMClient):
+    def __init__(self, client: LLMClient, run_recorder=None):
         self.client = client
+        # In-memory provenance of every LLM stage executed by this node set.
+        # Optional run_recorder(run) hook lets callers persist each AIRun.
+        self.runs: list = []
+        self.run_recorder = run_recorder
+
+    def _record(self, run):
+        self.runs.append(run)
+        if self.run_recorder is not None:
+            try:
+                self.run_recorder(run)
+            except Exception:
+                _json_log.warning("run_recorder failed for stage %s", run.stage)
+        return run
 
     def understanding(self, state: dict) -> dict:
         response = self.client.chat(
@@ -164,6 +201,12 @@ class AgentNodes:
         filters = {"document_type": state["document_type"]} if state.get("document_type") else {}
         historical = retrieve("Measurable Action Point implementation plan", filters=filters)
         historical_context = "\n".join(h.get("text", "") for h in historical[:3])
+        chunk_ids = _chunk_ids(historical)
+        user_prompt = MAP_PROMPT.format(
+            requirements=req_text,
+            historical_context=historical_context,
+            schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
+        )
 
         response = self.client.chat(
             [
@@ -177,26 +220,93 @@ class AgentNodes:
                 },
                 {
                     "role": "user",
-                    "content": MAP_PROMPT.format(
-                        requirements=req_text,
-                        historical_context=historical_context,
-                        schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
-                    ),
+                    "content": user_prompt,
                 },
             ]
         )
         _json_log.debug("MAPS LLM RESPONSE (len=%d): %s", len(response), response[:300])
         parsed = _extract_json(response, default=[])
-        
+
         # Robust unwrap if LLM returned {"maps": [...]} instead of [...]
         if isinstance(parsed, dict):
             if len(parsed) == 1 and isinstance(list(parsed.values())[0], list):
                 parsed = list(parsed.values())[0]
             else:
                 parsed = [parsed]
-                
+
         _json_log.debug("MAPS PARSED: %d items", len(parsed))
-        return {"generated_maps": parsed, "raw_llm_response": response}
+        # Task 10 provenance: every generate_maps LLM call records model,
+        # prompt version, input/output hashes, retrieval chunk IDs and the
+        # parse-validator outcome. Human review happens downstream, so the
+        # run starts life as pending_review.
+        run = self._record(
+            record_ai_run(
+                stage="generate_maps",
+                model_id=_model_id(self.client),
+                prompt_version=PROMPT_VERSIONS["generate_maps"],
+                input_text=user_prompt,
+                output_text=response,
+                retrieval_chunk_ids=chunk_ids,
+                retrieval_manifest={"query": "Measurable Action Point implementation plan"},
+                validator_result={"parsed": len(parsed) if isinstance(parsed, list) else 0,
+                                  "accepted": isinstance(parsed, list)},
+                reviewer_outcome="pending_review",
+                correlation_id=state.get("correlation_id"),
+                regulation_version_id=state.get("regulation_version_id") or state.get("regulation_id"),
+            )
+        )
+        return {"generated_maps": parsed, "raw_llm_response": response, "ai_runs": [run.to_dict()]}
+
+    def validate_obligations(self, state: dict) -> dict:
+        """Task 7: validate LLM-extracted obligation candidates against the
+        canonical document. Accepted candidates become draft obligations;
+        rejected ones persist only as review errors, never as approved
+        obligations."""
+        from app.schemas.obligation import ObligationCandidate
+        from app.services.citation_validator import CanonicalDocument, validate_candidate
+
+        clauses = state.get("clauses", [])
+        pages = state.get("pages") or {}
+        if not pages:
+            # Rebuild a sparse page map from clause page annotations.
+            for c in clauses:
+                if isinstance(c, dict) and c.get("page") is not None and c.get("text"):
+                    pages.setdefault(c["page"], "")
+            for c in clauses:
+                if isinstance(c, dict) and c.get("page") in pages and c.get("text"):
+                    pages[c["page"]] += (" " + str(c["text"]))
+        document = CanonicalDocument(
+            source_version_id=str(state.get("regulation_id", "unknown")),
+            pages={int(k): str(v) for k, v in pages.items()},
+            clauses={
+                str(c.get("id", i)): {"text": str(c.get("text", "")), "page": c.get("page")}
+                for i, c in enumerate(clauses)
+                if isinstance(c, dict)
+            },
+        )
+        obligations: list = []
+        review_errors: list = []
+        for raw in state.get("requirements", []):
+            if not isinstance(raw, dict):
+                continue
+            try:
+                candidate = ObligationCandidate(
+                    clause_id=str(raw.get("clause_id", "")),
+                    quote=str(raw.get("quote", raw.get("obligation", ""))),
+                    page=raw.get("page"),
+                    obligation_text=str(raw.get("obligation", "")),
+                )
+            except Exception as e:  # malformed model output -> review error
+                review_errors.append({"raw": raw, "reasons": [f"malformed candidate: {e}"]})
+                continue
+            result = validate_candidate(candidate, document)
+            if result.accepted:
+                obligations.append(candidate.model_dump())
+            else:
+                review_errors.append(
+                    {"candidate": candidate.model_dump(), "reasons": result.reasons}
+                )
+        return {"obligations": obligations, "obligation_review_errors": review_errors}
 
     def dependencies(self, state: dict) -> dict:
         maps_text = json.dumps(

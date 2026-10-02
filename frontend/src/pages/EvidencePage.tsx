@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../App'
-import { api } from '../lib/api'
+import { api, pilotApi } from '../lib/api'
 import { openFilePicker } from '../lib/fileHelper'
+import EvidenceDecision from '../components/EvidenceDecision'
+import type { AssessmentDraftOut, EvidenceReviewState } from '../lib/types'
+import { canReviewRole } from '../lib/types'
 
 const typeColors: Record<string, { bg: string; text: string }> = {
   PDF: { bg: '#FFF3F0', text: '#C13B2A' },
@@ -11,7 +14,7 @@ const typeColors: Record<string, { bg: string; text: string }> = {
   MP4: { bg: '#F5F0FF', text: '#7B40C0' },
 }
 
-function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onClose: () => void; onUploaded: (name: string) => void }) {
+function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onClose: () => void; onUploaded: (name: string, evidenceId: string | null) => void }) {
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
   const [picked, setPicked] = useState<{ fileName: string; blob: Blob } | null>(null)
@@ -27,13 +30,16 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
     setUploading(true)
     setError('')
     try {
+      let evidenceId: string | null = null
       if (mapId) {
         const fd = new FormData()
         fd.append('file', picked.blob, picked.fileName)
-        await api.postForm(`/maps/${mapId}/complete`, fd)
+        const res = await api.postForm<Record<string, unknown>>(`/maps/${mapId}/complete`, fd)
+        const raw = res as { evidence_id?: string; evidenceId?: string; id?: string; evidence?: { id?: string } }
+        evidenceId = raw.evidence_id ?? raw.evidenceId ?? raw.evidence?.id ?? (typeof raw.id === 'string' ? raw.id : null)
       }
       setDone(true)
-      onUploaded(picked.fileName)
+      onUploaded(picked.fileName, evidenceId)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -54,11 +60,11 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
 
         {done ? (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
-            <div style={{ width: 64, height: 64, background: '#F0FFF0', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <svg width="28" height="28" fill="none" stroke="#4CAF50" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <div style={{ width: 64, height: 64, background: '#FFF8E1', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <svg width="28" height="28" fill="none" stroke="#C17B00" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>Upload complete!</p>
-            <p style={{ fontSize: 13, color: '#888880', margin: 0, marginTop: 6, fontFamily: 'Inter' }}>Evidence submitted for review</p>
+            <p data-testid="upload-awaiting-approval" style={{ fontSize: 16, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>File submitted — awaiting approval</p>
+            <p style={{ fontSize: 13, color: '#888880', margin: 0, marginTop: 6, fontFamily: 'Inter' }}>A different approver must approve before this item can complete.</p>
           </div>
         ) : (
           <>
@@ -117,10 +123,41 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
   )
 }
 
+interface SessionUpload {
+  name: string
+  time: string
+  ext: string
+  evidenceId: string | null
+  state: EvidenceReviewState
+  assessment: AssessmentDraftOut | null
+}
+
 export default function EvidencePage() {
-  const { toast, selectedId } = useApp()
+  const { toast, selectedId, user } = useApp()
   const [showUpload, setShowUpload] = useState(false)
-  const [recentUploads, setRecentUploads] = useState<{ name: string; time: string; ext: string }[]>([])
+  const [recentUploads, setRecentUploads] = useState<SessionUpload[]>([])
+  const [deciding, setDeciding] = useState<string | null>(null)
+  const canDecide = canReviewRole(user?.role)
+
+  const handleDecision = async (index: number, decision: 'APPROVED' | 'REJECTED', rationale?: string) => {
+    const item = recentUploads[index]
+    if (!item?.evidenceId) {
+      toast('warning', 'No evidence ID', 'This upload is not linked to a server-side evidence record yet.')
+      return
+    }
+    setDeciding(item.name)
+    try {
+      await pilotApi.approveEvidence(item.evidenceId, { decision, rationale })
+      setRecentUploads(prev => prev.map((u, i) =>
+        i === index ? { ...u, state: decision === 'APPROVED' ? 'approved' : 'rejected' } : u,
+      ))
+      toast(decision === 'APPROVED' ? 'success' : 'warning', decision === 'APPROVED' ? 'Evidence approved' : 'Evidence rejected')
+    } catch (err: unknown) {
+      toast('error', 'Decision failed', err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setDeciding(null)
+    }
+  }
 
   return (
     <>
@@ -128,10 +165,10 @@ export default function EvidencePage() {
         <UploadModal
           mapId={selectedId}
           onClose={() => setShowUpload(false)}
-          onUploaded={name => {
+          onUploaded={(name, evidenceId) => {
             const ext = name.split('.').pop()?.toUpperCase() ?? 'FILE'
-            setRecentUploads(prev => [{ name, time: 'just now', ext }, ...prev])
-            toast('success', 'Evidence submitted', `${name} queued for review`)
+            setRecentUploads(prev => [{ name, time: 'just now', ext, evidenceId, state: 'file-submitted', assessment: null }, ...prev])
+            toast('success', 'Evidence submitted', `${name} filed — awaiting a different approver`)
           }}
         />
       )}
@@ -171,25 +208,36 @@ export default function EvidencePage() {
           </button>
         </div>
 
-        {/* Recent uploads this session */}
+        {/* Recent uploads this session — explicit review states, never premature Completed */}
         {recentUploads.length > 0 && (
           <div style={{ background: '#FFFFFF', borderRadius: 26, border: '1px solid #E8E8E3', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
             <div style={{ background: '#FAFAF8', borderBottom: '1px solid #E8E8E3', padding: '12px 20px' }}>
               <p style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>This session's uploads</p>
             </div>
-            <div className="flex flex-col gap-2" style={{ padding: 16 }}>
+            <div className="flex flex-col gap-3" style={{ padding: 16 }}>
               {recentUploads.map((ev, i) => {
                 const tc = typeColors[ev.ext] ?? { bg: '#F5F5F0', text: '#888880' }
                 return (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid #F0F0EA' }}>
-                    <div style={{ width: 36, height: 36, background: tc.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 8, fontWeight: 700, color: tc.text, fontFamily: 'Geist Mono, monospace' }}>{ev.ext}</span>
+                  <div key={i} data-testid="session-upload" data-state={ev.state}>
+                    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid #F0F0EA' }}>
+                      <div style={{ width: 36, height: 36, background: tc.bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: 8, fontWeight: 700, color: tc.text, fontFamily: 'Geist Mono, monospace' }}>{ev.ext}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p style={{ fontSize: 12, fontWeight: 500, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{ev.name}</p>
+                        <p style={{ fontSize: 10, color: '#888880', margin: 0, fontFamily: 'Inter' }}>{ev.time}</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p style={{ fontSize: 12, fontWeight: 500, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{ev.name}</p>
-                      <p style={{ fontSize: 10, color: '#888880', margin: 0, fontFamily: 'Inter' }}>{ev.time}</p>
+                    <div style={{ marginTop: 8 }}>
+                      <EvidenceDecision
+                        state={ev.state}
+                        assessment={ev.assessment}
+                        canDecide={canDecide}
+                        busy={deciding === ev.name}
+                        onApprove={rationale => void handleDecision(i, 'APPROVED', rationale)}
+                        onReject={rationale => void handleDecision(i, 'REJECTED', rationale)}
+                      />
                     </div>
-                    <span style={{ background: '#F0FFF0', color: '#2D8A4E', fontSize: 10, fontWeight: 500, padding: '3px 8px', borderRadius: 20, fontFamily: 'Inter' }}>Submitted</span>
                   </div>
                 )
               })}

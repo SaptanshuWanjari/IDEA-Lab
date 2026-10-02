@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
-import { api } from '../lib/api'
+import { api, pilotApi } from '../lib/api'
 import { getPoliciesForReg } from '../lib/bankDemoManifest'
 import PolicyDrawer from '../components/PolicyDrawer'
-import type { RegulationOut, MAPOut, GraphResponse, IngestResponse } from '../lib/types'
+import ObligationReview from '../components/ObligationReview'
+import type { RegulationOut, MAPOut, GraphResponse, IngestResponse, ObligationOut } from '../lib/types'
+import { canReviewRole } from '../lib/types'
 
 const statusStyle: Record<string, { bg: string; text: string }> = {
   Mapped:       { bg: '#F0FFF0', text: '#2D8A4E' },
@@ -32,11 +34,13 @@ function ErrorBanner({ msg, onRetry }: { msg: string; onRetry: () => void }) {
 }
 
 export default function RegulationDetailPage() {
-  const { navigate, toast, selectedId } = useApp()
+  const { navigate, toast, selectedId, user } = useApp()
   const [activeTab, setActiveTab] = useState<'maps' | 'graph' | 'history'>('maps')
   const [ingesting, setIngesting] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [policyOpen, setPolicyOpen] = useState(false)
+  const [reviewBusy, setReviewBusy] = useState<string | null>(null)
+  const canReview = canReviewRole(user?.role)
 
   const { data: regulation, loading: regLoading, error: regError, refetch: regRefetch } = useApi<RegulationOut>(
     () => {
@@ -61,6 +65,28 @@ export default function RegulationDetailPage() {
     },
     [selectedId, activeTab],
   )
+
+  const { data: obligations, refetch: obligationsRefetch } = useApi<ObligationOut[]>(
+    () => {
+      if (!selectedId) return Promise.resolve([])
+      return pilotApi.listObligations(selectedId)
+    },
+    [selectedId],
+  )
+
+  const handleObligationDecision = async (ob: ObligationOut, decision: 'approve' | 'reject', rationale?: string) => {
+    if (!selectedId || !user) return
+    setReviewBusy(ob.id)
+    try {
+      await pilotApi.reviewObligation(selectedId, ob.id, { decision, reviewer_id: user.id, rationale })
+      toast('success', decision === 'approve' ? 'Obligation approved' : 'Obligation rejected')
+      obligationsRefetch()
+    } catch (err: unknown) {
+      toast('error', 'Obligation review failed', err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setReviewBusy(null)
+    }
+  }
 
   const linkedPolicies = useMemo(
     () => getPoliciesForReg(selectedId ?? '', regulation?.title ?? ''),
@@ -167,6 +193,32 @@ export default function RegulationDetailPage() {
       </div>
 
       <PolicyDrawer open={policyOpen} policies={linkedPolicies} onClose={() => setPolicyOpen(false)} />
+
+      {/* Obligation ledger — source-first review */}
+      <div data-testid="obligation-section" style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '22px 26px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)', marginBottom: 20 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>
+          Obligation Ledger{(obligations ?? []).length > 0 && <span style={{ marginLeft: 8, fontSize: 11, color: '#888880', fontWeight: 500 }}>{obligations!.length} candidate(s)</span>}
+        </h2>
+        <p style={{ fontSize: 12, color: '#888880', margin: '0 0 14px', fontFamily: 'Inter' }}>
+          Each obligation carries its source quote and page. Approval requires a valid citation and a reviewer different from the creator.
+        </p>
+        {(obligations ?? []).length === 0 ? (
+          <p style={{ fontSize: 13, color: '#AAAAAA', fontFamily: 'Inter', margin: 0 }}>No obligation candidates yet.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {(obligations ?? []).map(ob => (
+              <ObligationReview
+                key={ob.id}
+                obligation={ob}
+                canReview={canReview}
+                busy={reviewBusy === ob.id}
+                onApprove={rationale => void handleObligationDecision(ob, 'approve', rationale)}
+                onReject={rationale => void handleObligationDecision(ob, 'reject', rationale)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-5 p-1" style={{ background: '#FFFFFF', borderRadius: 12, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>

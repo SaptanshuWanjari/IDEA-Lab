@@ -1,4 +1,13 @@
-from pydantic_settings import BaseSettings
+from typing import Annotated, Literal
+
+from pydantic import BeforeValidator
+from pydantic_settings import BaseSettings, NoDecode
+
+
+def _split_origins(v) -> list[str]:
+    if isinstance(v, str):
+        return [o.strip() for o in v.split(",") if o.strip()]
+    return v
 
 
 class Settings(BaseSettings):
@@ -43,6 +52,14 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+
+    # Runtime profile
+    environment: Literal["development", "test", "pilot", "production"] = "development"
+    cookie_secure: bool = False
+    allowed_origins: Annotated[list[str], NoDecode, BeforeValidator(_split_origins)] = [
+        "http://localhost:3000",
+        "http://localhost:8443",
+    ]
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

@@ -137,6 +137,56 @@ class MapEngine:
         await self.session.commit()
         return m
 
+    async def from_approved_obligations(self, plan, obligations, regulation_id=None) -> List[MAP]:
+        """Plan-aware MAP generation: one draft MAP per APPROVED obligation.
+
+        Only obligations with APPROVED status produce MAPs; anything else
+        raises instead of generating advisory work from unreviewed text.
+        The caller persists the returned rows (and links plan items).
+        """
+        from uuid import UUID as _UUID
+
+        from app.models.obligation import ObligationStatus
+
+        resolved_regulation_id = regulation_id or getattr(plan, "regulation_id", None)
+        if resolved_regulation_id is None:
+            raise ValueError("plan-aware MAP generation requires a regulation_id")
+        if not isinstance(resolved_regulation_id, _UUID):
+            resolved_regulation_id = _UUID(str(resolved_regulation_id))
+
+        maps: list[MAP] = []
+        result = await self.session.execute(
+            select(Department).where(func.lower(Department.name) == "compliance")
+        )
+        default_dept = result.scalar_one_or_none()
+        for ob in obligations:
+            status = getattr(ob, "status", None)
+            current = status.value if hasattr(status, "value") else status
+            if current != ObligationStatus.APPROVED.value:
+                raise ValueError(
+                    f"obligation {getattr(ob, 'id', '?')} is not APPROVED "
+                    "(plan MAPs generate only from reviewed obligations)"
+                )
+            owner_dept = getattr(plan, "owner_department_id", None) or (
+                getattr(default_dept, "id", None) if default_dept is not None else None
+            )
+            maps.append(
+                MAP(
+                    regulation_id=resolved_regulation_id,
+                    map_plan_id=str(getattr(plan, "id")),
+                    owner_department_id=owner_dept,
+                    description=getattr(ob, "obligation_text", "")
+                    or getattr(ob, "quote", ""),
+                    status="Pending",
+                    approval_state="Draft",
+                    source_clauses=[getattr(ob, "clause_id", "")],
+                    evidence_required=getattr(ob, "owner_hint", None),
+                    bank_id=getattr(plan, "bank_id", None),
+                    legal_entity_id=getattr(plan, "legal_entity_id", None),
+                )
+            )
+        return maps
+
     def detect_cycle(self, dependencies: List[tuple[UUID, UUID]]) -> bool:
         graph = {}
         for src, dst in dependencies:

@@ -28,3 +28,6 @@ class GraphClient:
         self.run(
             "CREATE CONSTRAINT map_id IF NOT EXISTS FOR (m:MAP) REQUIRE m.id IS UNIQUE"
         )
+        self.run(
+            "CREATE CONSTRAINT source_version_id IF NOT EXISTS FOR (sv:SourceVersion) REQUIRE sv.id IS UNIQUE"
+        )

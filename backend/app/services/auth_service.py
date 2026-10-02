@@ -16,11 +16,13 @@ class AuthService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def register(self, email: str, password: str, role: str = "department_manager") -> User:
+    async def register(self, email: str, password: str) -> User:
         result = await self.session.execute(select(User).where(User.email == email))
         if result.scalar_one_or_none():
             raise ValueError("Email already registered")
-        user = User(email=email, hashed_password=pwd_context.hash(password), role=role)
+        # Pilot: client-supplied roles are not accepted; provisioned roles
+        # live in RoleAssignment. Keep the legacy column for dev compat.
+        user = User(email=email, hashed_password=pwd_context.hash(password), role="viewer")
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)

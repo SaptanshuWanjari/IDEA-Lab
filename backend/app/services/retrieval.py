@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import httpx
@@ -11,6 +12,53 @@ from app.llm.embeddings import EmbeddingClient
 from app.vector.client import HybridVectorStore
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RetrievalScope:
+    """Authorization scope enforced identically across dense/BM25/graph/rerank.
+
+    Kept optional (`scope=None`) for backward compatibility with existing
+    callers/tests; new pilot callers must pass a scope so every backend
+    applies the same bank/entity/version filters.
+    """
+
+    bank_id: str
+    legal_entity_ids: list[str] = field(default_factory=list)
+    regulation_version_ids: list[str] = field(default_factory=list)
+    classification: Optional[str] = None
+
+    def to_dense_filters(self) -> dict[str, Any]:
+        filters: dict[str, Any] = {"bank_id": self.bank_id}
+        if self.legal_entity_ids:
+            filters["legal_entity_id"] = list(self.legal_entity_ids)
+        if self.regulation_version_ids:
+            filters["regulation_version_id"] = list(self.regulation_version_ids)
+        if self.classification is not None:
+            filters["classification"] = self.classification
+        return filters
+
+    def to_bm25_filters(self) -> dict[str, Any]:
+        return self.to_dense_filters()
+
+    def allows(self, record: dict[str, Any]) -> bool:
+        if not record:
+            return True
+        if record.get("bank_id") is not None and record.get("bank_id") not in (None, "") and record.get("bank_id") != self.bank_id:
+            return False
+        if self.legal_entity_ids:
+            entity = record.get("legal_entity_id")
+            if entity is not None and entity not in self.legal_entity_ids:
+                return False
+        if self.regulation_version_ids:
+            version = record.get("regulation_version_id")
+            if version is not None and version not in self.regulation_version_ids:
+                return False
+        if self.classification is not None:
+            cls = record.get("classification")
+            if cls is not None and cls != self.classification:
+                return False
+        return True
 
 
 class Reranker:
@@ -126,21 +174,24 @@ class RetrievalService:
     def search(
         self,
         query: str,
+        scope: Optional[RetrievalScope] = None,
         document_type: Optional[str] = None,
         department: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict[str, Any]]:
-        filters = {}
+        filters: dict[str, Any] = {}
         if document_type:
             filters["document_type"] = document_type
         if department:
             filters["department"] = department
+        scope_filters: dict[str, Any] = scope.to_dense_filters() if scope else {}
+        dense_filters = {**filters, **scope_filters}
 
         query_vector = self.embedder.embed(query)
         dense = self.store.dense_search(
-            "regulation_chunks", query_vector, limit=50, filters=filters
+            "regulation_chunks", query_vector, limit=50, filters=dense_filters
         )
-        bm25 = self.store.bm25_search(query, limit=50)
+        bm25 = self.store.bm25_search(query, limit=50, filters=scope_filters or None)
 
         dense_by_id = {getattr(item, "id", str(rank)): item for rank, item in enumerate(dense)}
         text_by_id: dict[str, str] = {}
@@ -150,14 +201,25 @@ class RetrievalService:
             payload = getattr(item, "payload", {}) or {}
             if not isinstance(payload, dict):
                 payload = {}
+            if scope and not scope.allows(payload):
+                continue
             payload_by_id[cid] = payload
             text_by_id[cid] = getattr(item, "text", "") or payload.get("text", "")
         for item in bm25:
             cid = item.get("chunk_id", "")
-            text_by_id.setdefault(cid, "")
-            payload_by_id.setdefault(cid, {})
+            if scope and not scope.allows({**item, **payload_by_id.get(cid, {})}):
+                continue
+            text_by_id.setdefault(cid, item.get("text", ""))
+            payload_by_id.setdefault(cid, {k: v for k, v in item.items() if k not in ("chunk_id", "score")})
 
         fused = self._reciprocal_rank_fusion(dense, bm25, k=60)
+        if scope:
+            fused = [f for f in fused if f["id"] in payload_by_id]
+            # Defense in depth: re-check merged record before fusion cutoff.
+            fused = [
+                f for f in fused
+                if scope.allows(payload_by_id.get(f["id"], {}))
+            ]
         top = sorted(fused, key=lambda x: x["score"], reverse=True)[:20]
 
         candidates = []
@@ -169,9 +231,18 @@ class RetrievalService:
                 "score": item["score"],
                 "score_source": "rrf",
                 "source": "vector",
+                **{k: v for k, v in payload_by_id.get(chunk_id, {}).items()
+                   if k in ("bank_id", "legal_entity_id", "regulation_version_id", "classification", "source_version_id", "regulation_id", "clause")},
             })
 
         reranked = self.reranker.rerank(query, candidates)
+        if scope:
+            # Filter after rerank as well: never return out-of-scope ids
+            # even if the reranker echoes them back.
+            reranked = [
+                r for r in reranked
+                if scope.allows({**payload_by_id.get(r.get("id", ""), {}), **r})
+            ]
 
         expanded = []
         seen = set()
@@ -186,10 +257,12 @@ class RetrievalService:
             regulation_id = payload.get("regulation_id")
             if clause_id and regulation_id:
                 full_clause_id = f"{regulation_id}-{clause_id}"
-                related = self._graph_expand(full_clause_id)
+                related = self._graph_expand(full_clause_id, scope)
                 for r in related:
                     rid = r.get("id")
                     if rid and rid not in seen:
+                        if scope and not scope.allows(r):
+                            continue
                         expanded.append(
                             {
                                 "id": rid,
@@ -215,9 +288,37 @@ class RetrievalService:
             scores[key] = scores.get(key, 0) + 1 / (k + rank + 1)
         return [{"id": k, "score": v} for k, v in sorted(scores.items(), key=lambda x: x[1], reverse=True)]
 
-    def _graph_expand(self, clause_id: str) -> list[dict[str, Any]]:
+    def _graph_expand(self, clause_id: str, scope: Optional[RetrievalScope] = None) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {"id": clause_id}
+        if scope is None:
+            result = self.graph.run(
+                "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(related) RETURN related.id AS id, related.text AS text",
+                params,
+            )
+            return [{"id": r["id"], "text": r["text"]} for r in result]
+        clause_filters = []
+        if scope.bank_id:
+            clause_filters.append("related.bank_id = $bank_id")
+            params["bank_id"] = scope.bank_id
+        if scope.legal_entity_ids:
+            clause_filters.append("related.legal_entity_id IN $legal_entity_ids")
+            params["legal_entity_ids"] = list(scope.legal_entity_ids)
+        if scope.regulation_version_ids:
+            clause_filters.append("related.regulation_version_id IN $regulation_version_ids")
+            params["regulation_version_ids"] = list(scope.regulation_version_ids)
+        where = f"WHERE {' AND '.join(clause_filters)}" if clause_filters else ""
         result = self.graph.run(
-            "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(related) RETURN related.id AS id, related.text AS text",
-            {"id": clause_id},
+            "MATCH (c:Clause {id: $id})-[:REQUIRES|AMENDS|DEFINES]-(related) "
+            f"{where} RETURN related.id AS id, related.text AS text, "
+            "related.bank_id AS bank_id, related.legal_entity_id AS legal_entity_id, "
+            "related.regulation_version_id AS regulation_version_id",
+            params,
         )
-        return [{"id": r["id"], "text": r["text"]} for r in result]
+        out = []
+        for r in result:
+            try:
+                record = dict(r)
+            except Exception:
+                record = {"id": r["id"], "text": r["text"]}
+            out.append(record)
+        return out

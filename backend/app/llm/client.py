@@ -1,11 +1,61 @@
+import hashlib
 import logging
 import os
+from typing import Optional
 
 import httpx
 
 from app.config import settings
 
 _llm_log = logging.getLogger(__name__)
+
+
+def hash_text(value: str | None) -> str:
+    """SHA-256 hex of LLM input/output text for provenance records."""
+    return hashlib.sha256((value or "").encode("utf-8")).hexdigest()
+
+
+def record_ai_run(
+    *,
+    stage: str,
+    prompt_version: str,
+    input_text: str = "",
+    output_text: str = "",
+    model_id: str = "unknown",
+    provider: str = "ollama",
+    retrieval_chunk_ids: Optional[list] = None,
+    retrieval_manifest: Optional[dict] = None,
+    validator_result: Optional[dict] = None,
+    reviewer_outcome: Optional[str] = None,
+    correlation_id: Optional[str] = None,
+    regulation_version_id: Optional[str] = None,
+    bank_id: Optional[str] = None,
+    legal_entity_id: Optional[str] = None,
+):
+    """Persist-free AIRun factory: builds the provenance record for one LLM stage.
+
+    Callers persist the returned ``AIRun`` (or forward it to a recorder).
+    Never calls a model — safe for unit tests.
+    """
+    from app.models.ai_run import AIRun
+
+    manifest = dict(retrieval_manifest or {})
+    manifest.setdefault("chunk_ids", [str(c) for c in (retrieval_chunk_ids or [])])
+    return AIRun(
+        stage=stage,
+        model_id=model_id,
+        provider=provider,
+        prompt_version=prompt_version,
+        retrieval_manifest=manifest,
+        input_hash=hash_text(input_text),
+        output_hash=hash_text(output_text),
+        validator_result=validator_result,
+        reviewer_outcome=reviewer_outcome,
+        correlation_id=correlation_id,
+        regulation_version_id=regulation_version_id,
+        bank_id=bank_id,
+        legal_entity_id=legal_entity_id,
+    )
 
 
 class LLMClient:

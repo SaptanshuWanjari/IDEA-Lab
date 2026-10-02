@@ -33,21 +33,69 @@ class GraphService:
     def __init__(self, client: GraphClient):
         self.client = client
 
-    def ingest_regulation(self, regulation_id: str, title: str, document: DocumentStructure):
-        try:
+    def ingest_regulation(
+        self,
+        regulation_id: str,
+        title: str,
+        document: DocumentStructure,
+        *,
+        source_version_id: str | None = None,
+        bank_id: str | None = None,
+        legal_entity_id: str | None = None,
+        regulation_version_id: str | None = None,
+        classification: str | None = None,
+    ):
+        # Constraint violations must surface (never swallowed): MERGE-based
+        # writes are idempotent, so a constraint error indicates real
+        # corruption that reconciliation must report.
+        if source_version_id is not None:
+            self.client.run(
+                "MERGE (sv:SourceVersion {id: $id}) "
+                "SET sv.regulation_id = $reg_id, sv.bank_id = $bank_id, "
+                "sv.legal_entity_id = $legal_entity_id, "
+                "sv.regulation_version_id = $regulation_version_id",
+                {
+                    "id": source_version_id,
+                    "reg_id": regulation_id,
+                    "bank_id": bank_id,
+                    "legal_entity_id": legal_entity_id,
+                    "regulation_version_id": regulation_version_id or source_version_id,
+                },
+            )
+        else:
             self.client.run(
                 "MERGE (r:Regulation {id: $id}) SET r.title = $title",
                 {"id": regulation_id, "title": title},
             )
-        except Exception as e:
-            if "already exists" in str(e):
-                logger.info("Regulation %s already in graph, skipping ingest", regulation_id)
-                return
-            raise
         clause_ids = {c.id for c in document.clauses}
         for clause in document.clauses:
             clause_id = f"{regulation_id}-{clause.id}"
-            try:
+            params = {
+                "clause_id": clause_id,
+                "text": clause.text,
+                "section": clause.section,
+                "reg_id": regulation_id,
+                "bank_id": bank_id,
+                "legal_entity_id": legal_entity_id,
+                "regulation_version_id": regulation_version_id or source_version_id,
+                "classification": classification,
+                "source_version_id": source_version_id,
+            }
+            if source_version_id is not None:
+                self.client.run(
+                    """
+                    MATCH (sv:SourceVersion {id: $source_version_id})
+                    MERGE (c:Clause {id: $clause_id})
+                    SET c.text = $text, c.section = $section, c.regulation_id = $reg_id,
+                        c.bank_id = $bank_id, c.legal_entity_id = $legal_entity_id,
+                        c.regulation_version_id = $regulation_version_id,
+                        c.classification = $classification,
+                        c.source_version_id = $source_version_id
+                    MERGE (sv)-[:CONTAINS]->(c)
+                    """,
+                    params,
+                )
+            else:
                 self.client.run(
                     """
                     MERGE (c:Clause {id: $clause_id})
@@ -61,11 +109,6 @@ class GraphService:
                         "reg_id": regulation_id,
                     },
                 )
-            except Exception as e:
-                if "already exists" in str(e):
-                    logger.info("Clause %s already in graph, continuing", clause_id)
-                    continue
-                raise
 
         try:
             relations = self._extract_relations(title, document)
@@ -86,10 +129,12 @@ class GraphService:
             self._write_relation(source, target, rel_type)
 
     def _write_relation(self, source: str, target: str, rel_type: RelationType):
+        # MATCH both endpoints first: never fabricate phantom Clause nodes
+        # via bare MERGE, and never swallow constraint errors.
         queries = {
-            "REQUIRES": "MERGE (a:Clause {id: $source}) MERGE (b:Clause {id: $target}) MERGE (a)-[:REQUIRES]->(b)",
-            "AMENDS": "MERGE (a:Clause {id: $source}) MERGE (b:Clause {id: $target}) MERGE (a)-[:AMENDS]->(b)",
-            "DEFINES": "MERGE (a:Clause {id: $source}) MERGE (b:Clause {id: $target}) MERGE (a)-[:DEFINES]->(b)",
+            "REQUIRES": "MATCH (a:Clause {id: $source}) MATCH (b:Clause {id: $target}) MERGE (a)-[:REQUIRES]->(b)",
+            "AMENDS": "MATCH (a:Clause {id: $source}) MATCH (b:Clause {id: $target}) MERGE (a)-[:AMENDS]->(b)",
+            "DEFINES": "MATCH (a:Clause {id: $source}) MATCH (b:Clause {id: $target}) MERGE (a)-[:DEFINES]->(b)",
         }
         self.client.run(queries[rel_type], {"source": source, "target": target})
 

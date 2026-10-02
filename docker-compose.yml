@@ -1,4 +1,9 @@
 services:
+  # NOTE (dev profile): data ports are published for local development.
+  # For pilot deployments, use an overlay / `docker-compose -f docker-compose.yml -f docker-compose.pilot.yml`
+  # that removes these published data ports so Postgres/Qdrant/Neo4j/MinIO are
+  # reachable only on the private compose network (only the API port is published
+  # behind TLS termination), and injects all secrets via secret management.
   postgres:
     image: postgres:17
     environment:
@@ -60,6 +65,34 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build: ./backend
+    command: dramatiq app.workers --queues pravah --processes 1 --threads 4
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-pravah}:${POSTGRES_PASSWORD:-pravah}@postgres:5432/${POSTGRES_DB:-pravah}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
   api:
     build: ./backend
     extra_hosts:
@@ -75,6 +108,7 @@ services:
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      REDIS_URL: redis://redis:6379/0
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_CHAT_MODEL: ${OLLAMA_CHAT_MODEL:-qwen3:8b}
       OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text}
@@ -82,6 +116,9 @@ services:
       OLLAMA_CHAT_MAX_TOKENS: ${OLLAMA_CHAT_MAX_TOKENS:-16384}
       OLLAMA_CHAT_TIMEOUT: ${OLLAMA_CHAT_TIMEOUT:-600}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8443}
     depends_on:
       postgres:
         condition: service_healthy
@@ -90,6 +127,8 @@ services:
       neo4j:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     volumes:
       - ./backend:/app
@@ -100,4 +139,5 @@ volumes:
   qdrant_data:
   neo4j_data:
   minio_data:
+  redis_data:
   tantivy_data:

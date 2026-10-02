@@ -38,7 +38,7 @@ class FakeSession:
 async def test_upload_same_pdf_rejected():
     session = FakeSession()
     service = RegulationService(session, FakeStorage())
-    pdf = b"same pdf bytes"
+    pdf = b"%PDF-1.4 same pdf bytes\n%%EOF"
     user_id = "cdf0cb9b-3b74-44d5-9df7-fa75137467b5"
     await service.create(pdf, "a.pdf", "t", user_id)
     session.duplicate = True
@@ -128,6 +128,9 @@ async def test_generate_maps_passes_valid_clause_ids():
         saved_map.description = "A"
         saved_map.deadline = None
         saved_map.evidence_required = None
+        saved_map.evidence_requirement_type = None
+        saved_map.map_plan_id = None
+        saved_map.submitted_by = None
         saved_map.confidence = 0.9
         saved_map.reasoning = "r1"
         saved_map.source_clauses = ["1.1"]
