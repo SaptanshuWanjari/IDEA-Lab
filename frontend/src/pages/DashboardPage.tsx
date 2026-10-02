@@ -187,9 +187,19 @@ export default function DashboardPage() {
   const showDeadlineHint = usingDemoData || deadlines === null
   void extrasError
 
+  // Scoped review-queue counts (pilot states) derived from loaded MAPs.
+  const reviewQueue = useMemo(() => {
+    const all = Object.values(mapsByReg).flat()
+    if (all.length === 0) return null
+    const awaiting = all.filter(m => (m.approval_state ?? m.status) === 'Review' || m.status === 'In Progress').length
+    const approved = all.filter(m => (m.approval_state ?? m.status) === 'Approved').length
+    const rejected = all.filter(m => (m.approval_state ?? m.status) === 'Rejected').length
+    return { awaiting, approved, rejected, total: all.length }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [extras])
+
   // Fallback for visual mock data in table if no circulars
-  const tableData: Array<RegulationOut | { id: string; title: string; status: string; date: string; created_at?: string }> = !usingDemoData && circulars.length > 0 ? circulars : [
-    { id: '1', title: 'Master Direction – Operational Resilience', status: 'Review', date: '2026-08-24' },
+  const tableData: Array<RegulationOut | { id: string; title: string; status: string; date: string; created_at?: string }> = !usingDemoData && circulars.length > 0 ? circulars : [    { id: '1', title: 'Master Direction – Operational Resilience', status: 'Review', date: '2026-08-24' },
     { id: '2', title: 'Master Direction – Cybersecurity', status: 'In Progress', date: '2026-09-08' },
     { id: '3', title: 'Guidelines on Fraud Risk Management', status: 'Draft', date: '2026-09-15' },
     { id: '4', title: 'Master Direction – Credit Risk Management', status: 'Completed', date: '2026-08-10' },
@@ -263,6 +273,23 @@ export default function DashboardPage() {
 
 
       {/* ROW 2 */}
+      {/* Pilot review queue (scoped counts) */}
+      {reviewQueue && (
+        <div data-testid="review-queue" style={{ gridColumn: 'span 12', background: '#111111', borderRadius: 16, padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 24 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: '#8ad8ff', fontFamily: 'Inter' }}>Review queue</span>
+          {[
+            { label: 'Awaiting approval', value: reviewQueue.awaiting },
+            { label: 'Approved', value: reviewQueue.approved },
+            { label: 'Rejected', value: reviewQueue.rejected },
+            { label: 'Total MAPs', value: reviewQueue.total },
+          ].map(q => (
+            <span key={q.label} style={{ fontSize: 12, color: '#FFFFFF', fontFamily: 'Inter' }}>
+              {q.label}: <strong style={{ fontFamily: 'Geist Mono, monospace' }}>{q.value}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Regulatory Execution (Span 7) */}
       <HoverCard style={{ gridColumn: 'span 7' }}>
         <div className="flex items-center justify-between mb-5">

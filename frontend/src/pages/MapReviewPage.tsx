@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
-import { api } from '../lib/api'
-import type { MAPOut, MAPReviewAction } from '../lib/types'
+import { api, pilotApi } from '../lib/api'
+import PlanDiff from '../components/PlanDiff'
+import type { MAPOut, MAPReviewAction, PlanDiffOut } from '../lib/types'
+import { canReviewRole } from '../lib/types'
 
 const typeStyle: Record<string, { bg: string; text: string }> = {
   PDF: { bg: '#FFF3F0', text: '#C13B2A' },
@@ -28,13 +30,20 @@ function Skeleton() {
 }
 
 export default function MapReviewPage() {
-  const { navigate, toast, selectedId } = useApp()
+  const { navigate, toast, selectedId, user } = useApp()
   const [comments, setComments] = useState<{ author: string; avatar: string; time: string; text: string }[]>([])
   const [commentText, setCommentText] = useState('')
   const [decision, setDecision] = useState<'approve' | 'reject' | null>(null)
   const [reviewNotes, setReviewNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [candidatePlanId, setCandidatePlanId] = useState('')
+  const [previousPlanId, setPreviousPlanId] = useState('')
+  const [planDiff, setPlanDiff] = useState<PlanDiffOut | null>(null)
+  const [planLoading, setPlanLoading] = useState(false)
+  const [planApproving, setPlanApproving] = useState(false)
+  const [planError, setPlanError] = useState('')
+  const canReview = canReviewRole(user?.role)
 
   const { data: mapData, loading, error, refetch } = useApi<MAPOut>(
     () => {
@@ -72,6 +81,35 @@ export default function MapReviewPage() {
     setComments(prev => [{ author: 'You', avatar: 'ME', time: 'just now', text: commentText }, ...prev])
     setCommentText('')
     toast('info', 'Comment posted', 'Your comment has been added to the discussion.')
+  }
+
+  const handleLoadDiff = async () => {
+    if (!candidatePlanId.trim() || !previousPlanId.trim()) return
+    setPlanLoading(true)
+    setPlanError('')
+    try {
+      const diff = await pilotApi.diffPlans(candidatePlanId.trim(), previousPlanId.trim())
+      setPlanDiff(diff)
+    } catch (err: unknown) {
+      setPlanError(err instanceof Error ? err.message : 'Diff failed')
+    } finally {
+      setPlanLoading(false)
+    }
+  }
+
+  const handleApprovePlan = async (rationale?: string) => {
+    if (!candidatePlanId.trim()) return
+    setPlanApproving(true)
+    try {
+      await pilotApi.approvePlan(candidatePlanId.trim(), rationale)
+      toast('success', 'Plan approved', 'Candidate plan approved; prior active plan superseded.')
+      setPlanDiff(null)
+      setCandidatePlanId('')
+    } catch (err: unknown) {
+      toast('error', 'Plan approval failed', err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setPlanApproving(false)
+    }
   }
 
   if (!selectedId) {
@@ -185,6 +223,48 @@ export default function MapReviewPage() {
               </div>
             </div>
           )}
+
+          {/* Plan diff + approval */}
+          <div data-testid="plan-section" style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '22px 26px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>Plan Version Review</h2>
+            <p style={{ fontSize: 12, color: '#888880', margin: '0 0 12px', fontFamily: 'Inter' }}>
+              Compare a candidate plan against the active plan, then approve with supersession confirmation.
+            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <input
+                data-testid="plan-candidate-input"
+                value={candidatePlanId}
+                onChange={e => setCandidatePlanId(e.target.value)}
+                placeholder="Candidate plan ID"
+                style={{ flex: 1, border: '1px solid #E8E8E3', borderRadius: 8, padding: '8px 10px', fontSize: 12, fontFamily: 'Geist Mono, monospace', outline: 'none' }}
+              />
+              <input
+                data-testid="plan-previous-input"
+                value={previousPlanId}
+                onChange={e => setPreviousPlanId(e.target.value)}
+                placeholder="Active plan ID"
+                style={{ flex: 1, border: '1px solid #E8E8E3', borderRadius: 8, padding: '8px 10px', fontSize: 12, fontFamily: 'Geist Mono, monospace', outline: 'none' }}
+              />
+              <button
+                data-testid="load-plan-diff"
+                onClick={handleLoadDiff}
+                disabled={planLoading || !candidatePlanId.trim() || !previousPlanId.trim()}
+                style={{ padding: '8px 14px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: planLoading ? 'not-allowed' : 'pointer', fontFamily: 'Inter' }}
+              >
+                {planLoading ? 'Loading…' : 'Show diff'}
+              </button>
+            </div>
+            {planError && <p style={{ fontSize: 12, color: '#C13B2A', fontFamily: 'Inter', margin: '0 0 8px' }}>{planError}</p>}
+            {planDiff && (
+              <PlanDiff
+                diff={planDiff}
+                candidateVersion={null}
+                canApprove={canReview}
+                busy={planApproving}
+                onApprove={rationale => void handleApprovePlan(rationale)}
+              />
+            )}
+          </div>
         </div>
 
         {/* Right panel */}

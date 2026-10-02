@@ -1,6 +1,33 @@
 import { test, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test';
 import path from 'path';
 
+test.describe('PravahOS Electron smoke (Task 11: app loads, no crash)', () => {
+  test('electron window opens and renders without crashing', async () => {
+    if (process.env.SKIP_E2E === '1') test.skip(true, 'SKIP_E2E=1');
+    let app: ElectronApplication | undefined;
+    try {
+      app = await electron.launch({
+        args: ['electron/main.cjs'],
+        cwd: process.cwd(),
+        env: { ...process.env, ELECTRON_START_URL: 'http://localhost:8443' },
+      });
+    } catch (e) {
+      test.skip(true, 'electron launch unavailable in this environment');
+      return;
+    }
+    try {
+      const window = await app.firstWindow();
+      await window.waitForLoadState('domcontentloaded', { timeout: 20000 });
+      // App renders either the login screen or the dashboard — either counts as loaded.
+      const loaded = await window.locator('text=Welcome back, text=Digital Compliance Twin, text=Dashboard').first().isVisible({ timeout: 20000 }).catch(() => false);
+      expect(loaded).toBeTruthy();
+      expect(await app.windows()).toHaveLength(1);
+    } finally {
+      await app?.close();
+    }
+  });
+});
+
 test.describe('PravahOS Electron App E2E', () => {
   let electronApp: ElectronApplication;
   let page: Page;

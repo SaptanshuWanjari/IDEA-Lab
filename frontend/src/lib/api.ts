@@ -77,3 +77,39 @@ export const api = {
   postForm: <T>(path: string, formData: FormData) =>
     request<T>('POST', path, formData, true),
 }
+
+/** Single-bank pilot review workflow calls (Tasks 7-10 backends). */
+export const pilotApi = {
+  listObligations: (regulationId: string) =>
+    api.get<import('./types').ObligationOut[]>(`/regulations/${regulationId}/obligations`),
+
+  reviewObligation: (regulationId: string, obligationId: string, body: { decision: 'approve' | 'reject'; reviewer_id: string; rationale?: string }) =>
+    api.post<{ obligation: import('./types').ObligationOut }>(
+      `/regulations/${regulationId}/obligations/${obligationId}/review`,
+      body,
+    ),
+
+  createPlanCandidate: (regulationId: string, body: { regulation_version_id?: string; obligation_ids: string[]; rationale?: string }) =>
+    api.post<{ plan_id: string; regulation_version_id: string; version_number: number; status: string }>(
+      `/regulations/${regulationId}/plans/candidate`,
+      body,
+    ),
+
+  approvePlan: (planId: string, rationale?: string) =>
+    api.post<import('./types').MAPPlanOut>(`/maps/plans/${planId}/approve`, { rationale }),
+
+  diffPlans: (planId: string, against: string) =>
+    api.get<import('./types').PlanDiffOut>(`/maps/plans/${planId}/diff?against=${encodeURIComponent(against)}`),
+
+  assessEvidence: (evidenceId: string, body: { checklist: { items: { key: string; description?: string; required?: boolean }[] }; content_text?: string }) =>
+    api.post<import('./types').AssessmentDraftOut>(`/maps/evidence/${evidenceId}/assess`, body),
+
+  approveEvidence: (evidenceId: string, body: { decision: 'APPROVED' | 'REJECTED' | 'NEEDS_REVIEW' | 'REQUEST_INFO'; rationale?: string }) =>
+    api.post<import('./types').AssessmentOut>(`/maps/evidence/${evidenceId}/approve`, body),
+
+  createSnapshot: (body: { regulation_version_id: string; plan_id: string; rationale?: string; correlation_id?: string }) =>
+    api.post<import('./types').ReportSnapshotOut>('/reports/snapshots', body),
+
+  fetchSnapshot: (snapshotId: string) =>
+    api.get<import('./types').ReportSnapshotOut>(`/reports/snapshots/${snapshotId}`),
+}

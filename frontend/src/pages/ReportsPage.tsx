@@ -2,8 +2,8 @@ import { useState } from 'react'
 import ComplianceRing from '../components/ComplianceRing'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
-import { api } from '../lib/api'
-import type { RegulationOut, ReportOut } from '../lib/types'
+import { api, pilotApi } from '../lib/api'
+import type { RegulationOut, ReportOut, ReportSnapshotOut } from '../lib/types'
 
 const statusColor = (s: string) =>
   s === 'Ready' ? { bg: '#F0FFF0', text: '#2D8A4E' }
@@ -23,6 +23,9 @@ export default function ReportsPage() {
   const { toast, selectedId } = useApp()
   const [generating, setGenerating] = useState(false)
   const [report, setReport] = useState<ReportOut | null>(null)
+  const [planId, setPlanId] = useState('')
+  const [snapshot, setSnapshot] = useState<ReportSnapshotOut | null>(null)
+  const [freezing, setFreezing] = useState(false)
 
   const { data: regulations } = useApi<RegulationOut[]>(
     () => api.get<RegulationOut[]>('/regulations/'),
@@ -41,6 +44,24 @@ export default function ReportsPage() {
       toast('error', 'Generation failed', err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleFreezeSnapshot = async () => {
+    const id = selectedId ?? regulations?.[0]?.id
+    if (!id || !planId.trim()) {
+      toast('warning', 'Plan ID required', 'Enter the approved plan ID to freeze a snapshot.')
+      return
+    }
+    setFreezing(true)
+    try {
+      const snap = await pilotApi.createSnapshot({ regulation_version_id: id, plan_id: planId.trim() })
+      setSnapshot(snap)
+      toast('success', 'Snapshot frozen', `Snapshot ${snap.id.slice(0, 8)}… is immutable.`)
+    } catch (err: unknown) {
+      toast('error', 'Snapshot failed', err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setFreezing(false)
     }
   }
 
@@ -139,6 +160,33 @@ export default function ReportsPage() {
             <span style={{ background: '#F0FFF0', color: '#2D8A4E', fontSize: 11, fontWeight: 500, padding: '3px 10px', borderRadius: 20, fontFamily: 'Inter' }}>Ready</span>
           </div>
         )}
+
+        {/* Immutable snapshot indicator */}
+        <div data-testid="snapshot-panel" style={{ border: '1px dashed #E8E8E3', borderRadius: 12, padding: 12, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#0A0A0A', margin: '0 0 8px', fontFamily: 'Inter' }}>Immutable report snapshot</p>
+          <div className="flex items-center gap-2">
+            <input
+              data-testid="snapshot-plan-input"
+              value={planId}
+              onChange={e => setPlanId(e.target.value)}
+              placeholder="Approved plan ID"
+              style={{ flex: 1, border: '1px solid #E8E8E3', borderRadius: 8, padding: '7px 10px', fontSize: 12, fontFamily: 'Geist Mono, monospace', outline: 'none' }}
+            />
+            <button
+              data-testid="freeze-snapshot"
+              onClick={handleFreezeSnapshot}
+              disabled={freezing}
+              style={{ padding: '7px 14px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: freezing ? 'not-allowed' : 'pointer', fontFamily: 'Inter' }}
+            >
+              {freezing ? 'Freezing…' : 'Freeze snapshot'}
+            </button>
+          </div>
+          {snapshot && (
+            <p data-testid="snapshot-indicator" style={{ fontSize: 11, color: '#2D8A4E', background: '#F0FFF0', borderRadius: 8, padding: '6px 10px', margin: '8px 0 0', fontFamily: 'Geist Mono, monospace' }}>
+              Snapshot {snapshot.id.slice(0, 8)}… · cutoff {snapshot.data_cutoff ?? '—'} · immutable
+            </p>
+          )}
+        </div>
 
         <div className="flex flex-col gap-2">
           {rows.length === 0 ? (
