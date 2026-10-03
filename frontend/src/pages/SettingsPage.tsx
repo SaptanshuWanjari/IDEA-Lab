@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useApp } from '../App'
+import { Card, SectionHead } from '../components/ui'
 
 const tabs = ['Profile', 'Notifications', 'Security', 'Integrations', 'Team']
 
@@ -14,169 +15,117 @@ export default function SettingsPage() {
   const [notifUpload, setNotifUpload] = useState(true)
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
 
-
   return (
-    <div style={{ width: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
-      {/* Tab nav */}
-      <div className="flex items-center gap-1 mb-6 p-1" style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E8E8E3', display: 'inline-flex', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', alignSelf: 'flex-start' }}>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'inline-flex', gap: 2, background: 'var(--card)', border: '1px solid var(--line)', borderRadius: 10, padding: 3, marginBottom: 16, alignSelf: 'flex-start' }}>
         {tabs.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '7px 16px',
-              borderRadius: 10,
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 13,
-              fontFamily: 'Inter',
-              fontWeight: activeTab === tab ? 600 : 400,
-              background: activeTab === tab ? '#111' : 'transparent',
-              color: activeTab === tab ? '#8ad8ff' : '#888880',
-              transition: 'all 0.15s',
-            }}
-          >
+          <button key={tab} onClick={() => setActiveTab(tab)} className="pv-segtab" data-active={activeTab === tab}>
             {tab}
           </button>
         ))}
       </div>
 
       {activeTab === 'Profile' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, flex: 1 }}>
-          <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 24 }}>Personal Information</h3>
-            <div className="flex items-center gap-4 mb-6">
-              <div style={{ width: 64, height: 64, background: '#8ad8ff', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800, color: '#111', fontFamily: 'Inter' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <Card>
+            <SectionHead eyebrow="§ Officer record" title="Personal information" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
+              <div style={{ width: 56, height: 56, background: 'var(--ink)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 19, fontWeight: 800, color: 'var(--brass-bright)' }}>
                 {name.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{name}</p>
-                <p style={{ fontSize: 12, color: '#888880', margin: 0, fontFamily: 'Inter' }}>{user?.role ?? 'User'}</p>
-                <button style={{ fontSize: 11, color: '#8ad8ff', background: '#111', border: 'none', borderRadius: 6, padding: '3px 8px', marginTop: 6, cursor: 'pointer', fontFamily: 'Inter', fontWeight: 600 }}>
-                  Change Avatar
-                </button>
+                <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{name}</p>
+                <p className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.08em', color: 'var(--faint)', margin: '2px 0 0' }}>{(user?.role ?? 'OFFICER').toUpperCase()}</p>
               </div>
             </div>
             {[
-              { label: 'Full Name', value: name, setter: setName },
-              { label: 'Email', value: email, setter: setEmail },
+              { label: 'Full name', value: name, setter: setName },
+              { label: 'Work email', value: email, setter: setEmail },
             ].map(field => (
-              <div key={field.label} style={{ marginBottom: 16 }}>
-                <label style={{ fontSize: 12, fontWeight: 500, color: '#444440', display: 'block', marginBottom: 6, fontFamily: 'Inter' }}>{field.label}</label>
-                <input
-                  value={field.value}
-                  onChange={e => field.setter(e.target.value)}
-                  style={{ width: '100%', height: 40, border: '1px solid #E8E8E3', borderRadius: 10, padding: '0 14px', fontSize: 13, color: '#0A0A0A', fontFamily: 'Inter', outline: 'none', boxSizing: 'border-box', background: '#FAFAF8', transition: 'border-color 0.15s' }}
-                  onFocus={e => e.currentTarget.style.borderColor = '#8ad8ff'}
-                  onBlur={e => e.currentTarget.style.borderColor = '#E8E8E3'}
-                />
+              <div key={field.label} style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>{field.label}</label>
+                <input value={field.value} onChange={e => field.setter(e.target.value)} className="pv-input" style={{ width: '100%', boxSizing: 'border-box' }} />
               </div>
             ))}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 500, color: '#444440', display: 'block', marginBottom: 6, fontFamily: 'Inter' }}>Role</label>
-              <select style={{ width: '100%', height: 40, border: '1px solid #E8E8E3', borderRadius: 10, padding: '0 14px', fontSize: 13, color: '#0A0A0A', fontFamily: 'Inter', outline: 'none', background: '#FAFAF8', boxSizing: 'border-box' }}>
+            <div style={{ marginBottom: 18 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Role</label>
+              <select className="pv-input" style={{ width: '100%', boxSizing: 'border-box' }}>
                 <option>Compliance Officer</option>
                 <option>Risk Manager</option>
                 <option>Audit Lead</option>
                 <option>Viewer</option>
               </select>
             </div>
-            <button onClick={() => toast('success', 'Changes saved', 'Your profile has been updated.')} style={{ padding: '10px 20px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', transition: 'opacity 0.15s' }} onMouseEnter={e => e.currentTarget.style.opacity = '0.85'} onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-              Save Changes
+            <button onClick={() => toast('success', 'Changes saved', 'Your profile has been updated.')} className="pv-btn-primary">
+              Save changes
             </button>
-          </div>
+          </Card>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 16 }}>Organization</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Card>
+              <SectionHead eyebrow="§ Institution" title="Organisation" />
               {[
-                { label: 'Bank Name', value: 'Pravah Private Bank Ltd.' },
-                { label: 'RBI License', value: 'BANK-RBI-2019-0042' },
-                { label: 'Compliance Cycle', value: 'Q3 2026' },
+                { label: 'Bank', value: 'Pravah Private Bank Ltd.' },
+                { label: 'RBI licence', value: 'BANK-RBI-2019-0042' },
+                { label: 'Compliance cycle', value: 'Q3 2026' },
               ].map(item => (
-                <div key={item.label} className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid #F5F5F0' }}>
-                  <span style={{ fontSize: 12, color: '#888880', fontFamily: 'Inter' }}>{item.label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', fontFamily: 'Inter' }}>{item.value}</span>
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--slate)' }}>{item.label}</span>
+                  <span className="pv-mono" style={{ fontSize: 12, fontWeight: 600 }}>{item.value}</span>
                 </div>
               ))}
-            </div>
+            </Card>
 
-            <div className="card-hover" style={{ background: '#FAFAF8', borderRadius: 24, border: '1px solid #E8E8E3', padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 4 }}>Danger Zone</h3>
-              <p style={{ fontSize: 12, color: '#888880', margin: 0, marginBottom: 16, fontFamily: 'Inter' }}>Irreversible account actions</p>
+            <Card>
+              <SectionHead eyebrow="§ Irreversible" title="Danger zone" sub="Account actions requiring admin countersign." />
               {showDeactivateConfirm ? (
                 <div>
-                  <p style={{ fontSize: 12, color: '#C13B2A', margin: 0, marginBottom: 8, fontFamily: 'Inter', fontWeight: 500 }}>Are you sure? This cannot be undone.</p>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => { toast('warning', 'Account deactivation requested', 'Your request has been submitted for admin review.'); setShowDeactivateConfirm(false) }} style={{ padding: '7px 14px', background: '#C13B2A', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#FFF' }}>Confirm</button>
-                    <button onClick={() => setShowDeactivateConfirm(false)} style={{ padding: '7px 14px', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 8, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter', color: '#888880' }}>Cancel</button>
+                  <p style={{ fontSize: 12.5, color: 'var(--scarlet)', margin: '0 0 10px', fontWeight: 600 }}>Confirm deactivation — this cannot be undone.</p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => { toast('warning', 'Deactivation requested', 'Submitted for admin review.'); setShowDeactivateConfirm(false) }}
+                      className="pv-btn-ghost" style={{ color: '#fff', background: 'var(--scarlet)', borderColor: 'var(--scarlet)', fontWeight: 700 }}>Confirm</button>
+                    <button onClick={() => setShowDeactivateConfirm(false)} className="pv-btn-ghost">Cancel</button>
                   </div>
                 </div>
               ) : (
-                <button onClick={() => setShowDeactivateConfirm(true)} style={{ padding: '8px 16px', background: '#FFF3F0', border: '1px solid #FFD7D7', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter', color: '#C13B2A' }}>
-                  Deactivate Account
+                <button onClick={() => setShowDeactivateConfirm(true)} className="pv-btn-ghost" style={{ color: 'var(--scarlet)', borderColor: '#EFC4BE' }}>
+                  Deactivate account
                 </button>
               )}
-            </div>
+            </Card>
           </div>
         </div>
       )}
 
       {activeTab === 'Notifications' && (
-        <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 28, maxWidth: 560, boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', marginBottom: 24 }}>Notification Preferences</h3>
+        <Card style={{ maxWidth: 600 }}>
+          <SectionHead eyebrow="§ Alerts" title="Notification preferences" sub="Control how the desk reaches you." />
           {[
-            { label: 'Email notifications', desc: 'Receive compliance alerts via email', val: notifEmail, set: setNotifEmail },
-            { label: 'Slack integration', desc: 'Push MAP updates to your Slack workspace', val: notifSlack, set: setNotifSlack },
-            { label: 'Overdue MAP alerts', desc: 'Alert when a MAP task passes its due date', val: notifOverdue, set: setNotifOverdue },
-            { label: 'Evidence upload notifications', desc: 'Notify when new evidence is uploaded', val: notifUpload, set: setNotifUpload },
+            { label: 'Email notifications', desc: 'Compliance alerts via work email', val: notifEmail, set: setNotifEmail },
+            { label: 'Slack integration', desc: 'Push MAP updates to your workspace', val: notifSlack, set: setNotifSlack },
+            { label: 'Overdue MAP alerts', desc: 'Escalate when a MAP passes its due date', val: notifOverdue, set: setNotifOverdue },
+            { label: 'Evidence upload notifications', desc: 'Notify on new filings in your folios', val: notifUpload, set: setNotifUpload },
           ].map(item => (
-            <div key={item.label} className="flex items-center justify-between py-4" style={{ borderBottom: '1px solid #F5F5F0' }}>
+            <div key={item.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--line-soft)' }}>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 500, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{item.label}</p>
-                <p style={{ fontSize: 11, color: '#888880', margin: 0, fontFamily: 'Inter' }}>{item.desc}</p>
+                <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{item.label}</p>
+                <p style={{ fontSize: 11.5, color: 'var(--slate)', margin: '2px 0 0' }}>{item.desc}</p>
               </div>
-              <button
-                onClick={() => item.set(!item.val)}
-                style={{
-                  width: 44,
-                  height: 24,
-                  borderRadius: 12,
-                  border: 'none',
-                  cursor: 'pointer',
-                  background: item.val ? '#8ad8ff' : '#E8E8E3',
-                  position: 'relative',
-                  transition: 'background 0.2s',
-                  flexShrink: 0,
-                }}
-              >
-                <div style={{
-                  position: 'absolute',
-                  top: 3,
-                  left: item.val ? 23 : 3,
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
-                  background: item.val ? '#111' : '#FFFFFF',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                  transition: 'left 0.2s, background 0.2s',
-                }} />
+              <button onClick={() => item.set(!item.val)} role="switch" aria-checked={item.val} aria-label={item.label}
+                style={{ width: 42, height: 23, borderRadius: 12, border: 'none', cursor: 'pointer', background: item.val ? 'var(--ink)' : '#D8D5CC', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 3, left: item.val ? 22 : 3, width: 17, height: 17, borderRadius: '50%', background: item.val ? 'var(--brass-bright)' : '#FFFFFF', boxShadow: '0 1px 4px rgba(0,0,0,0.25)', transition: 'left 0.2s' }} />
               </button>
             </div>
           ))}
-        </div>
+        </Card>
       )}
 
       {(activeTab === 'Security' || activeTab === 'Integrations' || activeTab === 'Team') && (
-        <div className="card-hover" style={{ background: '#FFFFFF', borderRadius: 24, border: '1px solid #E8E8E3', padding: 48, textAlign: 'center', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-          <div style={{ width: 48, height: 48, background: '#F5F5F0', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <svg width="22" height="22" fill="none" stroke="#888880" strokeWidth="1.8" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <p style={{ fontSize: 15, fontWeight: 600, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{activeTab} Settings</p>
-          <p style={{ fontSize: 13, color: '#888880', margin: 0, marginTop: 6, fontFamily: 'Inter' }}>Coming soon in the next release</p>
-        </div>
+        <Card style={{ padding: 48, textAlign: 'center' }}>
+          <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--brass)' }}>§ {activeTab.toUpperCase()}</div>
+          <p style={{ fontFamily: 'Fraunces, serif', fontSize: 20, fontWeight: 600, margin: '8px 0 4px' }}>Controlled release</p>
+          <p style={{ fontSize: 13, color: 'var(--slate)', margin: 0 }}>Available after pilot sign-off — contact your administrator.</p>
+        </Card>
       )}
     </div>
   )

@@ -33,7 +33,7 @@ export default function PolicyDrawer({ open, policies, onClose }: PolicyDrawerPr
             </h2>
             {active && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#4040C0', background: '#F0F0FF', padding: '3px 10px', borderRadius: 20, fontFamily: 'Geist Mono, monospace' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#6E5620', background: 'var(--brass-wash)', border: '1px solid #DCC88F', padding: '3px 10px', borderRadius: 20, fontFamily: 'IBM Plex Mono, monospace' }}>
                   {active.version}
                 </span>
                 <span style={{ fontSize: 12, color: '#888880', fontFamily: 'Inter' }}>{active.owner_dept}</span>
@@ -62,11 +62,11 @@ export default function PolicyDrawer({ open, policies, onClose }: PolicyDrawerPr
               <pre style={{
                 fontSize: 12, color: '#444440', background: '#F5F5F0', border: '1px solid #E8E8E3',
                 borderRadius: 12, padding: '14px 16px', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                fontFamily: 'Geist Mono, monospace', lineHeight: 1.6, margin: 0,
+                fontFamily: 'IBM Plex Mono, monospace', lineHeight: 1.6, margin: 0,
               }}>
                 {active.excerpt}
               </pre>
-              <p style={{ fontSize: 11, color: '#888880', margin: '12px 0 0', fontFamily: 'Geist Mono, monospace' }}>
+              <p style={{ fontSize: 11, color: '#888880', margin: '12px 0 0', fontFamily: 'IBM Plex Mono, monospace' }}>
                 {active.file} · {active.id}
               </p>
               {rest.length > 0 && (
@@ -77,7 +77,7 @@ export default function PolicyDrawer({ open, policies, onClose }: PolicyDrawerPr
                   {rest.map(p => (
                     <div key={p.id} style={{ border: '1px solid #E8E8E3', borderRadius: 10, padding: '8px 12px', marginBottom: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#0A0A0A', fontFamily: 'Inter' }}>{p.title}</span>
-                      <span style={{ fontSize: 11, color: '#888880', marginLeft: 8, fontFamily: 'Geist Mono, monospace' }}>{p.version} · {p.owner_dept}</span>
+                      <span style={{ fontSize: 11, color: '#888880', marginLeft: 8, fontFamily: 'IBM Plex Mono, monospace' }}>{p.version} · {p.owner_dept}</span>
                     </div>
                   ))}
                 </div>

@@ -5,29 +5,7 @@ import { api, pilotApi } from '../lib/api'
 import PlanDiff from '../components/PlanDiff'
 import type { MAPOut, MAPReviewAction, PlanDiffOut } from '../lib/types'
 import { canReviewRole } from '../lib/types'
-
-const typeStyle: Record<string, { bg: string; text: string }> = {
-  PDF: { bg: '#FFF3F0', text: '#C13B2A' },
-  XLS: { bg: '#F0FFF0', text: '#2D8A4E' },
-  DOC: { bg: '#FFF8E1', text: '#C17B00' },
-}
-
-const statusStyle: Record<string, { bg: string; text: string }> = {
-  Approved:     { bg: '#F0FFF0', text: '#2D8A4E' },
-  Review:       { bg: '#F0F0FF', text: '#4040C0' },
-  Overdue:      { bg: '#FFF3F0', text: '#C13B2A' },
-  'In Progress':{ bg: '#F0F0FF', text: '#4040C0' },
-  InProgress:   { bg: '#F0F0FF', text: '#4040C0' },
-  Pending:      { bg: '#FFF8E1', text: '#C17B00' },
-  Critical:     { bg: '#FFF3F0', text: '#C13B2A' },
-  Rejected:     { bg: '#FFF3F0', text: '#C13B2A' },
-  Draft:        { bg: '#F0F0EA', text: '#666660' },
-  Completed:    { bg: '#F0FFF0', text: '#2D8A4E' },
-}
-
-function Skeleton() {
-  return <div style={{ height: 300, background: '#F5F5F0', borderRadius: 22 }} />
-}
+import { Card, SectionHead, StatusChip, statusToneFor } from '../components/ui'
 
 export default function MapReviewPage() {
   const { navigate, toast, selectedId, user } = useApp()
@@ -57,10 +35,7 @@ export default function MapReviewPage() {
     if (!decision || !selectedId) return
     setSubmitting(true)
     try {
-      const action: MAPReviewAction = {
-        action: decision,
-        description: reviewNotes || undefined,
-      }
+      const action: MAPReviewAction = { action: decision, description: reviewNotes || undefined }
       await api.post(`/maps/${selectedId}/review`, action)
       setSubmitted(true)
       toast(
@@ -115,249 +90,198 @@ export default function MapReviewPage() {
   if (!selectedId) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 0' }}>
-        <p style={{ fontSize: 14, color: '#888880', fontFamily: 'Inter' }}>No MAP selected.</p>
-        <button onClick={() => navigate('map-tasks')} style={{ marginTop: 16, padding: '8px 20px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter' }}>← Back</button>
+        <div className="pv-mono" style={{ fontSize: 11, letterSpacing: '0.14em', color: 'var(--brass)' }}>§ NO MAP SELECTED</div>
+        <p style={{ fontSize: 14, color: 'var(--slate)', margin: '8px 0 0' }}>Choose a MAP from the action register.</p>
+        <button onClick={() => navigate('map-tasks')} className="pv-btn-primary" style={{ marginTop: 16 }}>← Back to MAP tasks</button>
       </div>
     )
   }
 
   return (
     <div style={{ width: '100%' }}>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-5">
-        <button onClick={() => navigate('map-tasks')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888880', fontSize: 12, fontFamily: 'Inter', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}>
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-          MAP Tasks
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+        <button onClick={() => navigate('map-tasks')} className="pv-btn-ghost" style={{ padding: '6px 12px', fontSize: 12 }}>
+          ← MAP Tasks
         </button>
-        <span style={{ color: '#D0D0C8', fontSize: 12 }}>/</span>
-        <span style={{ fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter', fontWeight: 500 }}>{selectedId.slice(0, 8)}…</span>
-        <span style={{ color: '#D0D0C8', fontSize: 12 }}>/</span>
-        <span style={{ fontSize: 12, color: '#0A0A0A', fontFamily: 'Inter', fontWeight: 500 }}>Review</span>
+        <span style={{ color: 'var(--line)', fontSize: 12 }}>/</span>
+        <span className="pv-mono" style={{ fontSize: 12, color: 'var(--slate)' }}>{selectedId.slice(0, 8)}…</span>
+        <span style={{ color: 'var(--line)', fontSize: 12 }}>/</span>
+        <span style={{ fontSize: 12, fontWeight: 600 }}>Checker review</span>
       </div>
 
       {error && (
-        <div style={{ background: '#FFF3F0', border: '1px solid #FFD7D7', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p style={{ fontSize: 13, color: '#C13B2A', margin: 0, fontFamily: 'Inter' }}>{error}</p>
-          <button onClick={refetch} style={{ fontSize: 12, color: '#C13B2A', background: 'none', border: '1px solid #C13B2A', borderRadius: 7, padding: '4px 10px', cursor: 'pointer', fontFamily: 'Inter' }}>Retry</button>
+        <div style={{ background: 'var(--scarlet-bg)', border: '1px solid #EFC4BE', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p style={{ fontSize: 13, color: 'var(--scarlet)', margin: 0 }}>{error}</p>
+          <button onClick={refetch} className="pv-btn-ghost" style={{ color: 'var(--scarlet)', borderColor: '#EFC4BE' }}>Retry</button>
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20 }}>
-        {/* Left */}
-        <div className="flex flex-col gap-5">
-
-          {/* MAP header */}
-          <div style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '24px 28px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            {loading ? <Skeleton /> : mapData && (
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+          <Card>
+            {loading ? <div style={{ height: 180, background: '#F1EFE9', borderRadius: 8 }} /> : mapData && (
               <>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#888880', fontFamily: 'Geist Mono, monospace' }}>{mapData.id.slice(0, 8)}…</span>
-                      <span style={{ background: statusStyle[mapData.status]?.bg, color: statusStyle[mapData.status]?.text, fontSize: 11, fontWeight: 500, padding: '3px 9px', borderRadius: 20, fontFamily: 'Inter' }}>{mapData.status}</span>
-                      {mapData.approval_state && <span style={{ background: statusStyle[mapData.approval_state]?.bg, color: statusStyle[mapData.approval_state]?.text, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, fontFamily: 'Inter' }}>{mapData.approval_state}</span>}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                      <span className="pv-mono" style={{ fontSize: 11, fontWeight: 600, color: 'var(--slate)' }}>{mapData.id.slice(0, 8)}…</span>
+                      <StatusChip tone={statusToneFor(mapData.status)}>{mapData.status}</StatusChip>
+                      {mapData.approval_state && <StatusChip tone={statusToneFor(mapData.approval_state)}>{mapData.approval_state}</StatusChip>}
                     </div>
-                    <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.4px', lineHeight: 1.3 }}>{mapData.description}</h1>
-                    {mapData.reasoning && (
-                      <p style={{ fontSize: 13, color: '#888880', margin: 0, marginTop: 10, fontFamily: 'Inter', lineHeight: 1.6 }}>{mapData.reasoning}</p>
-                    )}
+                    <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 22, fontWeight: 600, margin: 0, lineHeight: 1.3, letterSpacing: '-0.01em' }}>{mapData.description}</h1>
+                    {mapData.reasoning && <p style={{ fontSize: 13, color: 'var(--slate)', margin: '10px 0 0', lineHeight: 1.6 }}>{mapData.reasoning}</p>}
                   </div>
                   {mapData.confidence != null && (
                     <div style={{ flexShrink: 0, textAlign: 'center' }}>
-                      <div style={{ position: 'relative', width: 80, height: 80 }}>
-                        <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
-                          <circle cx="40" cy="40" r="32" fill="none" stroke="#F0F0EA" strokeWidth="8"/>
-                          <circle cx="40" cy="40" r="32" fill="none" stroke="#8ad8ff" strokeWidth="8" strokeLinecap="round"
-                            strokeDasharray={`${2 * Math.PI * 32}`} strokeDashoffset={`${2 * Math.PI * 32 * (1 - mapData.confidence)}`}/>
+                      <div style={{ position: 'relative', width: 76, height: 76 }}>
+                        <svg width="76" height="76" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle cx="38" cy="38" r="30" fill="none" stroke="#EFEEE8" strokeWidth="7" />
+                          <circle cx="38" cy="38" r="30" fill="none" stroke="var(--brass)" strokeWidth="7" strokeLinecap="round"
+                            strokeDasharray={`${2 * Math.PI * 30}`} strokeDashoffset={`${2 * Math.PI * 30 * (1 - mapData.confidence)}`} />
                         </svg>
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <span style={{ fontSize: 18, fontWeight: 800, color: '#0A0A0A', fontFamily: 'Inter', letterSpacing: '-0.5px' }}>{Math.round(mapData.confidence * 100)}%</span>
+                          <span className="pv-numeral" style={{ fontSize: 17, fontWeight: 600 }}>{Math.round(mapData.confidence * 100)}%</span>
                         </div>
                       </div>
-                      <p style={{ fontSize: 10, color: '#888880', margin: 0, marginTop: 4, fontFamily: 'Inter' }}>confidence</p>
+                      <p className="pv-mono" style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--faint)', margin: '4px 0 0' }}>CONFIDENCE</p>
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-6 mt-5 pt-4" style={{ borderTop: '1px solid #F5F5F0' }}>
+                <div style={{ display: 'flex', gap: 28, marginTop: 18, paddingTop: 14, borderTop: '1px solid var(--line-soft)' }}>
                   {[
                     { label: 'Deadline', value: mapData.deadline ?? '—' },
                     { label: 'Est. Days', value: mapData.estimated_days ? `${mapData.estimated_days}d` : '—' },
                     { label: 'Created', value: new Date(mapData.created_at).toLocaleDateString('en-IN') },
                   ].map(item => (
                     <div key={item.label}>
-                      <p style={{ fontSize: 10, color: '#888880', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px', fontFamily: 'Inter' }}>{item.label}</p>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{item.value}</p>
+                      <p className="pv-mono" style={{ fontSize: 9.5, letterSpacing: '0.1em', color: 'var(--faint)', margin: 0 }}>{item.label.toUpperCase()}</p>
+                      <p style={{ fontSize: 12.5, fontWeight: 600, margin: '2px 0 0' }}>{item.value}</p>
                     </div>
                   ))}
                 </div>
               </>
             )}
-          </div>
+          </Card>
 
-          {/* Evidence required */}
           {mapData?.evidence_required && mapData.evidence_required.length > 0 && (
-            <div style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '22px 26px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 16 }}>Evidence Required</h2>
-              <div className="flex flex-col gap-2">
+            <Card>
+              <SectionHead eyebrow="§ Evidence checklist" title="Evidence required" sub={`${mapData.evidence_required.length} artefact(s) needed to close this MAP.`} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {mapData.evidence_required.map((ev, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#FAFAF8', border: '1px solid #F0F0EA' }}>
-                    <div style={{ width: 34, height: 34, background: typeStyle['PDF'].bg, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 8, fontWeight: 800, color: typeStyle['PDF'].text, fontFamily: 'Geist Mono, monospace' }}>REQ</span>
-                    </div>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: '#0A0A0A', margin: 0, fontFamily: 'Inter' }}>{ev}</p>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 9, background: 'var(--paper)', border: '1px solid var(--line-soft)' }}>
+                    <span className="pv-mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--brass)', background: 'var(--brass-wash)', border: '1px solid #DCC88F', borderRadius: 6, padding: '3px 8px' }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <p style={{ fontSize: 12.5, fontWeight: 500, margin: 0 }}>{ev}</p>
                   </div>
                 ))}
               </div>
-              <button onClick={() => navigate('evidence', selectedId)} style={{ marginTop: 14, padding: '6px 12px', background: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter', color: '#111' }}>Upload Evidence</button>
-            </div>
+              <button onClick={() => navigate('evidence', selectedId)} className="pv-btn-primary pv-btn-brass" style={{ marginTop: 14, fontSize: 12 }}>Upload evidence</button>
+            </Card>
           )}
 
-          {/* Source clauses */}
           {mapData?.source_clauses && mapData.source_clauses.length > 0 && (
-            <div style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '22px 26px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-              <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 16 }}>Source Clauses</h2>
-              <div className="flex flex-wrap gap-2">
+            <Card>
+              <SectionHead eyebrow="§ Source traceability" title="Source clauses" sub="Folio citations backing this MAP." />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {mapData.source_clauses.map((c, i) => (
-                  <span key={i} style={{ background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 7, padding: '4px 10px', fontSize: 11, fontFamily: 'Geist Mono, monospace', color: '#444440' }}>{c}</span>
+                  <span key={i} className="pv-mono" style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 7, padding: '5px 10px', fontSize: 11, color: 'var(--slate)' }}>{c}</span>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* Plan diff + approval */}
-          <div data-testid="plan-section" style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '22px 26px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 4 }}>Plan Version Review</h2>
-            <p style={{ fontSize: 12, color: '#888880', margin: '0 0 12px', fontFamily: 'Inter' }}>
-              Compare a candidate plan against the active plan, then approve with supersession confirmation.
-            </p>
-            <div className="flex items-center gap-2 mb-3">
-              <input
-                data-testid="plan-candidate-input"
-                value={candidatePlanId}
-                onChange={e => setCandidatePlanId(e.target.value)}
-                placeholder="Candidate plan ID"
-                style={{ flex: 1, border: '1px solid #E8E8E3', borderRadius: 8, padding: '8px 10px', fontSize: 12, fontFamily: 'Geist Mono, monospace', outline: 'none' }}
-              />
-              <input
-                data-testid="plan-previous-input"
-                value={previousPlanId}
-                onChange={e => setPreviousPlanId(e.target.value)}
-                placeholder="Active plan ID"
-                style={{ flex: 1, border: '1px solid #E8E8E3', borderRadius: 8, padding: '8px 10px', fontSize: 12, fontFamily: 'Geist Mono, monospace', outline: 'none' }}
-              />
-              <button
-                data-testid="load-plan-diff"
-                onClick={handleLoadDiff}
-                disabled={planLoading || !candidatePlanId.trim() || !previousPlanId.trim()}
-                style={{ padding: '8px 14px', background: '#111', color: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: planLoading ? 'not-allowed' : 'pointer', fontFamily: 'Inter' }}
-              >
-                {planLoading ? 'Loading…' : 'Show diff'}
-              </button>
+          <Card>
+            <div data-testid="plan-section">
+              <SectionHead eyebrow="§ Plan control" title="Plan version review" sub="Compare candidate against active plan, then approve with supersession." />
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <input data-testid="plan-candidate-input" value={candidatePlanId} onChange={e => setCandidatePlanId(e.target.value)}
+                  placeholder="Candidate plan ID" className="pv-input pv-mono" style={{ flex: 1 }} />
+                <input data-testid="plan-previous-input" value={previousPlanId} onChange={e => setPreviousPlanId(e.target.value)}
+                  placeholder="Active plan ID" className="pv-input pv-mono" style={{ flex: 1 }} />
+                <button data-testid="load-plan-diff" onClick={handleLoadDiff}
+                  disabled={planLoading || !candidatePlanId.trim() || !previousPlanId.trim()}
+                  className="pv-btn-primary" style={{ opacity: planLoading ? 0.6 : 1 }}>
+                  {planLoading ? 'Loading…' : 'Show diff'}
+                </button>
+              </div>
+              {planError && <p style={{ fontSize: 12, color: 'var(--scarlet)', margin: '0 0 8px' }}>{planError}</p>}
+              {planDiff && (
+                <PlanDiff diff={planDiff} candidateVersion={null} canApprove={canReview} busy={planApproving}
+                  onApprove={rationale => void handleApprovePlan(rationale)} />
+              )}
             </div>
-            {planError && <p style={{ fontSize: 12, color: '#C13B2A', fontFamily: 'Inter', margin: '0 0 8px' }}>{planError}</p>}
-            {planDiff && (
-              <PlanDiff
-                diff={planDiff}
-                candidateVersion={null}
-                canApprove={canReview}
-                busy={planApproving}
-                onApprove={rationale => void handleApprovePlan(rationale)}
-              />
-            )}
-          </div>
+          </Card>
         </div>
 
-        {/* Right panel */}
-        <div className="flex flex-col gap-5">
-
-          {/* Review decision */}
-          <div style={{ background: '#111111', borderRadius: 22, padding: 22, boxShadow: '0 4px 20px rgba(0,0,0,0.12)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'Inter', marginBottom: 4 }}>Review Decision</h3>
-            <p style={{ fontSize: 11, color: '#666660', margin: 0, fontFamily: 'Inter', marginBottom: 18 }}>Submit your decision as reviewer</p>
-
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <section style={{ background: 'var(--ink)', borderRadius: 12, padding: 20, color: '#F6F1E2' }}>
+            <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--brass-bright)' }}>§ CHECKER DECISION</div>
+            <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 600, margin: '6px 0 4px' }}>Review decision</h3>
+            <p style={{ fontSize: 11.5, color: '#93A0B1', margin: '0 0 16px' }}>Recorded under your officer identity.</p>
             {submitted ? (
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                <div style={{ width: 44, height: 44, background: decision === 'approve' ? '#8ad8ff' : '#FF6B6B', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                  <svg width="20" height="20" fill="none" stroke={decision === 'approve' ? '#111' : '#fff'} strokeWidth="2.5" viewBox="0 0 24 24">
-                    {decision === 'approve' ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <div style={{ width: 44, height: 44, background: decision === 'approve' ? 'var(--brass-bright)' : '#C0574B', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <svg width="20" height="20" fill="none" stroke={decision === 'approve' ? '#0C1B2D' : '#fff'} strokeWidth="2.5" viewBox="0 0 24 24">
+                    {decision === 'approve' ? <polyline points="20 6 9 17 4 12" /> : <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>}
                   </svg>
                 </div>
-                <p style={{ fontSize: 13, fontWeight: 700, color: '#FFFFFF', margin: 0, fontFamily: 'Inter' }}>
-                  {decision === 'approve' ? 'MAP Approved' : 'Revision Requested'}
-                </p>
-                <p style={{ fontSize: 11, color: '#666660', margin: 0, marginTop: 4, fontFamily: 'Inter' }}>Redirecting...</p>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{decision === 'approve' ? 'MAP Approved' : 'Revision Requested'}</p>
+                <p style={{ fontSize: 11, color: '#93A0B1', margin: '4px 0 0' }}>Redirecting…</p>
               </div>
             ) : (
               <>
-                <div className="flex flex-col gap-2 mb-4">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
                   {(['approve', 'reject'] as const).map(d => (
                     <button key={d} onClick={() => setDecision(d)}
-                      style={{ padding: '10px 16px', borderRadius: 12, border: `2px solid ${decision === d ? (d === 'approve' ? '#8ad8ff' : '#FF6B6B') : 'rgba(255,255,255,0.1)'}`, background: decision === d ? (d === 'approve' ? '#8ad8ff' : '#FF6B6B') : 'transparent', cursor: 'pointer', fontSize: 13, fontWeight: 700, fontFamily: 'Inter', color: decision === d ? '#111' : '#FFFFFF', transition: 'all 0.15s', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        {d === 'approve' ? <polyline points="20 6 9 17 4 12"/> : <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>}
-                      </svg>
-                      {d === 'approve' ? 'Approve MAP' : 'Request Revision'}
+                      style={{
+                        padding: '10px 14px', borderRadius: 9, cursor: 'pointer', fontSize: 13, fontWeight: 700,
+                        border: `1px solid ${decision === d ? 'var(--brass-bright)' : 'rgba(255,255,255,0.16)'}`,
+                        background: decision === d ? 'rgba(217,188,107,0.16)' : 'transparent',
+                        color: '#F6F1E2', display: 'flex', alignItems: 'center', gap: 8,
+                      }}>
+                      {d === 'approve' ? 'Approve MAP' : 'Request revision'}
                     </button>
                   ))}
                 </div>
-                <textarea
-                  value={reviewNotes}
-                  onChange={e => setReviewNotes(e.target.value)}
-                  placeholder="Add review notes (optional)..."
-                  style={{ width: '100%', height: 80, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 12px', fontSize: 12, fontFamily: 'Inter', background: 'rgba(255,255,255,0.05)', color: '#FFFFFF', resize: 'none', outline: 'none', boxSizing: 'border-box' }}
-                />
-                <button
-                  onClick={handleSubmitReview}
-                  disabled={!decision || submitting}
-                  style={{ width: '100%', padding: '11px', marginTop: 12, background: decision ? '#8ad8ff' : 'rgba(255,255,255,0.08)', border: 'none', borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: decision && !submitting ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: decision ? '#111' : '#666660', transition: 'all 0.15s' }}
-                >
-                  {submitting ? 'Submitting…' : 'Submit Review'}
+                <textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)} placeholder="Review notes (optional)…"
+                  style={{ width: '100%', height: 76, border: '1px solid rgba(255,255,255,0.16)', borderRadius: 9, padding: '10px 12px', fontSize: 12, background: 'rgba(255,255,255,0.05)', color: '#F6F1E2', resize: 'none', outline: 'none', boxSizing: 'border-box' }} />
+                <button onClick={handleSubmitReview} disabled={!decision || submitting}
+                  className="pv-btn-primary pv-btn-brass" style={{ width: '100%', justifyContent: 'center', marginTop: 12, opacity: decision ? 1 : 0.45 }}>
+                  {submitting ? 'Submitting…' : 'Submit review'}
                 </button>
               </>
             )}
-          </div>
+          </section>
 
-          {/* Discussion */}
-          <div style={{ background: '#FFFFFF', borderRadius: 22, border: '1px solid #E8E8E3', padding: '20px 22px', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', margin: 0, fontFamily: 'Inter', letterSpacing: '-0.3px', marginBottom: 16 }}>Discussion</h3>
-            <div className="flex flex-col gap-4 mb-4">
+          <Card>
+            <SectionHead eyebrow="§ Discussion" title="Review thread" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
               {comments.length === 0 ? (
-                <p style={{ fontSize: 12, color: '#AAAAAA', fontFamily: 'Inter', margin: 0 }}>No comments yet</p>
+                <p style={{ fontSize: 12, color: 'var(--faint)', margin: 0 }}>No comments yet — start the checker thread.</p>
               ) : comments.map((c, i) => (
-                <div key={i} className="flex gap-3">
-                  <div style={{ width: 30, height: 30, borderRadius: 8, background: '#8ad8ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#111', flexShrink: 0, fontFamily: 'Inter' }}>{c.avatar}</div>
+                <div key={i} style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: 'var(--brass-bright)', flexShrink: 0 }}>{c.avatar}</div>
                   <div style={{ flex: 1 }}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#0A0A0A', fontFamily: 'Inter' }}>{c.author}</span>
-                      <span style={{ fontSize: 10, color: '#AAAAAA', fontFamily: 'Inter' }}>{c.time}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600 }}>{c.author}</span>
+                      <span style={{ fontSize: 10, color: 'var(--faint)' }}>{c.time}</span>
                     </div>
-                    <p style={{ fontSize: 12, color: '#444440', margin: 0, fontFamily: 'Inter', lineHeight: 1.5 }}>{c.text}</p>
+                    <p style={{ fontSize: 12, color: 'var(--slate)', margin: 0, lineHeight: 1.5 }}>{c.text}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ borderTop: '1px solid #F0F0EA', paddingTop: 14 }}>
-              <textarea
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                placeholder="Add a comment..."
+            <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 12 }}>
+              <textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder="Add a comment…"
                 onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handlePostComment() }}
-                style={{ width: '100%', height: 72, border: '1px solid #E8E8E3', borderRadius: 10, padding: '10px 12px', fontSize: 12, fontFamily: 'Inter', background: '#FAFAF8', color: '#0A0A0A', resize: 'none', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                onFocus={e => e.currentTarget.style.borderColor = '#8ad8ff'}
-                onBlur={e => e.currentTarget.style.borderColor = '#E8E8E3'}
-              />
-              <div className="flex items-center justify-between mt-2">
-                <span style={{ fontSize: 10, color: '#BBBBBB', fontFamily: 'Inter' }}>⌘↵ to post</span>
-                <button
-                  onClick={handlePostComment}
-                  disabled={!commentText.trim()}
-                  style={{ padding: '7px 14px', background: commentText.trim() ? '#111' : '#F5F5F0', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: commentText.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: commentText.trim() ? '#8ad8ff' : '#AAAAAA', transition: 'all 0.15s' }}
-                >
-                  Post
-                </button>
+                className="pv-input" style={{ width: '100%', height: 68, padding: '10px 12px', resize: 'none', boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                <span className="pv-mono" style={{ fontSize: 10, color: 'var(--faint)' }}>⌘↵ TO POST</span>
+                <button onClick={handlePostComment} disabled={!commentText.trim()} className="pv-btn-primary" style={{ padding: '7px 14px', fontSize: 12, opacity: commentText.trim() ? 1 : 0.5 }}>Post</button>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

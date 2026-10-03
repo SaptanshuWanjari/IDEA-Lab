@@ -20,7 +20,7 @@ export default function PlanDiff({ diff, candidateVersion, canApprove, busy, onA
         <span style={{ fontSize: 12, fontWeight: 700, color: '#0A0A0A', fontFamily: 'Inter' }}>
           Plan diff{candidateVersion != null ? ` → v${candidateVersion}` : ''}
         </span>
-        <span style={{ fontSize: 10, color: '#888880', fontFamily: 'Geist Mono, monospace' }}>
+        <span style={{ fontSize: 10, color: '#888880', fontFamily: 'IBM Plex Mono, monospace' }}>
           {diff.previous_id.slice(0, 8)}… → {diff.candidate_id.slice(0, 8)}…
         </span>
       </div>
@@ -35,7 +35,7 @@ export default function PlanDiff({ diff, candidateVersion, canApprove, busy, onA
             {col.items.length === 0 ? (
               <p style={{ fontSize: 11, color: '#AAAAAA', margin: 0, fontFamily: 'Inter' }}>—</p>
             ) : col.items.slice(0, 8).map(id => (
-              <p key={id} style={{ fontSize: 11, color: '#444440', margin: '0 0 3px', fontFamily: 'Geist Mono, monospace' }}>{id.slice(0, 12)}…</p>
+              <p key={id} style={{ fontSize: 11, color: '#444440', margin: '0 0 3px', fontFamily: 'IBM Plex Mono, monospace' }}>{id.slice(0, 12)}…</p>
             ))}
           </div>
         ))}
@@ -62,7 +62,7 @@ export default function PlanDiff({ diff, candidateVersion, canApprove, busy, onA
             data-testid="approve-plan"
             onClick={() => onApprove(rationale.trim() || undefined)}
             disabled={busy || !supersede}
-            style={{ marginTop: 8, padding: '8px 16px', background: supersede ? '#8ad8ff' : '#F5F5F0', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: supersede && !busy ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: supersede ? '#111' : '#AAAAAA' }}
+            style={{ marginTop: 8, padding: '8px 16px', background: supersede ? '#0C1B2D' : '#F5F5F0', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: supersede && !busy ? 'pointer' : 'not-allowed', fontFamily: 'Inter', color: supersede ? '#F6F1E2' : '#AAAAAA' }}
           >
             {busy ? 'Approving…' : 'Approve plan (supersede active)'}
           </button>

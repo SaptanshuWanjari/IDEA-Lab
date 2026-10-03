@@ -133,13 +133,11 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="grid-bg" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="rgba(138,216,255,0.3)" strokeWidth="3"/>
-          <path d="M12 2a10 10 0 0 1 10 10" stroke="#8ad8ff" strokeWidth="3" strokeLinecap="round">
-            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
-          </path>
-        </svg>
+      <div className="pv-app" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: 'Fraunces, serif', fontSize: 28, fontWeight: 600 }}>PravahOS</div>
+          <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--brass)', marginTop: 6 }}>VERIFYING SESSION…</div>
+        </div>
       </div>
     )
   }
@@ -179,7 +177,7 @@ export default function App() {
 
   return (
     <AppCtx.Provider value={ctx}>
-      <div className="grid-bg flex min-h-screen" style={{ width: '100%' }}>
+      <div className="pv-app flex min-h-screen" style={{ width: '100%' }}>
         <Sidebar
           currentPage={sidebarPage[currentPage]}
           onNavigate={p => navigate(p)}
@@ -187,15 +185,19 @@ export default function App() {
           onPalette={() => setPaletteOpen(true)}
         />
 
-        <div className="flex-1 flex flex-col" style={{ marginLeft: 72, minHeight: '100vh' }}>
+        <div className="pv-main flex-1 flex flex-col" style={{ marginLeft: 248, minHeight: '100vh', minWidth: 0 }}>
           <Header
             title={pageTitles[currentPage]}
             onPaletteOpen={() => setPaletteOpen(true)}
           />
-          <main className="flex-1 overflow-auto flex flex-col" style={{ padding: '28px 28px 48px' }}>
-            <div key={currentPage} className="flex-1 flex flex-col" style={{ animation: 'fadeInUp 0.28s ease forwards' }}>
+          <main className="flex-1 flex flex-col" style={{ padding: '24px 28px 56px', maxWidth: 1360, width: '100%', margin: '0 auto' }}>
+            <div key={currentPage} className="pv-rise flex-1 flex flex-col">
               {renderPage()}
             </div>
+            <footer className="pv-mono" style={{ marginTop: 32, paddingTop: 14, borderTop: '1px solid var(--line)', fontSize: 10, letterSpacing: '0.1em', color: 'var(--faint)', display: 'flex', justifyContent: 'space-between' }}>
+              <span>PRAVAHOS · AUDIT TRAIL ENABLED · ALL ACTIONS LOGGED</span>
+              <span>MAKER–CHECKER ENFORCED</span>
+            </footer>
           </main>
         </div>
 

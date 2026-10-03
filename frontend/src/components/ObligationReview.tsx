@@ -69,7 +69,7 @@ export default function ObligationReview({ obligation, validation, canReview, bu
               data-testid="approve-obligation"
               onClick={() => onApprove(rationale.trim() || undefined)}
               disabled={busy}
-              style={{ padding: '7px 14px', background: '#8ad8ff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#111', opacity: busy ? 0.6 : 1 }}
+              style={{ padding: '7px 14px', background: '#0C1B2D', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: busy ? 'not-allowed' : 'pointer', fontFamily: 'Inter', color: '#F6F1E2', opacity: busy ? 0.6 : 1 }}
             >
               {busy ? 'Submitting…' : 'Approve obligation'}
             </button>

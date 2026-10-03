@@ -16,7 +16,9 @@ try:  # pragma: no cover - broker optional
     try:
         from dramatiq.brokers.redis import RedisBroker
 
-        _broker = RedisBroker()
+        from app.config import settings
+
+        _broker = RedisBroker(url=settings.redis_url)
         dramatiq.set_broker(_broker)
     except Exception:
         _broker = None

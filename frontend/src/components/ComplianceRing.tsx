@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ComplianceRingProps {
   score: number
@@ -28,57 +28,22 @@ export default function ComplianceRing({ score, size = 130, label = 'Compliance 
     <div className="flex flex-col items-center gap-2">
       <div style={{ position: 'relative', width: size, height: size }}>
         <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          {/* Track */}
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEEE8" strokeWidth={12} />
           <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="#F0F0EA"
-            strokeWidth={12}
-          />
-          {/* Progress */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="#8ad8ff"
-            strokeWidth={12}
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 0.05s ease', filter: 'drop-shadow(0 0 8px rgba(138, 216, 255, 0.5))' }}
+            cx={size / 2} cy={size / 2} r={r} fill="none"
+            stroke="#0C1B2D" strokeWidth={12} strokeLinecap="round"
+            strokeDasharray={circumference} strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.05s ease' }}
           />
         </svg>
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <span style={{
-            fontSize: size > 100 ? 28 : 20,
-            fontWeight: 800,
-            color: '#0A0A0A',
-            fontFamily: 'Inter',
-            letterSpacing: '-1px',
-            lineHeight: 1,
-          }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <span className="pv-numeral" style={{ fontSize: size > 100 ? 28 : 20, fontWeight: 600, color: 'var(--ink)', lineHeight: 1 }}>
             {Math.round(animatedScore)}%
           </span>
-          {size > 100 && (
-            <span style={{ fontSize: 10, color: '#888880', fontFamily: 'Inter', marginTop: 2 }}>Score</span>
-          )}
+          {size > 100 && <span style={{ fontSize: 10, color: 'var(--faint)', marginTop: 2 }}>Score</span>}
         </div>
       </div>
-      {label && (
-        <span style={{ fontSize: 12, color: '#888880', fontFamily: 'Inter', textAlign: 'center' }}>{label}</span>
-      )}
+      {label && <span style={{ fontSize: 12, color: 'var(--slate)', textAlign: 'center' }}>{label}</span>}
     </div>
   )
 }

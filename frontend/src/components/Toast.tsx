@@ -11,40 +11,47 @@ export interface ToastMessage {
 
 const icons: Record<ToastType, React.ReactNode> = {
   success: (
-    <svg width="16" height="16" fill="none" stroke="#4CAF50" strokeWidth="2.5" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="#1B6B4A" strokeWidth="2.5" viewBox="0 0 24 24">
       <polyline points="20 6 9 17 4 12"/>
     </svg>
   ),
   error: (
-    <svg width="16" height="16" fill="none" stroke="#E53935" strokeWidth="2.5" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="#A83226" strokeWidth="2.5" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
   ),
   warning: (
-    <svg width="16" height="16" fill="none" stroke="#F9A825" strokeWidth="2.5" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="#8A5E00" strokeWidth="2.5" viewBox="0 0 24 24">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
       <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
     </svg>
   ),
   info: (
-    <svg width="16" height="16" fill="none" stroke="#5C5CD6" strokeWidth="2.5" viewBox="0 0 24 24">
+    <svg width="16" height="16" fill="none" stroke="#13293F" strokeWidth="2.5" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
     </svg>
   ),
 }
 
 const bgColors: Record<ToastType, string> = {
-  success: '#F0FFF0',
-  error: '#FFF3F0',
-  warning: '#FFF8E1',
-  info: '#F0F0FF',
+  success: '#FFFFFF',
+  error: '#FFFFFF',
+  warning: '#FFFFFF',
+  info: '#FFFFFF',
 }
 
 const borderColors: Record<ToastType, string> = {
-  success: '#C8EFCA',
-  error: '#FFD7D7',
-  warning: '#FFE8A1',
-  info: '#C8C8F0',
+  success: '#C4DFCF',
+  error: '#EFC4BE',
+  warning: '#E7D3A0',
+  info: '#CBD6E2',
+}
+
+const accentColors: Record<ToastType, string> = {
+  success: '#1B6B4A',
+  error: '#A83226',
+  warning: '#8A5E00',
+  info: '#13293F',
 }
 
 interface ToastItemProps {
@@ -66,12 +73,13 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       style={{
         background: bgColors[toast.type],
         border: `1px solid ${borderColors[toast.type]}`,
-        borderRadius: 14,
+        borderLeft: `3px solid ${accentColors[toast.type]}`,
+        borderRadius: 10,
         padding: '12px 16px',
         display: 'flex',
         alignItems: 'flex-start',
         gap: 10,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+        boxShadow: '0 12px 40px -8px rgba(12,27,45,0.22)',
         opacity: visible ? 1 : 0,
         transform: visible ? 'translateX(0)' : 'translateX(32px)',
         transition: 'opacity 0.25s ease, transform 0.25s ease',

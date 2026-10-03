@@ -93,20 +93,20 @@ export default function CommandPalette({ open, onClose, onNavigate }: CommandPal
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14vh' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ width: 580, background: '#FFFFFF', borderRadius: 20, boxShadow: '0 32px 80px rgba(0,0,0,0.24)', overflow: 'hidden', border: '1px solid #E8E8E3' }}>
+      <div style={{ width: 580, maxWidth: '92vw', background: '#FFFFFF', borderRadius: 12, boxShadow: 'var(--shadow-pop)', overflow: 'hidden', border: '1px solid var(--line)' }}>
         {/* Search bar */}
-        <div className="flex items-center gap-3 px-4" style={{ borderBottom: '1px solid #E8E8E3', height: 52 }}>
-          <svg width="16" height="16" fill="none" stroke="#888880" strokeWidth="2" viewBox="0 0 24 24">
+        <div className="flex items-center gap-3 px-4" style={{ borderBottom: '1px solid var(--line)', height: 52 }}>
+          <svg width="16" height="16" fill="none" stroke="var(--brass)" strokeWidth="2" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search pages, actions..."
-            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#0A0A0A', fontFamily: 'Inter', background: 'transparent' }}
+            placeholder="Search circulars, MAPs, actions..."
+            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, color: 'var(--ink)', fontFamily: 'Inter', background: 'transparent' }}
           />
-          <kbd style={{ fontSize: 11, color: '#888880', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 5, padding: '2px 6px', fontFamily: 'Geist Mono, monospace' }}>ESC</kbd>
+          <kbd className="pv-mono" style={{ fontSize: 10, color: 'var(--slate)', background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 5, padding: '2px 6px' }}>ESC</kbd>
         </div>
 
         {/* Results */}
@@ -141,11 +141,11 @@ export default function CommandPalette({ open, onClose, onNavigate }: CommandPal
                       width: 30,
                       height: 30,
                       borderRadius: 8,
-                      background: isSelected ? '#8ad8ff' : '#F0F0EA',
+                      background: isSelected ? 'var(--ink)' : 'var(--paper)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: isSelected ? '#111' : '#888880',
+                      color: isSelected ? 'var(--brass-bright)' : 'var(--slate)',
                       flexShrink: 0,
                       transition: 'background 0.08s, color 0.08s',
                     }}>
@@ -157,7 +157,7 @@ export default function CommandPalette({ open, onClose, onNavigate }: CommandPal
                     </div>
                     {isSelected && (
                       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <kbd style={{ fontSize: 10, color: '#888880', background: '#EBEBEB', border: '1px solid #E0E0E0', borderRadius: 4, padding: '1px 5px', fontFamily: 'Geist Mono, monospace' }}>↵</kbd>
+                        <kbd style={{ fontSize: 10, color: '#888880', background: '#EBEBEB', border: '1px solid #E0E0E0', borderRadius: 4, padding: '1px 5px', fontFamily: 'IBM Plex Mono, monospace' }}>↵</kbd>
                       </div>
                     )}
                   </button>
@@ -176,7 +176,7 @@ export default function CommandPalette({ open, onClose, onNavigate }: CommandPal
         <div className="flex items-center gap-4 px-4 py-2.5" style={{ borderTop: '1px solid #F0F0EA' }}>
           {[['↑↓', 'navigate'], ['↵', 'select'], ['esc', 'close']].map(([key, label]) => (
             <div key={label} className="flex items-center gap-1.5">
-              <kbd style={{ fontSize: 10, color: '#888880', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 4, padding: '1px 5px', fontFamily: 'Geist Mono, monospace' }}>{key}</kbd>
+              <kbd style={{ fontSize: 10, color: '#888880', background: '#F5F5F0', border: '1px solid #E8E8E3', borderRadius: 4, padding: '1px 5px', fontFamily: 'IBM Plex Mono, monospace' }}>{key}</kbd>
               <span style={{ fontSize: 11, color: '#AAAAAA', fontFamily: 'Inter' }}>{label}</span>
             </div>
           ))}

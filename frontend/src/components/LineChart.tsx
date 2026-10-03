@@ -52,8 +52,8 @@ export default function LineChart() {
       >
         <defs>
           <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#8ad8ff" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#8ad8ff" stopOpacity="0.02" />
+            <stop offset="0%" stopColor="#C5A254" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#C5A254" stopOpacity="0.02" />
           </linearGradient>
           <clipPath id="lineClip">
             <rect x={padL} y={padT} width={chartW * progress} height={chartH} />
@@ -80,7 +80,7 @@ export default function LineChart() {
             textAnchor="end"
             fontSize={9}
             fill="#BBBBBB"
-            fontFamily="Geist Mono, monospace"
+            fontFamily="IBM Plex Mono, monospace"
             dominantBaseline="middle"
           >
             {v}
@@ -98,7 +98,7 @@ export default function LineChart() {
         <path
           d={mainPath}
           fill="none"
-          stroke="#8ad8ff"
+          stroke="#C5A254"
           strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -111,7 +111,7 @@ export default function LineChart() {
             key={key}
             d={makePath(key)}
             fill="none"
-            stroke={['rgba(138,216,255,0.35)', 'rgba(138,216,255,0.2)', 'rgba(138,216,255,0.12)'][ki]}
+            stroke={['rgba(197,162,84,0.35)', 'rgba(197,162,84,0.2)', 'rgba(197,162,84,0.12)'][ki]}
             strokeWidth={1.5}
             strokeDasharray="4 3"
             clipPath="url(#lineClip)"
@@ -133,7 +133,7 @@ export default function LineChart() {
                 cx={scaleX(i)}
                 cy={scaleY(d.ops)}
                 r={3}
-                fill="#8ad8ff"
+                fill="#C5A254"
                 stroke="#111"
                 strokeWidth={1.5}
                 opacity={0.8}
@@ -151,7 +151,7 @@ export default function LineChart() {
             textAnchor="middle"
             fontSize={9}
             fill="#BBBBBB"
-            fontFamily="Geist Mono, monospace"
+            fontFamily="IBM Plex Mono, monospace"
           >
             {d.week}
           </text>
@@ -175,7 +175,7 @@ export default function LineChart() {
               rx={5}
               fill="#111"
             />
-            <text x={tooltip.x + 36} y={tooltip.y - 9} textAnchor="middle" fontSize={10} fill="#8ad8ff" fontFamily="Geist Mono, monospace">
+            <text x={tooltip.x + 36} y={tooltip.y - 9} textAnchor="middle" fontSize={10} fill="#C5A254" fontFamily="IBM Plex Mono, monospace">
               {tooltip.d.ops} MAPs
             </text>
           </g>
@@ -185,10 +185,10 @@ export default function LineChart() {
       {/* Legend */}
       <div className="flex items-center gap-4 mt-2">
         {[
-          { label: 'Operations', color: '#8ad8ff' },
-          { label: 'Risk', color: 'rgba(138,216,255,0.5)' },
-          { label: 'IT', color: 'rgba(138,216,255,0.3)' },
-          { label: 'Legal', color: 'rgba(138,216,255,0.15)' },
+          { label: 'Operations', color: '#C5A254' },
+          { label: 'Risk', color: 'rgba(197,162,84,0.5)' },
+          { label: 'IT', color: 'rgba(197,162,84,0.3)' },
+          { label: 'Legal', color: 'rgba(197,162,84,0.15)' },
         ].map((l) => (
           <div key={l.label} className="flex items-center gap-1.5">
             <div style={{ width: 12, height: 2, background: l.color, borderRadius: 1 }} />
