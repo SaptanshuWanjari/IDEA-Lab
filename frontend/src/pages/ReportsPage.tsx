@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Package, Lock, Download, CheckCircle2, FileText } from 'lucide-react'
 import ComplianceRing from '../components/ComplianceRing'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
@@ -30,7 +31,10 @@ export default function ReportsPage() {
 
   const handleGenerate = async () => {
     const id = selectedId ?? regulations?.[0]?.id
-    if (!id) { toast('warning', 'Select a regulation first', 'Navigate to a regulation to generate its audit package.'); return }
+    if (!id) {
+      toast('warning', 'Select a regulation first', 'Navigate to a regulation to generate its audit package.')
+      return
+    }
     setGenerating(true)
     try {
       const res = await api.post<ReportOut>(`/regulations/${id}/report`)
@@ -69,107 +73,176 @@ export default function ReportsPage() {
   }))
 
   return (
-    <div className="pv-grid12" style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16 }}>
-      <div className="pv-span8" style={{ gridColumn: 'span 8', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+    <div className="w-full flex flex-col gap-6">
+      {/* Top row: 3 Compliance cards + 1 RBI Audit Package card */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Overall Compliance', score: 92 },
           { label: 'MAP Completion', score: 89 },
           { label: 'Evidence Coverage', score: 96 },
-        ].map((item) => (
-          <Card key={item.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <ComplianceRing score={item.score} size={100} label={item.label} />
+        ].map(item => (
+          <Card key={item.label} pad={true} className="flex flex-col items-center justify-center min-h-[190px]">
+            <ComplianceRing score={item.score} size={110} label={item.label} />
           </Card>
         ))}
+
+        {/* RBI Audit Package Deliberate Dark Navy Card */}
+        <div className="bg-[#102A43] rounded-xl border border-slate-700/60 p-6 flex flex-col justify-between text-white shadow-sm">
+          <div>
+            <div className="text-[11px] font-semibold tracking-wider text-teal-400 uppercase mb-2">
+              RBI AUDIT PACKAGE
+            </div>
+            <h3 className="text-[18px] font-semibold text-white m-0 leading-snug">
+              Inspection-ready, folio by folio.
+            </h3>
+            <p className="text-[12.5px] text-slate-300 mt-2 mb-0 leading-relaxed">
+              {selectedId ? 'Generating for the folio in context.' : 'Will use the first available folio.'}
+            </p>
+          </div>
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="w-full mt-5 h-9.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-sm disabled:opacity-70"
+          >
+            <Package className="w-4 h-4" />
+            <span>{generating ? 'Compiling…' : report ? '✓ Package ready — regenerate' : 'Generate package'}</span>
+          </button>
+        </div>
       </div>
 
-      <section className="pv-span4" style={{
-        gridColumn: 'span 4', borderRadius: 12, padding: 22, display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        background: 'linear-gradient(165deg, #10253C 0%, #0C1B2D 60%)', border: '1px solid #22394F', color: '#F6F1E2',
-      }}>
-        <div>
-          <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.18em', color: '#D9BC6B' }}>§ RBI AUDIT PACKAGE</div>
-          <h3 style={{ fontFamily: 'Fraunces, serif', fontSize: 21, fontWeight: 600, margin: '8px 0', lineHeight: 1.25 }}>
-            Inspection-ready,<br />folio by folio.
-          </h3>
-          <p style={{ fontSize: 12, color: '#AEB9C6', margin: 0, lineHeight: 1.55 }}>
-            {selectedId ? 'Generating for the folio in context.' : 'Will use the first available folio.'}
-          </p>
-        </div>
-        <button onClick={handleGenerate} disabled={generating}
-          className="pv-btn-primary pv-btn-brass" style={{ justifyContent: 'center', marginTop: 20, opacity: generating ? 0.7 : 1 }}>
-          {generating ? 'Compiling…' : report ? '✓ Package ready — regenerate' : 'Generate package'}
-        </button>
-      </section>
-
-      <Card style={{ gridColumn: 'span 4' }}>
-        <div className="pv-span4">
-          <SectionHead eyebrow="§ By department" title="Department scores" />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {deptScores.map(d => (
-            <div key={d.dept}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 12.5, fontWeight: 500 }}>{d.dept}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 11, color: d.change.startsWith('+') ? 'var(--emerald)' : 'var(--scarlet)', fontWeight: 600 }}>{d.change}%</span>
-                  <span className="pv-numeral" style={{ fontSize: 13, fontWeight: 600 }}>{d.score}%</span>
+      {/* Middle row: Department Scores + Recent Reports */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Department Scores Panel */}
+        <Card pad={true} className="lg:col-span-5 flex flex-col">
+          <SectionHead
+            eyebrow="DEPARTMENT PERFORMANCE"
+            title="Department scores"
+            sub="Compliance scores and changes across departments."
+          />
+          <div className="flex flex-col gap-4 mt-1">
+            {deptScores.map(d => {
+              const isPositive = d.change.startsWith('+')
+              return (
+                <div key={d.dept} className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="font-medium text-[#102A43]">{d.dept}</span>
+                    <div className="flex items-center gap-2 tabular-nums">
+                      <span className={`text-[11.5px] font-semibold ${isPositive ? 'text-[#0D9488]' : 'text-red-600'}`}>
+                        {d.change}%
+                      </span>
+                      <span className="font-semibold text-[#102A43] text-[13px]">{d.score}%</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-[#F1F5F9] rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-[#0D9488] h-full rounded-full transition-all duration-300"
+                      style={{ width: `${d.score}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div style={{ height: 5, background: '#EFEEE8', borderRadius: 3 }}>
-                <div style={{ height: '100%', width: `${d.score}%`, background: d.score >= 90 ? 'var(--ink)' : d.score >= 80 ? 'var(--brass)' : 'var(--scarlet)', borderRadius: 3 }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      <Card style={{ gridColumn: 'span 8' }}>
-        <SectionHead eyebrow="§ Issued packages" title="Recent reports" sub="Compiled audit packages with immutable snapshots." />
-        {report && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 12, borderRadius: 9, marginBottom: 12, border: '1px solid #DCC88F', background: 'var(--brass-wash)' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 13, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{report.title ?? 'Audit Package'}</p>
-              <p className="pv-mono" style={{ fontSize: 11, color: 'var(--slate)', margin: '2px 0 0' }}>
-                {new Date(report.generated_at).toLocaleDateString('en-IN')} · {report.total_count} MAPS
-              </p>
-            </div>
-            <StatusChip tone="ok">Ready</StatusChip>
+              )
+            })}
           </div>
-        )}
+        </Card>
 
-        <div data-testid="snapshot-panel" style={{ border: '1px dashed var(--line)', borderRadius: 10, padding: 12, marginBottom: 12, background: 'var(--paper)' }}>
-          <p className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--brass)', margin: '0 0 8px' }}>IMMUTABLE REPORT SNAPSHOT</p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input data-testid="snapshot-plan-input" value={planId} onChange={e => setPlanId(e.target.value)}
-              placeholder="Approved plan ID" className="pv-input pv-mono" style={{ flex: 1 }} />
-            <button data-testid="freeze-snapshot" onClick={handleFreezeSnapshot} disabled={freezing} className="pv-btn-primary" style={{ opacity: freezing ? 0.6 : 1 }}>
-              {freezing ? 'Freezing…' : 'Freeze snapshot'}
-            </button>
-          </div>
-          {snapshot && (
-            <p data-testid="snapshot-indicator" className="pv-mono" style={{ fontSize: 11, color: 'var(--emerald)', background: 'var(--emerald-bg)', borderRadius: 8, padding: '6px 10px', margin: '8px 0 0' }}>
-              Snapshot {snapshot.id.slice(0, 8)}… · cutoff {snapshot.data_cutoff ?? '—'} · immutable
-            </p>
+        {/* Recent Reports Panel */}
+        <Card pad={true} className="lg:col-span-7 flex flex-col">
+          <SectionHead
+            eyebrow="REPORTING"
+            title="Recent reports"
+            sub="Compiled audit packages with immutable snapshots."
+          />
+
+          {/* Generated Package Banner */}
+          {report && (
+            <div className="flex items-center gap-3 p-3 rounded-lg mb-4 bg-teal-50 border border-teal-200">
+              <CheckCircle2 className="w-5 h-5 text-[#0D9488] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#102A43] m-0 truncate">
+                  {report.title ?? 'Audit Package'}
+                </p>
+                <p className="text-[11px] text-slate-500 m-0 mt-0.5 font-mono">
+                  {new Date(report.generated_at).toLocaleDateString('en-IN')} · {report.total_count} MAPs
+                </p>
+              </div>
+              <StatusChip tone="ok">Ready</StatusChip>
+            </div>
           )}
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {rows.length === 0 ? (
-            <EmptyState title="No folios to report on" hint="Register a circular to begin." />
-          ) : rows.map((r) => (
-            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '10px 4px', borderBottom: '1px solid var(--line-soft)' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 500, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</p>
-                <p className="pv-mono" style={{ fontSize: 10.5, color: 'var(--faint)', margin: '2px 0 0' }}>CIRCULAR · {r.date.toUpperCase()}</p>
-              </div>
-              <StatusChip tone={statusToneFor(r.status)}>{r.status}</StatusChip>
-              <button onClick={() => toast('info', 'Report download', r.name + ' — available via backend endpoint.')} className="pv-btn-ghost" style={{ padding: '5px 12px', fontSize: 12 }}>
-                Download
+          {/* Immutable Report Snapshot Panel */}
+          <div
+            data-testid="snapshot-panel"
+            className="rounded-lg p-3.5 mb-4 bg-[#F1F5F9] border border-[#E2EAF2]"
+          >
+            <div className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase mb-2">
+              IMMUTABLE REPORT SNAPSHOT
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                data-testid="snapshot-plan-input"
+                value={planId}
+                onChange={e => setPlanId(e.target.value)}
+                placeholder="Approved plan ID"
+                className="flex-1 h-9 px-3 text-[13px] font-mono bg-white border border-[#E2EAF2] rounded-lg text-[#102A43] placeholder-slate-400 focus:outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/15 transition-all"
+              />
+              <button
+                data-testid="freeze-snapshot"
+                onClick={handleFreezeSnapshot}
+                disabled={freezing}
+                className="h-9 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[12.5px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer disabled:opacity-60 shadow-sm"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>{freezing ? 'Freezing…' : 'Freeze snapshot'}</span>
               </button>
             </div>
-          ))}
-        </div>
-      </Card>
+            {snapshot && (
+              <div
+                data-testid="snapshot-indicator"
+                className="mt-2 text-[11.5px] font-mono text-[#0D9488] bg-teal-50 border border-teal-200 rounded-md px-2.5 py-1.5 flex items-center gap-1.5"
+              >
+                <Lock className="w-3 h-3" />
+                <span>Snapshot {snapshot.id.slice(0, 8)}… · cutoff {snapshot.data_cutoff ?? '—'} · immutable</span>
+              </div>
+            )}
+          </div>
+
+          {/* Report List */}
+          <div className="flex flex-col divide-y divide-slate-100">
+            {rows.length === 0 ? (
+              <EmptyState
+                icon={<FileText className="w-5 h-5 text-slate-400" />}
+                title="No folios to report on"
+                hint="Register a circular folio to begin generating reports."
+              />
+            ) : (
+              rows.map(r => (
+                <div key={r.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0 hover:bg-[#F1F5F9]/40 px-2 rounded-lg transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-[#102A43] m-0 truncate">
+                      {r.name}
+                    </p>
+                    <p className="text-[11px] text-slate-400 m-0 mt-0.5 font-mono">
+                      CIRCULAR · {r.date.toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <StatusChip tone={statusToneFor(r.status)}>
+                      {r.status}
+                    </StatusChip>
+                    <button
+                      onClick={() => toast('info', 'Report download', `${r.name} — available via backend endpoint.`)}
+                      className="inline-flex items-center gap-1 text-[12px] font-medium text-[#0D9488] hover:text-[#0b7e73] hover:bg-teal-50 px-2.5 py-1 rounded transition-colors cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }

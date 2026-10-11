@@ -23,8 +23,8 @@ export interface MAPOut {
   approval_state: string | null
   confidence: number | null
   reasoning: string | null
-  source_clauses: string[] | null
-  evidence_required: string[] | null
+  source_clauses: string[] | string | null
+  evidence_required: string[] | string | null
   estimated_days: number | null
   created_at: string
 }
@@ -79,7 +79,7 @@ export interface ReportOut {
 }
 
 export interface MAPReviewAction {
-  action: 'approve' | 'edit' | 'reject'
+  action: "approve" | "edit" | "reject"
   description?: string
   owner_department_id?: string
   deadline?: string
@@ -119,7 +119,7 @@ export interface ObligationOut {
 export interface ObligationValidation {
   valid: boolean
   errors: string[]
-  quality: 'high' | 'medium' | 'low'
+  quality: "high" | "medium" | "low"
 }
 
 export interface MAPPlanOut {
@@ -144,18 +144,18 @@ export interface PlanDiffOut {
   unchanged: string[]
 }
 
-export type EvidenceReviewState =
-  | 'file-submitted'
-  | 'needs-review'
-  | 'approved'
-  | 'rejected'
-  | 'exception-active'
-  | 'completed'
+export type EvidenceReviewState = "file-submitted" | "needs-review" | "approved" | "rejected" | "exception-active" | "completed"
 
 export interface AssessmentDraftOut {
   evidence_id: string
   decision: string
-  checklist_results: Record<string, { key: string; passed: boolean; required: boolean; support?: string | null; missing_terms: string[] }>
+  checklist_results: Record<string, {
+    key: string
+    passed: boolean
+    required: boolean
+    support?: string | null
+    missing_terms: string[]
+  }>
   missing_elements: string[]
   advisory_only: boolean
   note: string | null
@@ -185,7 +185,7 @@ export interface ReportSnapshotOut {
 }
 
 /** Roles permitted to take reviewer/approver actions in the pilot UI. */
-export const REVIEWER_ROLES = ['admin', 'compliance_officer', 'reviewer']
+export const REVIEWER_ROLES = ["admin", "compliance_officer", "reviewer"]
 
 export function canReviewRole(role: string | null | undefined): boolean {
   if (!role) return false

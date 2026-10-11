@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileUp, UploadCloud, X, CheckCircle2, FileText, Layers, HardDrive, Link2, Plus } from 'lucide-react'
 import { useApp } from '../App'
 import { api, pilotApi } from '../lib/api'
 import { openFilePicker } from '../lib/fileHelper'
@@ -7,15 +8,28 @@ import type { AssessmentDraftOut, EvidenceReviewState } from '../lib/types'
 import { canReviewRole } from '../lib/types'
 import { Card, SectionHead, StatCard, EmptyState } from '../components/ui'
 
-function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onClose: () => void; onUploaded: (name: string, evidenceId: string | null) => void }) {
+function UploadModal({
+  mapId,
+  onClose,
+  onUploaded,
+}: {
+  mapId: string | null
+  onClose: () => void
+  onUploaded: (name: string, evidenceId: string | null) => void
+}) {
   const [uploading, setUploading] = useState(false)
   const [done, setDone] = useState(false)
   const [picked, setPicked] = useState<{ fileName: string; blob: Blob } | null>(null)
   const [error, setError] = useState('')
 
   const handlePick = async () => {
-    const file = await openFilePicker({ accept: '.pdf,.png,.jpg,.xlsx,.docx', extensions: ['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'docx'] })
-    if (file && file.blob) setPicked({ fileName: file.fileName, blob: file.blob })
+    const file = await openFilePicker({
+      accept: '.pdf,.png,.jpg,.xlsx,.docx',
+      extensions: ['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'docx'],
+    })
+    if (file && file.blob) {
+      setPicked({ fileName: file.fileName, blob: file.blob })
+    }
   }
 
   const handleUpload = async () => {
@@ -28,8 +42,17 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
         const fd = new FormData()
         fd.append('file', picked.blob, picked.fileName)
         const res = await api.postForm<Record<string, unknown>>(`/maps/${mapId}/complete`, fd)
-        const raw = res as { evidence_id?: string; evidenceId?: string; id?: string; evidence?: { id?: string } }
-        evidenceId = raw.evidence_id ?? raw.evidenceId ?? raw.evidence?.id ?? (typeof raw.id === 'string' ? raw.id : null)
+        const raw = res as {
+          evidence_id?: string
+          evidenceId?: string
+          id?: string
+          evidence?: { id?: string }
+        }
+        evidenceId =
+          raw.evidence_id ??
+          raw.evidenceId ??
+          raw.evidence?.id ??
+          (typeof raw.id === 'string' ? raw.id : null)
       }
       setDone(true)
       onUploaded(picked.fileName, evidenceId)
@@ -41,56 +64,102 @@ function UploadModal({ mapId, onClose, onUploaded }: { mapId: string | null; onC
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(12,27,45,0.5)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="pv-card" style={{ padding: 32, width: 480, maxWidth: '92vw', boxShadow: 'var(--shadow-pop)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--brass)' }}>§ FILE EVIDENCE</div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 8, width: 30, height: 30, cursor: 'pointer', fontSize: 15, color: 'var(--slate)' }}>×</button>
+    <div
+      className="fixed inset-0 bg-[#0C1B2D]/50 z-50 flex items-center justify-center p-4 backdrop-blur-[2px]"
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div className="bg-white rounded-xl border border-[#E2EAF2] p-7 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
+            FILE EVIDENCE
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="w-8 h-8 rounded-lg border border-[#E2EAF2] bg-[#F1F5F9] hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <h2 style={{ fontFamily: 'Fraunces, serif', fontSize: 22, fontWeight: 600, margin: '0 0 4px' }}>Upload evidence</h2>
-        <p style={{ fontSize: 12.5, color: 'var(--slate)', margin: '0 0 20px' }}>Filed under maker–checker — a different approver must approve.</p>
+        <h2 className="text-xl font-semibold text-[#102A43] m-0 mb-1">
+          Upload evidence
+        </h2>
+        <p className="text-[12.5px] text-slate-500 m-0 mb-5 leading-relaxed">
+          Filed under maker–checker — a different approver must approve.
+        </p>
 
         {done ? (
-          <div style={{ textAlign: 'center', padding: '28px 0' }}>
-            <div style={{ width: 56, height: 56, background: 'var(--amber-bg)', border: '1px solid #E7D3A0', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <svg width="24" height="24" fill="none" stroke="var(--amber)" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+          <div className="text-center py-6">
+            <div className="w-12 h-12 rounded-full bg-teal-50 border border-teal-200 text-[#0D9488] flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="w-6 h-6" />
             </div>
-            <p data-testid="upload-awaiting-approval" style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>File submitted — awaiting approval</p>
-            <p style={{ fontSize: 12.5, color: 'var(--slate)', margin: '6px 0 0' }}>A different approver must approve before this item can complete.</p>
+            <p data-testid="upload-awaiting-approval" className="text-[15px] font-bold text-[#102A43] m-0">
+              File submitted — awaiting approval
+            </p>
+            <p className="text-[12.5px] text-slate-500 mt-1.5 mb-0">
+              A different approver must approve before this item can complete.
+            </p>
           </div>
         ) : (
-          <>
+          <div className="flex flex-col gap-4">
             {!picked ? (
-              <button onClick={handlePick}
-                style={{ width: '100%', border: '1px dashed var(--brass)', borderRadius: 10, padding: '30px 24px', textAlign: 'center', cursor: 'pointer', background: 'var(--brass-wash)', marginBottom: 16 }}>
-                <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>Select a file</p>
-                <p style={{ fontSize: 12, color: 'var(--slate)', margin: '4px 0 0' }}>PDF, DOC, XLS, PNG, JPG · Max 20 MB</p>
+              <button
+                onClick={handlePick}
+                className="w-full border-2 border-dashed border-[#E2EAF2] hover:border-[#0D9488] rounded-xl p-6 text-center cursor-pointer bg-[#F1F5F9]/50 hover:bg-teal-50/40 transition-all flex flex-col items-center justify-center gap-2 group"
+              >
+                <div className="w-10 h-10 rounded-full bg-white border border-[#E2EAF2] group-hover:border-teal-200 text-slate-500 group-hover:text-[#0D9488] flex items-center justify-center transition-colors">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#102A43] m-0">Select a file</p>
+                  <p className="text-xs text-slate-500 mt-0.5 m-0">PDF, DOC, XLS, PNG, JPG · Max 20 MB</p>
+                </div>
               </button>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 9, marginBottom: 16, background: 'var(--paper)', border: '1px solid var(--line-soft)' }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{picked.fileName}</p>
-                  <p className="pv-mono" style={{ fontSize: 10.5, color: 'var(--slate)', margin: 0 }}>{(picked.blob.size / 1024 / 1024).toFixed(2)} MB</p>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[#F1F5F9] border border-[#E2EAF2]">
+                <div className="w-8 h-8 rounded-md bg-white border border-[#E2EAF2] text-[#0D9488] flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <button onClick={() => setPicked(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--slate)', fontSize: 16 }}>×</button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#102A43] m-0 truncate">{picked.fileName}</p>
+                  <p className="text-[11px] text-slate-500 m-0 font-mono">{(picked.blob.size / 1024 / 1024).toFixed(2)} MB</p>
+                </div>
+                <button
+                  onClick={() => setPicked(null)}
+                  className="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )}
 
             {!mapId && (
-              <p style={{ fontSize: 12, color: 'var(--amber)', background: 'var(--amber-bg)', border: '1px solid #E7D3A0', borderRadius: 8, padding: '8px 12px', margin: '0 0 12px' }}>
+              <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2.5 m-0">
                 No MAP in context — open a MAP and use “Upload Evidence” to link this file.
               </p>
             )}
-            {error && <p style={{ fontSize: 12, color: 'var(--scarlet)', margin: '0 0 12px' }}>{error}</p>}
+            {error && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2.5 m-0">
+                {error}
+              </p>
+            )}
 
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={handleUpload} disabled={uploading || !picked} className="pv-btn-primary" style={{ flex: 1, justifyContent: 'center', opacity: picked ? 1 : 0.5 }}>
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={handleUpload}
+                disabled={uploading || !picked}
+                className="flex-1 h-10 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
                 {uploading ? 'Filing…' : 'Submit evidence'}
               </button>
-              <button onClick={onClose} className="pv-btn-ghost">Cancel</button>
+              <button
+                onClick={onClose}
+                className="px-4 h-10 rounded-lg border border-[#E2EAF2] hover:bg-slate-100 text-slate-700 text-[13px] font-medium transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -136,51 +205,123 @@ export default function EvidencePage() {
   return (
     <>
       {showUpload && (
-        <UploadModal mapId={selectedId}
+        <UploadModal
+          mapId={selectedId}
           onClose={() => setShowUpload(false)}
           onUploaded={(name, evidenceId) => {
             const ext = name.split('.').pop()?.toUpperCase() ?? 'FILE'
             setRecentUploads(prev => [{ name, time: 'just now', ext, evidenceId, state: 'file-submitted', assessment: null }, ...prev])
             toast('success', 'Evidence submitted', `${name} filed — awaiting a different approver`)
-          }} />
+          }}
+        />
       )}
 
-      <div style={{ width: '100%' }}>
-        <div className="pv-grid12" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 16, marginBottom: 16 }}>
-          <div className="pv-span3" style={{ gridColumn: 'span 3' }}><StatCard eyebrow="Session filings" value={String(recentUploads.length)} caption="Files submitted this session" /></div>
-          <div className="pv-span3" style={{ gridColumn: 'span 3' }}><StatCard eyebrow="Accepted types" value="5" caption="PDF · DOC · XLS · PNG · JPG" /></div>
-          <div className="pv-span3" style={{ gridColumn: 'span 3' }}><StatCard eyebrow="Max file size" value="20MB" caption="Per-file upload limit" /></div>
-          <div className="pv-span3" style={{ gridColumn: 'span 3' }}><StatCard eyebrow="MAP linkage" value={selectedId ? 'Linked' : '—'} caption={selectedId ? `Folio ${selectedId.slice(0, 8)}… in context` : 'Open a MAP to link filings'} /></div>
+      <div className="w-full flex flex-col gap-6">
+        {/* KPI Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard
+            icon={<FileText className="w-4 h-4 text-[#0D9488]" />}
+            eyebrow="Session filings"
+            value={String(recentUploads.length)}
+            caption="Files submitted this session"
+          />
+          <StatCard
+            icon={<Layers className="w-4 h-4 text-[#0D9488]" />}
+            eyebrow="Accepted types"
+            value="5"
+            caption="PDF · DOC · XLS · PNG · JPG"
+          />
+          <StatCard
+            icon={<HardDrive className="w-4 h-4 text-[#0D9488]" />}
+            eyebrow="Max file size"
+            value="20MB"
+            caption="Per-file upload limit"
+          />
+          <StatCard
+            icon={<Link2 className="w-4 h-4 text-[#0D9488]" />}
+            eyebrow="MAP linkage"
+            value={selectedId ? 'Linked' : '—'}
+            caption={selectedId ? `Folio ${selectedId.slice(0, 8)}… in context` : 'Open a MAP to link filings'}
+          />
         </div>
 
-        <Card>
+        {/* Evidence Vault Card */}
+        <Card pad={true}>
           <SectionHead
-            eyebrow="§ Evidence vault"
+            eyebrow="EVIDENCE VAULT"
             title="Session filings"
-            sub={selectedId ? <>Filing against MAP <strong className="pv-mono">{selectedId.slice(0, 8)}…</strong> — approval requires a different approver.</> : 'Open a MAP task and file evidence against it.'}
-            right={<button onClick={() => setShowUpload(true)} className="pv-btn-primary pv-btn-brass">+ File evidence</button>}
+            sub={
+              selectedId ? (
+                <>
+                  Filing against MAP{' '}
+                  <strong className="font-mono text-[#102A43]">{selectedId.slice(0, 8)}…</strong>{' '}
+                  — approval requires a different approver.
+                </>
+              ) : (
+                'Open a MAP task and attach supporting evidence for maker-checker review.'
+              )
+            }
+            right={
+              <button
+                onClick={() => setShowUpload(true)}
+                className="h-9.5 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>File evidence</span>
+              </button>
+            }
           />
+
           {recentUploads.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {recentUploads.map((ev, i) => (
-                <div key={i} data-testid="session-upload" data-state={ev.state}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 9, background: 'var(--paper)', border: '1px solid var(--line-soft)' }}>
-                    <span className="pv-mono" style={{ fontSize: 10, fontWeight: 700, background: '#fff', border: '1px solid var(--line)', borderRadius: 6, padding: '4px 8px', color: 'var(--slate)' }}>{ev.ext}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 12.5, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.name}</p>
-                      <p className="pv-mono" style={{ fontSize: 10.5, color: 'var(--faint)', margin: 0 }}>{ev.time}</p>
+                <div
+                  key={i}
+                  data-testid="session-upload"
+                  data-state={ev.state}
+                  className="rounded-lg p-3 bg-[#F1F5F9]/60 border border-[#E2EAF2] flex flex-col gap-2.5"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-[10.5px] font-bold bg-white border border-[#E2EAF2] rounded-md px-2 py-1 text-slate-600 shrink-0">
+                      {ev.ext}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-[#102A43] m-0 truncate">
+                        {ev.name}
+                      </p>
+                      <p className="text-[11px] text-slate-400 m-0 font-mono">
+                        {ev.time}
+                      </p>
                     </div>
                   </div>
-                  <div style={{ marginTop: 8 }}>
-                    <EvidenceDecision state={ev.state} assessment={ev.assessment} canDecide={canDecide} busy={deciding === ev.name}
+                  <div>
+                    <EvidenceDecision
+                      state={ev.state}
+                      assessment={ev.assessment}
+                      canDecide={canDecide}
+                      busy={deciding === ev.name}
                       onApprove={rationale => void handleDecision(i, 'APPROVED', rationale)}
-                      onReject={rationale => void handleDecision(i, 'REJECTED', rationale)} />
+                      onReject={rationale => void handleDecision(i, 'REJECTED', rationale)}
+                    />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <EmptyState title="No evidence filed this session" hint="File artefacts against the MAP in context — each filing enters maker–checker." />
+            <EmptyState
+              icon={<FileUp className="w-5 h-5 text-[#0D9488]" />}
+              title="No evidence filed yet"
+              hint="Attach supporting documents to a MAP task. Every filing enters the maker-checker review workflow."
+              action={
+                <button
+                  onClick={() => setShowUpload(true)}
+                  className="h-9 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>File evidence</span>
+                </button>
+              }
+            />
           )}
         </Card>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { PanelLeftClose, PanelLeftOpen, Search, Bell, ChevronDown } from 'lucide-react'
 
 const SUB: Record<string, string> = {
   Dashboard: 'Command Desk · Q3 compliance cycle · All departments',
@@ -10,72 +11,144 @@ const SUB: Record<string, string> = {
   Evidence: 'Evidence vault · Traceability per MAP',
   Reports: 'Audit packages · RBI-ready export',
   Users: 'Officers and roles · Access control',
-  Settings: 'Controls · Retention, calibration and policy',
+  Settings: 'Account, organisation & preferences · Access control',
   Login: 'Secure sign in',
 }
 
 function today(): string {
   try {
-    return new Date().toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })
-  } catch { return '' }
+    return new Date().toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  } catch {
+    return ''
+  }
 }
 
-export default function Header({ title, onPaletteOpen }: { title: string; onPaletteOpen?: () => void }) {
+export default function Header({
+  title,
+  onPaletteOpen,
+  sidebarCollapsed,
+  onToggleSidebar,
+}: {
+  title: string
+  onPaletteOpen?: () => void
+  sidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
+}) {
   const [notifOpen, setNotifOpen] = useState(false)
+
   return (
-    <header style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-      padding: '14px 28px', background: 'rgba(244,243,239,0.9)',
-      backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--line)',
-      position: 'sticky', top: 0, zIndex: 40,
-    }}>
-      <div style={{ minWidth: 0 }}>
-        <div className="pv-mono" style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--brass)' }}>
-          PRAVAHOS § {today().toUpperCase()}
+    <header className="flex items-center justify-between gap-4 px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-[#E2EAF2] sticky top-0 z-40">
+      <div className="flex items-center gap-3 min-w-0">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar (⌘B)' : 'Collapse sidebar (⌘B)'}
+            className="w-8.5 h-8.5 rounded-lg flex items-center justify-center bg-transparent border border-[#E2EAF2] text-slate-500 hover:text-[#102A43] hover:bg-[#F1F5F9] transition-colors shrink-0 cursor-pointer"
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="w-4 h-4" />
+            ) : (
+              <PanelLeftClose className="w-4 h-4" />
+            )}
+          </button>
+        )}
+
+        <div className="min-w-0">
+          <div className="text-xs text-slate-400 mb-0.5 font-medium">{today()}</div>
+          <h1 className="text-2xl font-bold text-[#102A43] tracking-tight m-0 leading-tight">
+            {title}
+          </h1>
+          <p className="text-xs text-slate-500 m-0 whitespace-nowrap overflow-hidden text-ellipsis">
+            {SUB[title] ?? 'Bank compliance operations'}
+          </p>
         </div>
-        <h1 style={{ fontFamily: 'Fraunces, serif', fontSize: 23, fontWeight: 600, margin: '2px 0 0', letterSpacing: '-0.01em' }}>{title}</h1>
-        <p style={{ fontSize: 12, color: 'var(--slate)', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {SUB[title] ?? 'Bank compliance operations'}
-        </p>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <button onClick={onPaletteOpen} className="pv-input" style={{ display: 'flex', alignItems: 'center', gap: 8, width: 250, cursor: 'pointer', color: 'var(--faint)' }}>
-          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <span style={{ fontSize: 12.5, flex: 1, textAlign: 'left' }}>Search circulars, MAPs…</span>
-          <kbd className="pv-mono" style={{ fontSize: 10, background: 'var(--paper)', border: '1px solid var(--line)', borderRadius: 5, padding: '1px 6px' }}>⌘K</kbd>
+      <div className="flex items-center gap-2.5">
+        {/* Search command bar */}
+        <button
+          onClick={onPaletteOpen}
+          className="hidden sm:flex items-center gap-2 w-64 md:w-72 h-9 px-3 bg-[#F1F5F9] border border-[#E2EAF2] hover:border-slate-300 rounded-lg text-slate-400 text-left transition-colors cursor-pointer"
+        >
+          <Search className="w-4 h-4 shrink-0" />
+          <span className="text-[13px] flex-1 text-slate-500">Search circulars, MAPs</span>
+          <kbd className="text-[10px] bg-white border border-[#E2EAF2] rounded px-1.5 py-0.5 text-slate-500 font-mono">
+            ⌘K
+          </kbd>
         </button>
 
-        <div style={{ position: 'relative' }}>
+        {/* Notifications toggle */}
+        <div className="relative">
           <button
-            onClick={() => setNotifOpen((v) => !v)}
+            onClick={() => setNotifOpen(v => !v)}
             aria-label="Notifications"
-            className="pv-btn-ghost" style={{ padding: 8, position: 'relative' }}
+            className="p-2 rounded-lg text-slate-500 hover:text-[#102A43] hover:bg-[#F1F5F9] relative transition-colors cursor-pointer"
           >
-            <svg width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
-            <span style={{ position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: '50%', background: 'var(--brass)', border: '1.5px solid var(--paper)' }} />
+            <Bell className="w-4.5 h-4.5" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-600 ring-2 ring-white" />
           </button>
+
           {notifOpen && (
-            <div className="pv-card" style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 330, padding: 16, zIndex: 100, boxShadow: 'var(--shadow-pop)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Exceptions register</span>
-                <span className="pv-chip pv-chip--brass">3 open</span>
+            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-[#E2EAF2] p-4 shadow-xl z-50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-[#102A43]">Notifications</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                  3 new
+                </span>
               </div>
-              {[
-                { t: 'RBI/2026-27/45 — owner confirmation pending', m: 'Risk · 2h ago', tone: 'var(--brass)' },
-                { t: 'MAP overdue — IT Department', m: 'Escalation Level 1 · 4h ago', tone: 'var(--scarlet)' },
-                { t: 'Evidence batch verified — 18 files', m: 'Vault · 6h ago', tone: 'var(--emerald)' },
-              ].map((n, i) => (
-                <div key={i} style={{ display: 'flex', gap: 10, padding: '10px 0', borderTop: i ? '1px solid var(--line-soft)' : 'none' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: n.tone, marginTop: 5, flexShrink: 0 }} />
-                  <div><div style={{ fontSize: 12.5, fontWeight: 600 }}>{n.t}</div><div style={{ fontSize: 11, color: 'var(--slate)' }}>{n.m}</div></div>
-                </div>
-              ))}
+              <div className="divide-y divide-slate-100">
+                {[
+                  {
+                    t: 'MAP overdue — IT infrastructure changes',
+                    m: 'Escalation Level 1 · 2h ago',
+                    dot: 'bg-red-500',
+                  },
+                  {
+                    t: 'Evidence batch requires review — 18 files',
+                    m: 'Evidence vault · 4h ago',
+                    dot: 'bg-amber-500',
+                  },
+                  {
+                    t: 'Circular uploaded — Credit Risk Management',
+                    m: 'Regulations · 6h ago',
+                    dot: 'bg-[#0D9488]',
+                  },
+                ].map((n, i) => (
+                  <div key={i} className="flex gap-2.5 py-2.5 first:pt-2 last:pb-0">
+                    <span className={`w-2 h-2 rounded-full ${n.dot} mt-1.5 shrink-0`} />
+                    <div className="min-w-0">
+                      <div className="text-[12.5px] font-semibold text-[#102A43] leading-snug">
+                        {n.t}
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">{n.m}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        <button className="pv-btn-primary" onClick={onPaletteOpen} style={{ height: 38 }}>New action</button>
+        {/* Profile menu */}
+        <div className="flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-[#F1F5F9] cursor-pointer transition-colors">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0D9488] to-[#0B7E73] text-white font-semibold text-xs flex items-center justify-center shrink-0 shadow-xs">
+            PA
+          </div>
+          <div className="hidden md:block text-left">
+            <div className="text-xs font-semibold text-[#102A43] leading-tight">
+              PravahOS Admin
+            </div>
+            <div className="text-[11px] text-slate-500 leading-tight">Administrator</div>
+          </div>
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+        </div>
       </div>
     </header>
   )

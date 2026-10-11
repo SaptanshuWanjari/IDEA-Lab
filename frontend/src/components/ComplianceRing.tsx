@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react"
 
 interface ComplianceRingProps {
   score: number
@@ -6,44 +6,74 @@ interface ComplianceRingProps {
   label?: string
 }
 
-export default function ComplianceRing({ score, size = 130, label = 'Compliance Score' }: ComplianceRingProps) {
+export default function ComplianceRing({
+  score,
+  size = 110,
+  label = "Compliance Score",
+}: ComplianceRingProps) {
   const [animatedScore, setAnimatedScore] = useState(0)
-  const r = (size - 20) / 2
+  const strokeWidth = 9
+  const r = (size - strokeWidth * 2) / 2
   const circumference = 2 * Math.PI * r
   const offset = circumference - (animatedScore / 100) * circumference
 
   useEffect(() => {
     const start = Date.now()
-    const duration = 1200
+    const duration = 1000
+    let rafId: number
     const frame = () => {
       const t = Math.min((Date.now() - start) / duration, 1)
       const eased = 1 - Math.pow(1 - t, 3)
       setAnimatedScore(eased * score)
-      if (t < 1) requestAnimationFrame(frame)
+      if (t < 1) {
+        rafId = requestAnimationFrame(frame)
+      }
     }
-    requestAnimationFrame(frame)
+    rafId = requestAnimationFrame(frame)
+    return () => cancelAnimationFrame(rafId)
   }, [score])
 
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div style={{ position: 'relative', width: size, height: size }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EFEEE8" strokeWidth={12} />
+    <div className="flex flex-col items-center justify-center text-center w-full h-full">
+      <div
+        className="relative flex items-center justify-center"
+        style={{ width: size, height: size }}
+      >
+        <svg width={size} height={size} className="-rotate-90">
+          {/* Neutral track */}
           <circle
-            cx={size / 2} cy={size / 2} r={r} fill="none"
-            stroke="#0C1B2D" strokeWidth={12} strokeLinecap="round"
-            strokeDasharray={circumference} strokeDashoffset={offset}
-            style={{ transition: 'stroke-dashoffset 0.05s ease' }}
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="#E2EAF2"
+            strokeWidth={strokeWidth}
+          />
+          {/* Restrained teal progress ring */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="#0D9488"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className="transition-all duration-75 ease-out"
           />
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="pv-numeral" style={{ fontSize: size > 100 ? 28 : 20, fontWeight: 600, color: 'var(--ink)', lineHeight: 1 }}>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-[22px] font-bold text-[#102A43] tabular-nums leading-none">
             {Math.round(animatedScore)}%
           </span>
-          {size > 100 && <span style={{ fontSize: 10, color: 'var(--faint)', marginTop: 2 }}>Score</span>}
         </div>
       </div>
-      {label && <span style={{ fontSize: 12, color: 'var(--slate)', textAlign: 'center' }}>{label}</span>}
+      {label && (
+        <span className="text-[13px] font-medium text-slate-600 mt-3 text-center">
+          {label}
+        </span>
+      )}
     </div>
   )
 }

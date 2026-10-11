@@ -1,9 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from "react"
 
 export function useApi<T>(
   fn: () => Promise<T>,
   deps: unknown[],
-): { data: T | null; loading: boolean; error: string | null; refetch: () => void } {
+): {
+  data: T | null
+  loading: boolean
+  error: string | null
+  refetch: () => void
+} {
   const [data, setData] = useState<T | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -17,8 +22,9 @@ export function useApi<T>(
     let cancelled = false
     setLoading(true)
     setError(null)
-    fnRef.current()
-      .then(result => {
+    fnRef
+      .current()
+      .then((result) => {
         if (!cancelled) {
           setData(result)
           setLoading(false)
@@ -26,15 +32,17 @@ export function useApi<T>(
       })
       .catch((err: Error) => {
         if (!cancelled) {
-          setError(err.message ?? 'Unknown error')
+          setError(err.message ?? "Unknown error")
           setLoading(false)
         }
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, tick])
 
-  const refetch = useCallback(() => setTick(t => t + 1), [])
+  const refetch = useCallback(() => setTick((t) => t + 1), [])
 
   return { data, loading, error, refetch }
 }
