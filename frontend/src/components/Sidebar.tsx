@@ -9,6 +9,7 @@ import {
   Users,
   Settings,
   Network,
+  LogOut,
 } from 'lucide-react'
 
 interface NavItem {
@@ -44,6 +45,7 @@ const nav: NavItem[] = [
 export default function Sidebar({
   currentPage,
   onNavigate,
+  onLogout,
   collapsed = false,
 }: {
   currentPage: Page
@@ -115,6 +117,22 @@ export default function Sidebar({
           )
         })}
       </nav>
+
+      {/* Sidebar Sign Out Footer */}
+      <div className={`border-t border-[#E2EAF2] ${collapsed ? 'p-1.5' : 'p-2'}`}>
+        <button
+          onClick={onLogout}
+          className={`pv-nav-item text-slate-500 hover:text-red-600 hover:bg-red-50/70 transition-colors w-full ${
+            collapsed ? 'is-collapsed justify-center' : ''
+          }`}
+          title="Sign out (terminate session)"
+        >
+          <span className="pv-nav-icon text-slate-400 group-hover:text-red-600">
+            <LogOut className="w-4.5 h-4.5" strokeWidth={1.8} />
+          </span>
+          <span className="pv-sidebar-label">Sign Out</span>
+        </button>
+      </div>
     </aside>
   )
 }

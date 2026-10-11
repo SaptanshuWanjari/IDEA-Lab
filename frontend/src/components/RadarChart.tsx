@@ -8,8 +8,8 @@ const datasets = {
   p90: [94, 85, 97, 98, 89, 93],
 }
 
-const INK = "#0C1B2D"
-const BRASS = "#9A7B2E"
+const INK = "#102A43"
+const BRASS = "#0D9488"
 
 function polarToCartesian(
   cx: number,
@@ -122,7 +122,7 @@ export default function RadarChart() {
         />
         <path
           d={pointsToPath(predictedPts)}
-          fill="rgba(154,123,46,0.16)"
+          fill="rgba(13,148,136,0.16)"
           stroke={BRASS}
           strokeWidth={2}
         />

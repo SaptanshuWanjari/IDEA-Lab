@@ -28,9 +28,9 @@ export default function SourceCitation({
     <div
       data-testid="source-citation"
       style={{
-        background: "#FAFAF8",
-        border: "1px solid #E8E8E3",
-        borderRadius: 12,
+        background: "var(--line-soft)",
+        border: "1px solid var(--line)",
+        borderRadius: 10,
         padding: "12px 14px",
       }}
     >
@@ -40,8 +40,8 @@ export default function SourceCitation({
           style={{
             fontSize: 11,
             fontWeight: 700,
-            color: "#444440",
-            fontFamily: "IBM Plex Mono, monospace",
+            color: "var(--ink)",
+            fontFamily: "Inter, monospace",
           }}
         >
           {clauseId}
@@ -50,9 +50,10 @@ export default function SourceCitation({
           data-testid="citation-page"
           style={{
             fontSize: 11,
-            color: "#888880",
-            fontFamily: "IBM Plex Mono, monospace",
-            background: "#F0F0EA",
+            color: "var(--slate)",
+            fontFamily: "Inter, monospace",
+            background: "var(--card)",
+            border: "1px solid var(--line)",
             padding: "1px 8px",
             borderRadius: 10,
           }}
@@ -80,11 +81,11 @@ export default function SourceCitation({
         data-testid="citation-quote"
         style={{
           fontSize: 12,
-          color: "#0A0A0A",
+          color: "var(--ink)",
           margin: 0,
           fontFamily: "Inter",
           lineHeight: 1.6,
-          borderLeft: "3px solid #C5A254",
+          borderLeft: "3px solid var(--teal)",
           paddingLeft: 10,
           fontStyle: "italic",
         }}

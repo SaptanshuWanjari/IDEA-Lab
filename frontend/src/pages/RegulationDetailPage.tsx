@@ -149,242 +149,150 @@ export default function RegulationDetailPage() {
 
   if (!selectedId) {
     return (
-      <div style={{ textAlign: "center", padding: "80px 0" }}>
-        <div
-          className="pv-mono"
-          style={{
-            fontSize: 11,
-            letterSpacing: "0.14em",
-            color: "var(--brass)",
-          }}
-        >
-          § NO FOLIO SELECTED
-        </div>
-        <p style={{ fontSize: 14, color: "var(--slate)", margin: "8px 0 0" }}>
-          Return to the circulars ledger.
-        </p>
-        <button
-          onClick={() => navigate("regulations")}
-          className="pv-btn-primary"
-          style={{ marginTop: 16 }}
-        >
-          ← Back
-        </button>
+      <div className="w-full py-16 flex items-center justify-center">
+        <Card pad className="max-w-md w-full text-center">
+          <EmptyState
+            title="No regulation selected"
+            hint="Return to the circulars ledger to select and inspect an RBI compliance folio."
+            action={
+              <button
+                onClick={() => navigate("regulations")}
+                className="pv-btn-primary"
+              >
+                ← Return to Regulations
+              </button>
+            }
+          />
+        </Card>
       </div>
     )
   }
 
   return (
-    <div style={{ width: "100%" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 16,
-        }}
-      >
+    <div className="w-full flex flex-col gap-4">
+      {/* Breadcrumbs Navigation */}
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs">
         <button
           onClick={() => navigate("regulations")}
-          className="pv-btn-ghost"
-          style={{ padding: "6px 12px", fontSize: 12 }}
+          className="pv-btn-ghost py-1 px-2.5 text-xs text-slate-600 hover:text-ink font-medium"
         >
-          ← Circulars
+          ← Regulations
         </button>
-        <span style={{ color: "var(--line)", fontSize: 12 }}>/</span>
-        <span
-          className="pv-mono"
-          style={{ fontSize: 12, color: "var(--slate)" }}
-        >
+        <span className="text-slate-300">/</span>
+        <span className="font-mono text-slate-500 font-medium">
           {selectedId.slice(0, 8)}…
         </span>
-      </div>
+      </nav>
 
+      {/* Error Alert */}
       {regError && (
         <div
+          role="alert"
+          className="p-3.5 rounded-xl flex items-center justify-between"
           style={{
-            background: "var(--scarlet-bg)",
-            border: "1px solid #EFC4BE",
-            borderRadius: 10,
-            padding: "12px 16px",
-            marginBottom: 16,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            background: "var(--critical-bg)",
+            border: "1px solid var(--critical-border)",
+            color: "var(--critical)",
           }}
         >
-          <p style={{ fontSize: 13, color: "var(--scarlet)", margin: 0 }}>
-            {regError}
-          </p>
+          <p className="text-xs font-medium m-0">{regError}</p>
           <button
             onClick={regRefetch}
-            className="pv-btn-ghost"
-            style={{ color: "var(--scarlet)", borderColor: "#EFC4BE" }}
+            className="pv-btn-ghost text-xs"
+            style={{ color: "var(--critical)" }}
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* Folio hero — navy ledger plate */}
+      {/* Folio Hero — Unified Navy/Teal Plate */}
       <section
+        className="relative overflow-hidden rounded-xl border border-[#1E3A5F] p-6 sm:p-7 text-white shadow-sm"
         style={{
-          background: "linear-gradient(160deg, #10253C 0%, #0C1B2D 65%)",
-          border: "1px solid #22394F",
-          borderRadius: 12,
-          padding: "26px 28px",
-          marginBottom: 16,
-          position: "relative",
-          overflow: "hidden",
-          color: "#F6F1E2",
+          background: "linear-gradient(165deg, var(--ink) 0%, #0C1E33 60%, #071524 100%)",
         }}
       >
+        {/* Subtle ambient teal glow matching app theme */}
         <div
+          className="absolute inset-0 pointer-events-none"
           style={{
-            position: "absolute",
-            inset: 0,
             background:
-              "radial-gradient(400px 220px at 85% 0%, rgba(197,162,84,0.16), transparent 65%)",
-            pointerEvents: "none",
+              "radial-gradient(500px 260px at 85% 0%, rgba(13, 148, 136, 0.2), transparent 70%)",
           }}
+          aria-hidden="true"
         />
+
         {regLoading ? (
-          <div
-            style={{
-              height: 120,
-              background: "rgba(255,255,255,0.06)",
-              borderRadius: 8,
-            }}
-          />
+          <div className="h-28 bg-white/5 rounded-lg animate-pulse" />
         ) : (
           regulation && (
-            <div style={{ position: "relative" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  marginBottom: 12,
-                  flexWrap: "wrap",
-                }}
-              >
-                <span
-                  className="pv-mono"
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: "#D9BC6B",
-                    border: "1px solid rgba(217,188,107,0.45)",
-                    padding: "3px 10px",
-                    borderRadius: 999,
-                  }}
-                >
+            <div className="relative z-10">
+              <div className="flex items-center gap-2.5 mb-3 flex-wrap">
+                <span className="bg-teal-950/70 text-teal-300 border border-teal-500/40 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide font-mono">
                   {regulation.id.slice(0, 8)}…
                 </span>
                 <StatusChip tone={statusToneFor(regulation.status)}>
                   {regulation.status}
                 </StatusChip>
               </div>
-              <h1
-                style={{
-                  fontFamily: "Fraunces, serif",
-                  fontSize: 24,
-                  fontWeight: 600,
-                  margin: 0,
-                  lineHeight: 1.3,
-                  letterSpacing: "-0.01em",
-                  maxWidth: 720,
-                }}
-              >
+
+              <h1 className="text-[22px] sm:text-[25px] font-semibold text-white tracking-tight leading-snug m-0 max-w-3xl">
                 {regulation.title ?? "(untitled)"}
               </h1>
+
               {regulation.summary && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "#AEB9C6",
-                    margin: "10px 0 0",
-                    lineHeight: 1.6,
-                    maxWidth: 640,
-                  }}
-                >
+                <p className="text-[13.5px] text-slate-300 mt-2.5 mb-0 leading-relaxed max-w-2xl">
                   {regulation.summary}
                 </p>
               )}
             </div>
           )
         )}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginTop: 20,
-            paddingTop: 18,
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            position: "relative",
-            flexWrap: "wrap",
-          }}
-        >
+
+        <div className="relative z-10 flex items-center gap-2.5 mt-5 pt-4.5 border-t border-white/10 flex-wrap">
           <button
             onClick={handleIngest}
             disabled={ingesting}
-            style={{
-              padding: "8px 16px",
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.25)",
-              borderRadius: 9,
-              fontSize: 12.5,
-              fontWeight: 600,
-              cursor: ingesting ? "not-allowed" : "pointer",
-              color: "#F6F1E2",
-              opacity: ingesting ? 0.6 : 1,
-            }}
+            className="px-4 py-2 bg-slate-800/80 hover:bg-slate-700 text-white border border-slate-600/60 rounded-lg text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {ingesting ? "Ingesting…" : "Ingest PDF"}
           </button>
           <button
             onClick={handleGenerate}
             disabled={generating}
-            className="pv-btn-primary pv-btn-brass"
-            style={{ fontSize: 12.5, opacity: generating ? 0.7 : 1 }}
+            className="pv-btn-primary"
+            style={{ fontSize: 12.5 }}
           >
             {generating ? "Generating…" : "Generate MAPs"}
           </button>
           {linkedPolicies.length > 0 ? (
             <button
               onClick={() => setPolicyOpen(true)}
-              style={{
-                padding: "8px 16px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.25)",
-                borderRadius: 9,
-                fontSize: 12.5,
-                fontWeight: 600,
-                cursor: "pointer",
-                color: "#F6F1E2",
-              }}
+              className="px-4 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-600/60 rounded-lg text-xs font-semibold transition-colors"
             >
               Internal policy ({linkedPolicies[0].version})
             </button>
           ) : (
-            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+            <span className="text-xs text-white/50">
               No linked policy
             </span>
           )}
         </div>
       </section>
 
+      {/* Internal Policy Drawer */}
       <PolicyDrawer
         open={policyOpen}
         policies={linkedPolicies}
         onClose={() => setPolicyOpen(false)}
       />
 
+      {/* Obligations Review Section */}
       <Card>
         <div data-testid="obligation-section">
           <SectionHead
-            eyebrow={`§ Obligation ledger · ${(obligations ?? []).length} candidate(s)`}
+            eyebrow={`Obligation ledger · ${(obligations ?? []).length} candidate(s)`}
             title="Obligations"
             sub="Each obligation carries its source quote and page. Approval requires a valid citation and a reviewer different from the creator."
           />
@@ -394,7 +302,7 @@ export default function RegulationDetailPage() {
               hint="Ingest the circular to extract obligations."
             />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {(obligations ?? []).map((ob) => (
                 <ObligationReview
                   key={ob.id}
@@ -414,19 +322,8 @@ export default function RegulationDetailPage() {
         </div>
       </Card>
 
-      <div
-        style={{
-          display: "flex",
-          gap: 2,
-          background: "var(--card)",
-          border: "1px solid var(--line)",
-          borderRadius: 10,
-          padding: 3,
-          margin: "16px 0",
-          alignSelf: "flex-start",
-          width: "fit-content",
-        }}
-      >
+      {/* Segmented Navigation Tabs */}
+      <div className="flex gap-1 p-1 bg-white border border-line rounded-xl my-1 self-start w-fit">
         {(["maps", "graph", "history"] as const).map((tab) => (
           <button
             key={tab}
@@ -437,7 +334,7 @@ export default function RegulationDetailPage() {
           >
             {tab}
             {tab === "maps" && maps && (
-              <span className="pv-mono" style={{ marginLeft: 6, fontSize: 10 }}>
+              <span className="pv-mono ml-1.5 text-[10px]">
                 ({maps.length})
               </span>
             )}
@@ -445,12 +342,11 @@ export default function RegulationDetailPage() {
         ))}
       </div>
 
+      {/* Tab Panel: MAPs */}
       {activeTab === "maps" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="flex flex-col gap-2.5">
           {mapsLoading ? (
-            <div
-              style={{ height: 160, background: "#F1EFE9", borderRadius: 12 }}
-            />
+            <div className="h-40 bg-slate-100 rounded-xl animate-pulse" />
           ) : (maps ?? []).length === 0 ? (
             <Card>
               <EmptyState
@@ -462,69 +358,43 @@ export default function RegulationDetailPage() {
             (maps ?? []).map((map) => (
               <Card
                 key={map.id}
-                style={{ padding: "16px 20px", cursor: "pointer" }}
+                pad
+                className="hover:border-slate-300 transition-colors cursor-pointer"
               >
                 <div onClick={() => navigate("map-review", map.id)}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      justifyContent: "space-between",
-                      gap: 16,
-                    }}
-                  >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 6,
-                        }}
-                      >
-                        <span
-                          className="pv-mono"
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: "var(--faint)",
-                          }}
-                        >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="pv-mono text-[11px] font-semibold text-slate-400">
                           {map.id.slice(0, 8)}…
                         </span>
                         <StatusChip tone={statusToneFor(map.status)}>
                           {map.status}
                         </StatusChip>
                         {map.approval_state && (
-                          <span style={{ fontSize: 11, color: "var(--slate)" }}>
+                          <span className="text-[11px] text-slate-500 font-medium">
                             {map.approval_state}
                           </span>
                         )}
                       </div>
-                      <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
+                      <p className="text-sm font-semibold text-ink m-0">
                         {map.description}
                       </p>
-                      <div style={{ display: "flex", gap: 16, marginTop: 6 }}>
+                      <div className="flex gap-4 mt-1.5">
                         {map.deadline && (
-                          <span
-                            className="pv-mono"
-                            style={{ fontSize: 11, color: "var(--slate)" }}
-                          >
+                          <span className="pv-mono text-[11px] text-slate-500">
                             Due {map.deadline}
                           </span>
                         )}
                         {map.estimated_days != null && (
-                          <span style={{ fontSize: 11, color: "var(--slate)" }}>
+                          <span className="text-[11px] text-slate-500">
                             Est. {map.estimated_days}d
                           </span>
                         )}
                       </div>
                     </div>
                     {map.confidence != null && (
-                      <span
-                        className="pv-numeral"
-                        style={{ fontSize: 24, fontWeight: 600, flexShrink: 0 }}
-                      >
+                      <span className="pv-numeral text-2xl font-semibold text-ink shrink-0">
                         {Math.round(map.confidence * 100)}%
                       </span>
                     )}
@@ -535,47 +405,38 @@ export default function RegulationDetailPage() {
           )}
           <button
             onClick={() => navigate("map-tasks")}
-            className="pv-btn-ghost"
-            style={{ justifyContent: "center", borderStyle: "dashed" }}
+            className="pv-btn-ghost justify-center border border-dashed border-line text-slate-600 hover:text-ink py-2"
           >
             View all MAP tasks
           </button>
         </div>
       )}
 
+      {/* Tab Panel: Dependency Graph */}
       {activeTab === "graph" && (
         <Card>
           <SectionHead
-            eyebrow="§ Dependency map"
+            eyebrow="Dependency map"
             title="Obligation graph"
             sub="Blocking relationships between MAPs."
           />
           {graphLoading ? (
-            <div
-              style={{ height: 160, background: "#F1EFE9", borderRadius: 12 }}
-            />
+            <div className="h-40 bg-slate-100 rounded-xl animate-pulse" />
           ) : !graph || graph.nodes.length === 0 ? (
             <EmptyState
               title="No dependency graph yet"
-              hint="Generate MAPs first."
+              hint="Generate MAPs first to build the dependency lattice."
             />
           ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <p
-                  className="pv-mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--slate)",
-                    margin: 0,
-                  }}
-                >
+                <p className="pv-mono text-[11px] text-slate-500 m-0">
                   {graph.nodes.length} NODES · {graph.edges.length} EDGES ·{" "}
                   {graph.critical_path.length} CRITICAL
                 </p>
                 <button
                   onClick={() => navigate("digital-twin")}
-                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+                  className="text-xs font-semibold text-teal-600 hover:text-teal-800 hover:underline"
                 >
                   Open in Digital Twin →
                 </button>
@@ -590,22 +451,15 @@ export default function RegulationDetailPage() {
                 />
               </div>
 
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div className="flex flex-wrap gap-2">
                 {graph.nodes.map((n) => (
                   <span
                     key={n.id}
-                    style={{
-                      background: "var(--paper)",
-                      border: "1px solid var(--line)",
-                      borderRadius: 8,
-                      padding: "6px 12px",
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                    }}
+                    className="bg-white border border-line text-ink rounded-lg text-[11.5px] font-semibold px-3 py-1.5"
                   >
                     {n.label || n.id.slice(0, 8)}
                     {n.department && (
-                      <span style={{ fontWeight: 400, color: "var(--slate)" }}>
+                      <span className="font-normal text-slate-500">
                         {" "}
                         · {n.department}
                       </span>
@@ -613,47 +467,22 @@ export default function RegulationDetailPage() {
                   </span>
                 ))}
               </div>
+
               {graph.critical_path.length > 0 && (
-                <div style={{ marginTop: 18 }}>
-                  <p
-                    className="pv-mono"
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: "0.12em",
-                      color: "var(--scarlet)",
-                      margin: "0 0 8px",
-                    }}
-                  >
+                <div className="mt-4.5">
+                  <p className="pv-mono text-[10.5px] font-bold tracking-wider text-red-600 mb-2">
                     CRITICAL PATH
                   </p>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      flexWrap: "wrap",
-                    }}
-                  >
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {graph.critical_path.map((id, i) => {
                       const n = graph.nodes.find((x) => x.id === id)
                       return (
-                        <span
-                          key={id}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                          }}
-                        >
+                        <span key={id} className="flex items-center gap-1.5">
                           <StatusChip tone="bad">
                             {n?.label ?? id.slice(0, 8)}
                           </StatusChip>
                           {i < graph.critical_path.length - 1 && (
-                            <span
-                              style={{ color: "var(--scarlet)", fontSize: 12 }}
-                            >
-                              →
-                            </span>
+                            <span className="text-red-500 text-xs">→</span>
                           )}
                         </span>
                       )
@@ -666,28 +495,23 @@ export default function RegulationDetailPage() {
         </Card>
       )}
 
+      {/* Tab Panel: History Audit Trail */}
       {activeTab === "history" && (
         <Card>
           <SectionHead
-            eyebrow="§ Audit trail"
+            eyebrow="Audit trail"
             title="Folio history"
-            sub="Immutable intake record."
+            sub="Immutable intake record and ledger events."
           />
           {regulation ? (
-            <div style={{ display: "flex", gap: 14 }}>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
+            <div className="flex gap-3.5">
+              <div className="flex flex-col items-center">
                 <div
                   style={{
                     width: 9,
                     height: 9,
                     borderRadius: "50%",
-                    background: "var(--brass)",
+                    background: "var(--teal)",
                     border: "2px solid var(--ink)",
                     flexShrink: 0,
                     marginTop: 3,
@@ -703,17 +527,10 @@ export default function RegulationDetailPage() {
                 />
               </div>
               <div>
-                <p style={{ fontSize: 13, margin: 0 }}>
+                <p className="text-[13px] text-ink m-0">
                   <strong>System</strong> — regulation uploaded
                 </p>
-                <p
-                  className="pv-mono"
-                  style={{
-                    fontSize: 11,
-                    color: "var(--slate)",
-                    margin: "4px 0 0",
-                  }}
-                >
+                <p className="pv-mono text-[11px] text-slate-500 mt-1 mb-0">
                   {new Date(regulation.created_at).toLocaleString("en-IN")}
                 </p>
               </div>

@@ -36,9 +36,9 @@ export default function ObligationReview({
     <div
       data-testid="obligation-review"
       style={{
-        background: "#FFFFFF",
-        border: "1px solid #E8E8E3",
-        borderRadius: 16,
+        background: "var(--card)",
+        border: "1px solid var(--line)",
+        borderRadius: "var(--radius-lg)",
         padding: "16px 18px",
       }}
     >
@@ -146,14 +146,14 @@ export default function ObligationReview({
               disabled={busy}
               style={{
                 padding: "7px 14px",
-                background: "#0C1B2D",
+                background: "var(--teal)",
                 border: "none",
                 borderRadius: 8,
                 fontSize: 12,
-                fontWeight: 700,
+                fontWeight: 600,
                 cursor: busy ? "not-allowed" : "pointer",
                 fontFamily: "Inter",
-                color: "#F6F1E2",
+                color: "#FFFFFF",
                 opacity: busy ? 0.6 : 1,
               }}
             >
@@ -166,13 +166,13 @@ export default function ObligationReview({
               style={{
                 padding: "7px 14px",
                 background: "transparent",
-                border: "1px solid #E53935",
+                border: "1px solid var(--critical-border)",
                 borderRadius: 8,
                 fontSize: 12,
                 fontWeight: 600,
                 cursor: busy ? "not-allowed" : "pointer",
                 fontFamily: "Inter",
-                color: "#C13B2A",
+                color: "var(--critical)",
               }}
             >
               Reject with rationale

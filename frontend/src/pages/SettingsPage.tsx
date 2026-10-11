@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   User,
   Bell,
@@ -39,8 +39,31 @@ const tabs: {
 ]
 
 export default function SettingsPage() {
-  const { toast, user, navigate } = useApp()
-  const [activeTab, setActiveTab] = useState<SettingsTab>("Profile")
+  const { toast, user, navigate, selectedId } = useApp()
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    if (
+      selectedId === "Profile" ||
+      selectedId === "Security" ||
+      selectedId === "Notifications" ||
+      selectedId === "Integrations" ||
+      selectedId === "Team"
+    ) {
+      return selectedId as SettingsTab
+    }
+    return "Profile"
+  })
+
+  useEffect(() => {
+    if (
+      selectedId === "Profile" ||
+      selectedId === "Security" ||
+      selectedId === "Notifications" ||
+      selectedId === "Integrations" ||
+      selectedId === "Team"
+    ) {
+      setActiveTab(selectedId as SettingsTab)
+    }
+  }, [selectedId])
 
   // User form states
   const initialName = useMemo(() => {

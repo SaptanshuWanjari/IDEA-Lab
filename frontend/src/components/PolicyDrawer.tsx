@@ -1,4 +1,5 @@
 import type { BankDemoPolicy } from "../lib/bankDemoManifest"
+import { X } from "lucide-react"
 
 interface PolicyDrawerProps {
   open: boolean
@@ -26,7 +27,8 @@ export default function PolicyDrawer({
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0,0,0,0.35)",
+          background: "rgba(16, 42, 67, 0.45)",
+          backdropFilter: "blur(2px)",
         }}
       />
       <aside
@@ -35,9 +37,10 @@ export default function PolicyDrawer({
           top: 0,
           right: 0,
           bottom: 0,
-          width: "min(420px, 92vw)",
-          background: "#FFFFFF",
-          boxShadow: "-8px 0 32px rgba(0,0,0,0.18)",
+          width: "min(440px, 92vw)",
+          background: "var(--card)",
+          boxShadow: "var(--shadow-pop)",
+          borderLeft: "1px solid var(--line)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -48,17 +51,18 @@ export default function PolicyDrawer({
             alignItems: "flex-start",
             justifyContent: "space-between",
             gap: 12,
-            padding: "20px 22px 0",
+            padding: "20px 22px 16px",
+            borderBottom: "1px solid var(--line)",
           }}
         >
           <div>
             <p
               style={{
                 fontSize: 11,
-                fontWeight: 700,
-                color: "#888880",
+                fontWeight: 600,
+                color: "var(--teal)",
                 margin: 0,
-                fontFamily: "Inter",
+                fontFamily: "Inter, sans-serif",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
               }}
@@ -69,10 +73,10 @@ export default function PolicyDrawer({
             <h2
               style={{
                 fontSize: 17,
-                fontWeight: 700,
-                color: "#0A0A0A",
-                margin: "6px 0 0",
-                fontFamily: "Inter",
+                fontWeight: 600,
+                color: "var(--ink)",
+                margin: "4px 0 0",
+                fontFamily: "Inter, sans-serif",
               }}
             >
               {active?.title ?? "No linked policy"}
@@ -89,13 +93,13 @@ export default function PolicyDrawer({
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: 700,
-                    color: "#6E5620",
-                    background: "var(--brass-wash)",
-                    border: "1px solid #DCC88F",
+                    fontWeight: 600,
+                    color: "var(--teal)",
+                    background: "var(--teal-wash)",
+                    border: "1px solid var(--teal-light)",
                     padding: "3px 10px",
                     borderRadius: 20,
-                    fontFamily: "IBM Plex Mono, monospace",
+                    fontFamily: "Inter, monospace",
                   }}
                 >
                   {active.version}
@@ -103,8 +107,8 @@ export default function PolicyDrawer({
                 <span
                   style={{
                     fontSize: 12,
-                    color: "#888880",
-                    fontFamily: "Inter",
+                    color: "var(--slate)",
+                    fontFamily: "Inter, sans-serif",
                   }}
                 >
                   {active.owner_dept}
@@ -116,28 +120,30 @@ export default function PolicyDrawer({
             onClick={onClose}
             aria-label="Close policy drawer"
             style={{
-              background: "#F5F5F0",
-              border: "1px solid #E8E8E3",
+              background: "var(--line-soft)",
+              border: "1px solid var(--line)",
               borderRadius: 8,
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               cursor: "pointer",
-              fontSize: 14,
-              color: "#444440",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--slate)",
               flexShrink: 0,
             }}
           >
-            ×
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div style={{ padding: "16px 22px 22px", overflowY: "auto", flex: 1 }}>
+        <div style={{ padding: "18px 22px 24px", overflowY: "auto", flex: 1 }}>
           {!active ? (
             <p
               style={{
                 fontSize: 14,
-                color: "#888880",
-                fontFamily: "Inter",
+                color: "var(--slate)",
+                fontFamily: "Inter, sans-serif",
                 textAlign: "center",
                 margin: "40px 0",
               }}
@@ -150,9 +156,9 @@ export default function PolicyDrawer({
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#0A0A0A",
+                  color: "var(--ink)",
                   margin: "0 0 8px",
-                  fontFamily: "Inter",
+                  fontFamily: "Inter, sans-serif",
                 }}
               >
                 Procedure preview
@@ -160,14 +166,14 @@ export default function PolicyDrawer({
               <pre
                 style={{
                   fontSize: 12,
-                  color: "#444440",
-                  background: "#F5F5F0",
-                  border: "1px solid #E8E8E3",
-                  borderRadius: 12,
+                  color: "var(--ink-2)",
+                  background: "var(--line-soft)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 10,
                   padding: "14px 16px",
                   whiteSpace: "pre-wrap",
                   wordBreak: "break-word",
-                  fontFamily: "IBM Plex Mono, monospace",
+                  fontFamily: "Inter, monospace",
                   lineHeight: 1.6,
                   margin: 0,
                 }}
@@ -177,22 +183,22 @@ export default function PolicyDrawer({
               <p
                 style={{
                   fontSize: 11,
-                  color: "#888880",
+                  color: "var(--slate)",
                   margin: "12px 0 0",
-                  fontFamily: "IBM Plex Mono, monospace",
+                  fontFamily: "Inter, monospace",
                 }}
               >
                 {active.file} · {active.id}
               </p>
               {rest.length > 0 && (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 20 }}>
                   <p
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      color: "#0A0A0A",
+                      color: "var(--ink)",
                       margin: "0 0 8px",
-                      fontFamily: "Inter",
+                      fontFamily: "Inter, sans-serif",
                     }}
                   >
                     Also linked
@@ -201,9 +207,10 @@ export default function PolicyDrawer({
                     <div
                       key={p.id}
                       style={{
-                        border: "1px solid #E8E8E3",
-                        borderRadius: 10,
-                        padding: "8px 12px",
+                        border: "1px solid var(--line)",
+                        background: "var(--card)",
+                        borderRadius: 8,
+                        padding: "10px 12px",
                         marginBottom: 8,
                       }}
                     >
@@ -211,8 +218,8 @@ export default function PolicyDrawer({
                         style={{
                           fontSize: 13,
                           fontWeight: 600,
-                          color: "#0A0A0A",
-                          fontFamily: "Inter",
+                          color: "var(--ink)",
+                          fontFamily: "Inter, sans-serif",
                         }}
                       >
                         {p.title}
@@ -220,9 +227,9 @@ export default function PolicyDrawer({
                       <span
                         style={{
                           fontSize: 11,
-                          color: "#888880",
+                          color: "var(--slate)",
                           marginLeft: 8,
-                          fontFamily: "IBM Plex Mono, monospace",
+                          fontFamily: "Inter, monospace",
                         }}
                       >
                         {p.version} · {p.owner_dept}

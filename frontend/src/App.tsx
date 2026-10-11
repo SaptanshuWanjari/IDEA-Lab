@@ -34,6 +34,7 @@ export interface NavCtx {
   toast: (type: ToastType, title: string, message?: string) => void
   selectedId: string | null
   user: UserOut | null
+  logout: () => Promise<void> | void
 }
 
 export const AppCtx = createContext<NavCtx>({
@@ -41,6 +42,7 @@ export const AppCtx = createContext<NavCtx>({
   toast: () => {},
   selectedId: null,
   user: null,
+  logout: () => {},
 })
 
 export const useApp = () => useContext(AppCtx)
@@ -208,11 +210,22 @@ export default function App() {
     )
   }
 
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout")
+    } catch {
+      /* ignore */
+    }
+    setUser(null)
+    setCurrentPage("login")
+  }
+
   const ctx: NavCtx = {
     navigate: navigate as NavCtx["navigate"],
     toast,
     selectedId,
     user,
+    logout: handleLogout,
   }
 
   const renderPage = () => {
@@ -238,16 +251,6 @@ export default function App() {
       default:
         return <DashboardPage />
     }
-  }
-
-  const handleLogout = async () => {
-    try {
-      await api.post("/auth/logout")
-    } catch {
-      /* ignore */
-    }
-    setUser(null)
-    setCurrentPage("login")
   }
 
   return (
@@ -279,6 +282,7 @@ export default function App() {
             onPaletteOpen={() => setPaletteOpen(true)}
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={toggleSidebar}
+            onLogout={handleLogout}
           />
           <main
             className="flex-1 flex flex-col"
