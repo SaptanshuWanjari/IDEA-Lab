@@ -83,7 +83,7 @@ export default function RegulationsPage() {
               className="h-9.5 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer disabled:opacity-70 shadow-sm"
             >
               <Plus className="w-4 h-4" />
-              <span>{uploading ? 'Registering…' : '+ Register circular'}</span>
+              <span>{uploading ? 'Registering…' : 'Register circular'}</span>
             </button>
           }
         />

@@ -1,4 +1,5 @@
 import type { Page } from '../App'
+import logo from '../logo.svg'
 import {
   LayoutGrid,
   FileText,
@@ -7,7 +8,6 @@ import {
   BarChart3,
   Users,
   Settings,
-  Shield,
 } from 'lucide-react'
 
 interface NavItem {
@@ -61,9 +61,11 @@ export default function Sidebar({
       <div className={`flex items-center gap-2.5 overflow-hidden transition-all duration-300 ${
         collapsed ? 'p-3.5 justify-center' : 'px-4 py-3.5'
       }`}>
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#0D9488] to-[#0B7E73] text-white flex items-center justify-center shrink-0 shadow-sm">
-          <Shield className="w-4.5 h-4.5" />
-        </div>
+        <img
+          src={logo}
+          alt="PravahOS"
+          className="w-8 h-8 rounded-lg object-contain shrink-0 shadow-xs"
+        />
         <span className="pv-sidebar-label text-[17px] font-bold text-[#102A43] tracking-tight">
           PravahOS
         </span>

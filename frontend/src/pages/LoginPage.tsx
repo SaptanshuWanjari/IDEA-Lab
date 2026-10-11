@@ -1,4 +1,5 @@
 import { useState } from "react"
+import logo from "../logo.svg"
 import { api } from "../lib/api"
 import type { UserOut } from "../lib/types"
 
@@ -77,23 +78,11 @@ export default function LoginPage({
             position: "relative",
           }}
         >
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 11,
-              background: "linear-gradient(160deg,#D9BC6B,#9A7B2E)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: "Fraunces, serif",
-              fontWeight: 700,
-              fontSize: 21,
-              color: "#0C1B2D",
-            }}
-          >
-            P
-          </div>
+          <img
+            src={logo}
+            alt="PravahOS"
+            className="w-10 h-10 rounded-xl object-contain shadow-sm"
+          />
           <div>
             <div
               style={{
