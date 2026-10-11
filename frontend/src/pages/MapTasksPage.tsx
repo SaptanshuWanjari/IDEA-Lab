@@ -16,6 +16,7 @@ import {
   ListTodo,
   ExternalLink,
   ChevronRight,
+  ArrowUpRight,
   AlertTriangle,
 } from 'lucide-react'
 import { useApp } from '../App'
@@ -643,56 +644,67 @@ function KanbanCard({
       </div>
 
       {/* Task Title (strongest visual weight) */}
-      <h3 className="text-[13px] font-semibold text-[#102A43] m-0 mb-1 leading-snug line-clamp-2 group-hover:text-[#0D9488] transition-colors">
+      <h3 className="text-[13.5px] font-semibold text-[#102A43] m-0 mb-1 leading-snug line-clamp-2 group-hover:text-[#0D9488] transition-colors">
         {task.description}
       </h3>
 
       {/* Associated Circular / Department (secondary text) */}
-      <p className="text-[11px] text-slate-500 m-0 mb-2 truncate">
+      <p className="text-[11.5px] text-slate-500 m-0 mb-2 truncate">
         {task.circular_title}
       </p>
 
-      {/* Owner & Deadline Row */}
-      <div className="flex items-center justify-between text-xs pt-1">
-        {/* Owner with avatar and short name */}
-        <div className="flex items-center gap-1.5 min-w-0 pr-2">
+      {/* Full-width divider line */}
+      <div className="border-t border-[#E2EAF2] my-2.5" />
+
+      {/* Owner & Deadline Row (two columns matching reference mockup) */}
+      <div className="flex items-center justify-between text-xs py-0.5">
+        {/* Left: Owner avatar + name + 'Owner' */}
+        <div className="flex items-center gap-2 min-w-0 pr-2">
           <div
-            className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0 shadow-2xs"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-[9.5px] font-bold text-white shrink-0 shadow-2xs"
             style={{ backgroundColor: task.owner.color }}
             title={`${task.owner.name} (${task.owner.role})`}
           >
             {task.owner.avatar}
           </div>
-          <span className="text-[11.5px] font-medium text-slate-700 truncate max-w-[85px]">
-            {task.owner.name}
-          </span>
+          <div className="min-w-0">
+            <p className="text-[12px] font-semibold text-slate-800 m-0 truncate leading-tight">
+              {task.owner.name}
+            </p>
+            <p className="text-[10px] text-slate-400 m-0 font-medium leading-tight mt-0.5">
+              Owner
+            </p>
+          </div>
         </div>
 
-        {/* Deadline and Overdue status */}
-        <div className="flex items-center gap-1 shrink-0">
-          {task.is_overdue ? (
-            <span
-              className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded"
-              title={`Due ${task.due_label} — Overdue by ${task.overdue_days} days`}
-            >
-              <Clock className="w-3 h-3 text-red-500 shrink-0" />
-              <span>Overdue {task.overdue_days}d</span>
-            </span>
-          ) : (
-            <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
-              <span>{task.due_label}</span>
-            </span>
-          )}
+        {/* Right: Deadline + Overdue / Status subtext */}
+        <div className="text-right shrink-0">
+          <p
+            className={`text-[12px] font-bold m-0 leading-tight ${
+              task.is_overdue ? 'text-red-600' : 'text-slate-700'
+            }`}
+          >
+            {task.due_label}
+          </p>
+          <p className="text-[10px] text-slate-400 m-0 font-medium leading-tight mt-0.5">
+            {task.is_overdue
+              ? `Overdue by ${task.overdue_days} days`
+              : task.due_in_days === 0
+              ? 'Due today'
+              : task.due_in_days != null
+              ? `Due in ${task.due_in_days} days`
+              : 'On track'}
+          </p>
         </div>
       </div>
 
-      {/* Quiet Footer: Estimated Effort */}
+      {/* Quiet Footer: Estimated Effort + Arrow action */}
       <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-2 mt-2 border-t border-slate-100">
-        <span>{task.estimated_days} days estimated effort</span>
-        <span className="text-slate-300 group-hover:text-[#0D9488] transition-colors">
-          <ChevronRight className="w-3.5 h-3.5" />
-        </span>
+        <div className="flex items-center gap-1.5">
+          <Clock className="w-3 h-3 text-slate-400" />
+          <span>{task.estimated_days} days estimated effort</span>
+        </div>
+        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#0D9488] transition-colors" />
       </div>
     </div>
   )

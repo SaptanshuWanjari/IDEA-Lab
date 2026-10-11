@@ -300,7 +300,7 @@ export default function App() {
               }}
             >
               <span>PRAVAHOS · AUDIT TRAIL ENABLED · ALL ACTIONS LOGGED</span>
-              <span>MAKER–CHECKER ENFORCED</span>
+              
             </footer>
           </main>
         </div>
