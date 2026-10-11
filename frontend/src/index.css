@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
 
 @theme inline {
@@ -633,3 +633,42 @@ button:focus:not(:focus-visible) { outline: none; }
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Kanban Board Styles ---------- */
+.pv-kanban-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.pv-kanban-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.pv-kanban-scroll::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+.pv-kanban-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+.pv-kanban-column {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.pv-kanban-column.is-drag-over {
+  border-color: var(--teal) !important;
+  background-color: rgba(240, 253, 250, 0.7) !important;
+}
+
+.pv-kanban-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.pv-kanban-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 12px -2px rgba(16, 42, 67, 0.08), 0 2px 6px -1px rgba(16, 42, 67, 0.04);
+}
+
+.pv-kanban-card.is-dragging {
+  opacity: 0.45;
+  transform: scale(0.97);
+}
+

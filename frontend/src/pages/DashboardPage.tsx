@@ -1264,6 +1264,100 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Critical Path Flow Strip */}
+          <div className="pv-twin-inset" style={{ marginBottom: 10 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: 6,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 700,
+                  color: "#94A3B8",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Critical Dependency Path (Zero Slack)
+              </div>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: "IBM Plex Mono, monospace",
+                  color: "#14B8A6",
+                  fontWeight: 600,
+                }}
+              >
+                47d Total
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                overflowX: "auto",
+                padding: "2px 0",
+              }}
+            >
+              {[
+                { name: "RBI Scope", days: "5d" },
+                { name: "IT Infra", days: "18d", alert: true },
+                { name: "Legal", days: "14d" },
+                { name: "Audit Rpt", days: "10d" },
+              ].map((step, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      padding: "3px 7px",
+                      borderRadius: 6,
+                      background: step.alert
+                        ? "rgba(220, 38, 38, 0.25)"
+                        : "rgba(255, 255, 255, 0.08)",
+                      border: step.alert
+                        ? "1px solid rgba(239, 68, 68, 0.5)"
+                        : "1px solid rgba(255, 255, 255, 0.12)",
+                      color: step.alert ? "#FCA5A5" : "#E2E8F0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <span>{step.name}</span>
+                    <span style={{ fontSize: 9.5, opacity: 0.7 }}>
+                      {step.days}
+                    </span>
+                  </span>
+                  {idx < 3 && (
+                    <span
+                      style={{
+                        color: "rgba(20, 184, 166, 0.6)",
+                        fontSize: 10,
+                      }}
+                    >
+                      →
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Top predicted delays */}
           <div className="pv-twin-inset">
             <div
@@ -1351,7 +1445,7 @@ export default function DashboardPage() {
                 }}
                 onClick={() => navigate("digital-twin")}
               >
-                Open scenario planner {ICONS.arrow}
+                Open Dependency Graph & Twin {ICONS.arrow}
               </button>
             </div>
           </div>

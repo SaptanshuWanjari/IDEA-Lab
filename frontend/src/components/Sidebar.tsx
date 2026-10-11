@@ -8,6 +8,7 @@ import {
   BarChart3,
   Users,
   Settings,
+  Network,
 } from 'lucide-react'
 
 interface NavItem {
@@ -22,6 +23,7 @@ const ICON = {
   dashboard: <LayoutGrid className="w-4.5 h-4.5" strokeWidth={1.8} />,
   regulations: <FileText className="w-4.5 h-4.5" strokeWidth={1.8} />,
   maps: <CheckSquare className="w-4.5 h-4.5" strokeWidth={1.8} />,
+  twin: <Network className="w-4.5 h-4.5" strokeWidth={1.8} />,
   evidence: <Paperclip className="w-4.5 h-4.5" strokeWidth={1.8} />,
   reports: <BarChart3 className="w-4.5 h-4.5" strokeWidth={1.8} />,
   users: <Users className="w-4.5 h-4.5" strokeWidth={1.8} />,
@@ -32,6 +34,7 @@ const nav: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', title: 'Dashboard', group: 'main', icon: ICON.dashboard },
   { id: 'regulations', label: 'Regulations', title: 'Regulations', group: 'main', icon: ICON.regulations },
   { id: 'map-tasks', label: 'MAPs', title: 'MAP Tasks', group: 'main', icon: ICON.maps },
+  { id: 'digital-twin', label: 'Digital Twin', title: 'Digital Twin & Dependencies', group: 'main', icon: ICON.twin },
   { id: 'evidence', label: 'Evidence', title: 'Evidence', group: 'main', icon: ICON.evidence },
   { id: 'reports', label: 'Reports', title: 'Reports', group: 'main', icon: ICON.reports },
   { id: 'users', label: 'Users', title: 'Users', group: 'admin', icon: ICON.users },

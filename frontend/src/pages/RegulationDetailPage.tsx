@@ -5,6 +5,7 @@ import { api, pilotApi } from "../lib/api"
 import { getPoliciesForReg } from "../lib/bankDemoManifest"
 import PolicyDrawer from "../components/PolicyDrawer"
 import ObligationReview from "../components/ObligationReview"
+import DependencyGraph from "../components/DependencyGraph"
 import type {
   RegulationOut,
   MAPOut,
@@ -559,18 +560,36 @@ export default function RegulationDetailPage() {
               hint="Generate MAPs first."
             />
           ) : (
-            <div>
-              <p
-                className="pv-mono"
-                style={{
-                  fontSize: 11,
-                  color: "var(--slate)",
-                  margin: "0 0 14px",
-                }}
-              >
-                {graph.nodes.length} NODES · {graph.edges.length} EDGES ·{" "}
-                {graph.critical_path.length} CRITICAL
-              </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p
+                  className="pv-mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--slate)",
+                    margin: 0,
+                  }}
+                >
+                  {graph.nodes.length} NODES · {graph.edges.length} EDGES ·{" "}
+                  {graph.critical_path.length} CRITICAL
+                </p>
+                <button
+                  onClick={() => navigate("digital-twin")}
+                  className="text-xs font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+                >
+                  Open in Digital Twin →
+                </button>
+              </div>
+
+              {/* Visual Dependency Graph Canvas */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <DependencyGraph
+                  customNodes={graph.nodes}
+                  customEdges={graph.edges}
+                  customCriticalPath={graph.critical_path}
+                />
+              </div>
+
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {graph.nodes.map((n) => (
                   <span
