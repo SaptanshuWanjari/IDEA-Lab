@@ -64,6 +64,94 @@ cp .env.example .env
 
 Edit `.env` and change `SECRET_KEY` for any non-local use. `.env` is the single source of truth for Ollama model names (consumed by both backend and `Makefile`).
 
+#### Windows Setup
+
+On Windows, use PowerShell or Git Bash for the commands above. Key differences:
+
+**Prerequisites (Windows):**
+- **Docker Desktop** — Install from [docker.com](https://www.docker.com/products/docker-desktop/) and enable WSL 2 backend (recommended)
+- **Git for Windows** — Provides `bash`, `make`, and `curl` (or use PowerShell equivalents)
+- **Node.js 20+** — Install from [nodejs.org](https://nodejs.org/) or via `winget install OpenJS.NodeJS.LTS`
+- **Python 3.12+** — Install from [python.org](https://www.python.org/) or via `winget install Python.Python.3.12`
+- **uv** — Fast Python package manager: `pip install uv` or `pipx install uv`
+- **Ollama** — Install from [ollama.com](https://ollama.com) (runs as a Windows service)
+
+**Environment file (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+# Edit .env with your preferred editor (notepad, code, vim)
+notepad .env
+```
+
+**Start infrastructure (PowerShell):**
+```powershell
+# Option 1: Using Make (if installed via Chocolatey/Scoop/Git Bash)
+make setup
+
+# Option 2: Direct Docker Compose (works everywhere)
+docker compose up -d
+```
+
+**Ollama on Windows:**
+Ollama runs as a Windows service and binds to `127.0.0.1:11434` by default. For Docker containers to reach it, configure Ollama to listen on all interfaces:
+
+```powershell
+# Stop the Ollama service
+Stop-Service Ollama
+
+# Set OLLAMA_HOST to listen on all interfaces
+$env:OLLAMA_HOST = "0.0.0.0"
+# Or permanently via registry (requires admin):
+# [Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0", "Machine")
+
+# Restart Ollama
+Start-Service Ollama
+
+# Verify
+ollama serve
+```
+
+Alternatively, run Ollama manually in a terminal:
+```powershell
+$env:OLLAMA_HOST = "0.0.0.0"; ollama serve
+```
+
+**Pull models (PowerShell):**
+```powershell
+# Using Make
+make models
+
+# Or directly
+ollama pull minimax-m3:cloud
+ollama pull qwen3-embedding:0.6b
+```
+
+**Start frontend (PowerShell):**
+```powershell
+cd frontend
+npm install
+npm run dev:desktop
+```
+
+**Run tests (PowerShell):**
+```powershell
+# Backend tests
+cd backend
+uv run pytest -v
+
+# E2E tests (requires Playwright browsers)
+cd frontend
+npx playwright install
+npm run test:e2e
+```
+
+**Useful Windows-specific notes:**
+- Docker Desktop must be running before `docker compose up`
+- File paths in `.env` use forward slashes (`/`) even on Windows
+- `host.docker.internal` works automatically in Docker Desktop for Windows
+- Tantivy index directory uses `/tmp/pravah_tantivy` in the container (Linux path)
+- If `make` is not available, all commands work directly with `docker compose`, `npm`, `uv`, `ollama`
+
 ### 1a. Pilot Runtime Profile
 
 Validated at startup (`validate_runtime_settings` in `backend/app/config_profiles.py`, wired into `backend/app/main.py`):
@@ -167,6 +255,10 @@ OLLAMA_RERANK_MODEL=minimax-m3:cloud
   sudo apt-get install tesseract-ocr poppler-utils
   # macOS
   brew install tesseract poppler
+  # Windows (Chocolatey)
+  choco install tesseract poppler
+  # Windows (Scoop)
+  scoop install tesseract poppler
   # Then enable:
   ENABLE_OCR=true
   ```
@@ -271,11 +363,13 @@ Note: `docs/` is gitignored (local-only design notes, evaluations, and the pilot
 
 After `make setup` and pulling models:
 
+In **development mode**, the admin user (`admin@pravah.in` / `admin123`) is auto-created on API startup. Just log in:
+
 ```bash
-# Register (disabled in pilot/production — use /auth/invite there)
-curl -X POST http://localhost:8000/auth/register \
+# Login (admin user auto-seeded in development)
+curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@pravah.in","password":"admin123","role":"compliance_officer"}' \
+  -d '{"email":"admin@pravah.in","password":"admin123"}' \
   -c cookies.txt
 
 # Upload a regulation (creates async ingest job)
@@ -295,6 +389,8 @@ curl -X POST "http://localhost:8000/regulations/$REG/scenario-estimate" -b cooki
   -H "Content-Type: application/json" -d '{}'
 curl "http://localhost:8000/reports/$REG/report" -b cookies.txt
 ```
+
+> **Note:** In `pilot`/`production` mode, public registration is disabled. Use the invite flow (`POST /auth/invite`) by a `bank_admin` to provision users.
 
 ---
 
