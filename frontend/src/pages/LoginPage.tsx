@@ -1,6 +1,16 @@
 import { useState } from "react"
-import { Eye, EyeOff, AlertCircle, ArrowRight, Shield, HelpCircle, X } from "lucide-react"
+import {
+  Eye,
+  EyeOff,
+  AlertCircle,
+  ArrowRight,
+  HelpCircle,
+  X,
+  Mail,
+  Lock,
+} from "lucide-react"
 import logo from "../logo.svg"
+import loginAsset from "../login-asset.png"
 import { api } from "../lib/api"
 import type { UserOut } from "../lib/types"
 
@@ -12,6 +22,7 @@ export default function LoginPage({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberDevice, setRememberDevice] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [showHelpModal, setShowHelpModal] = useState(false)
@@ -29,7 +40,10 @@ export default function LoginPage({
     setError("")
     setLoading(true)
     try {
-      const user = await api.post<UserOut>("/auth/login", { email: email.trim(), password })
+      const user = await api.post<UserOut>("/auth/login", {
+        email: email.trim(),
+        password,
+      })
       onLogin(user)
     } catch (err: unknown) {
       setError(
@@ -43,979 +57,752 @@ export default function LoginPage({
   }
 
   return (
-    <main className="pv-login-root">
-      {/* ========================================================
-          LEFT: BRANDING & REGULATORY LEDGER PANEL (Unified Navy/Teal)
-          ======================================================== */}
-      <section className="pv-login-brand" aria-label="PravahOS Brand Overview">
-        {/* Subtle radial ambient teal glow matching app brand */}
-        <div className="pv-brand-glow" aria-hidden="true" />
-
-        <div className="pv-brand-content">
-          {/* Brand header */}
-          <header className="pv-brand-header">
-            <img
-              src={logo}
-              alt="PravahOS Logo"
-              className="pv-brand-logo"
+    <>
+      <div className="lp-outer" aria-label="PravahOS Login">
+        {/* Outer background shapes */}
+        <div className="lp-bg-shapes" aria-hidden="true">
+          <svg
+            className="lp-bg-svg"
+            viewBox="0 0 1440 900"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <polygon
+              points="900,0 1440,0 1440,520 1100,380"
+              fill="rgba(13,148,136,0.06)"
             />
-            <div>
-              <div className="pv-brand-title">PravahOS</div>
-              <div className="pv-brand-subtitle">
-                BANKING COMPLIANCE INTELLIGENCE
-              </div>
-            </div>
-          </header>
-
-          {/* Eyebrow - Teal accent unified with app */}
-          <div className="pv-brand-eyebrow">
-            BANKING COMPLIANCE · MAKER-CHECKER · AUDIT TRAIL
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="pv-brand-headline">
-            Every circular,
-            <br />
-            accounted for
-            <br />
-            <em className="pv-brand-headline-accent">to the last proof.</em>
-          </h1>
-
-          {/* Supporting Description */}
-          <p className="pv-brand-description">
-            Bring regulatory obligations, accountable owners, and verified
-            evidence together in one controlled workspace.
-          </p>
-
-          {/* Feature List (Editorial) */}
-          <div className="pv-feature-list" role="list">
-            <div className="pv-feature-row" role="listitem">
-              <span className="pv-feature-num">01</span>
-              <div className="pv-feature-text">
-                <div className="pv-feature-title">From circular to action</div>
-                <div className="pv-feature-desc">
-                  Extract measurable obligations with traceable folio references.
-                </div>
-              </div>
-            </div>
-
-            <div className="pv-feature-row" role="listitem">
-              <span className="pv-feature-num">02</span>
-              <div className="pv-feature-text">
-                <div className="pv-feature-title">From action to outcome</div>
-                <div className="pv-feature-desc">
-                  Track owners, deadlines, and remediation progress.
-                </div>
-              </div>
-            </div>
-
-            <div className="pv-feature-row" role="listitem">
-              <span className="pv-feature-num">03</span>
-              <div className="pv-feature-text">
-                <div className="pv-feature-title">From evidence to proof</div>
-                <div className="pv-feature-desc">
-                  Maintain verified records with a complete audit trail.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Regulatory Compliance & Audit Trail Visual (Unified Theme) */}
-          <div className="pv-audit-visual" aria-hidden="true">
-            <svg
-              className="pv-audit-svg"
-              viewBox="0 0 520 180"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Fine ledger grid lines */}
-              <line x1="20" y1="30" x2="500" y2="30" stroke="rgba(226,234,242,0.08)" strokeDasharray="3 3" />
-              <line x1="20" y1="90" x2="500" y2="90" stroke="rgba(226,234,242,0.08)" />
-              <line x1="20" y1="150" x2="500" y2="150" stroke="rgba(226,234,242,0.08)" strokeDasharray="3 3" />
-
-              {/* Vertical ledger tick guides */}
-              <line x1="70" y1="18" x2="70" y2="162" stroke="rgba(226,234,242,0.05)" />
-              <line x1="260" y1="18" x2="260" y2="162" stroke="rgba(226,234,242,0.05)" />
-              <line x1="450" y1="18" x2="450" y2="162" stroke="rgba(226,234,242,0.05)" />
-
-              {/* Connecting lineage path */}
-              <path
-                d="M 70 90 L 260 90 L 450 90"
-                stroke="#0D9488"
-                strokeWidth="1.5"
-                strokeDasharray="4 4"
-                strokeOpacity="0.4"
-              />
-
-              {/* Node 1: Circular Folio */}
-              <circle cx="70" cy="90" r="16" fill="#0C1E33" stroke="#0D9488" strokeWidth="1.2" strokeOpacity="0.8" />
-              <circle cx="70" cy="90" r="24" stroke="rgba(20,184,166,0.18)" strokeWidth="1" strokeDasharray="2 2" />
-              <circle cx="70" cy="90" r="4" fill="#14B8A6" />
-              <text x="70" y="60" textAnchor="middle" fill="#94A3B8" fontSize="8.5" letterSpacing="0.12em" fontFamily="Inter, sans-serif" fontWeight="600">
-                CIRCULAR FOLIO
-              </text>
-              <text x="70" y="125" textAnchor="middle" fill="#14B8A6" fontSize="9" letterSpacing="0.08em" fontFamily="Inter, sans-serif">
-                § SEC 35A · REF 04
-              </text>
-
-              {/* Arrow connector 1 -> 2 */}
-              <polygon points="172,86 178,90 172,94" fill="#0D9488" fillOpacity="0.6" />
-
-              {/* Node 2: Maker-Checker Control */}
-              <circle cx="260" cy="90" r="18" fill="#0C1E33" stroke="#14B8A6" strokeWidth="1.4" strokeOpacity="0.9" />
-              <circle cx="260" cy="90" r="28" stroke="rgba(20,184,166,0.25)" strokeWidth="1" strokeDasharray="3 3" />
-              <circle cx="260" cy="90" r="5" fill="#14B8A6" />
-              <text x="260" y="58" textAnchor="middle" fill="#94A3B8" fontSize="8.5" letterSpacing="0.12em" fontFamily="Inter, sans-serif" fontWeight="600">
-                MAKER-CHECKER CONTROL
-              </text>
-              <text x="260" y="125" textAnchor="middle" fill="#14B8A6" fontSize="9" letterSpacing="0.08em" fontFamily="Inter, sans-serif">
-                DUAL SIGN-OFF
-              </text>
-
-              {/* Arrow connector 2 -> 3 */}
-              <polygon points="362,86 368,90 362,94" fill="#0D9488" fillOpacity="0.6" />
-
-              {/* Node 3: Tamper-Evident Evidence Vault */}
-              <circle cx="450" cy="90" r="16" fill="#0C1E33" stroke="#0D9488" strokeWidth="1.2" strokeOpacity="0.8" />
-              <circle cx="450" cy="90" r="24" stroke="rgba(20,184,166,0.18)" strokeWidth="1" strokeDasharray="2 2" />
-              <circle cx="450" cy="90" r="4" fill="#14B8A6" />
-              <text x="450" y="60" textAnchor="middle" fill="#94A3B8" fontSize="8.5" letterSpacing="0.12em" fontFamily="Inter, sans-serif" fontWeight="600">
-                EVIDENCE VAULT
-              </text>
-              <text x="450" y="125" textAnchor="middle" fill="#14B8A6" fontSize="9" letterSpacing="0.08em" fontFamily="Inter, sans-serif">
-                AUDIT LINEAGE VERIFIED
-              </text>
-            </svg>
-          </div>
-
-          {/* Institutional note footer */}
-          <footer className="pv-brand-footer">
-            PRAVAH COMPLIANCE ENGINE · AUTHORIZED INSTITUTIONAL ACCESS ONLY
-          </footer>
+            <polygon
+              points="0,600 320,900 0,900"
+              fill="rgba(13,148,136,0.05)"
+            />
+            <line
+              x1="60"
+              y1="0"
+              x2="60"
+              y2="900"
+              stroke="#C9A45F"
+              strokeWidth="0.6"
+              strokeOpacity="0.25"
+            />
+          </svg>
         </div>
-      </section>
 
-      {/* ========================================================
-          RIGHT: AUTHENTICATION PANEL (Unified Paper & White Card)
-          ======================================================== */}
-      <section className="pv-login-auth" aria-label="Sign In">
-        <div className="pv-auth-wrap">
-          {/* Login Card */}
-          <div className="pv-auth-card">
-            {/* Header */}
-            <div className="pv-card-header">
-              <div className="pv-card-eyebrow">
-                <span className="pv-card-eyebrow-badge">
-                  <Shield className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>OFFICER ACCESS</span>
-                </span>
-              </div>
-              <h2 className="pv-card-headline">Welcome back</h2>
-              <p className="pv-card-desc">
-                Sign in with your bank-issued credentials to access your compliance workspace.
+        {/* Main panel */}
+        <main className="lp-panel" role="main">
+          {/* LEFT: BRANDING */}
+          <section className="lp-brand" aria-label="PravahOS Brand">
+            <div className="lp-brand-grad" aria-hidden="true" />
+            <div className="lp-brand-inner">
+              <header className="lp-brand-header">
+                <img src={logo} alt="PravahOS Logo" className="lp-brand-logo" />
+                <div>
+                  <div className="lp-brand-name">PravahOS</div>
+                  <div className="lp-brand-tagline">BANKING COMPLIANCE INTELLIGENCE</div>
+                </div>
+              </header>
+
+              <h1 className="lp-headline">
+                Every circular,
+                <br />
+                accounted for
+                <br />
+                <em className="lp-headline-gold">to the last proof.</em>
+              </h1>
+
+              <p className="lp-description">
+                Intake RBI circulars, track remediation actions, and compile
+                inspection-ready evidence — in one controlled workspace.
               </p>
-            </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="pv-auth-form" noValidate>
-              {/* Email Field */}
-              <div className="pv-field-group">
-                <label htmlFor="login-email" className="pv-field-label">
-                  Work email
-                </label>
-                <input
-                  id="login-email"
-                  name="email"
-                  type="email"
-                  autoComplete="username"
-                  required
-                  placeholder="name@bankname.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (error) setError("")
-                  }}
-                  className="pv-auth-input"
-                  disabled={loading}
+              <div className="lp-illustration-wrap" aria-hidden="true">
+                <img
+                  src={loginAsset}
+                  alt="Banking compliance workflow — bank building, RBI circular document, compliance shield"
+                  className="lp-illustration"
                 />
               </div>
+            </div>
+          </section>
 
-              {/* Password Field */}
-              <div className="pv-field-group">
-                <div className="pv-label-row">
-                  <label htmlFor="login-password" className="pv-field-label">
-                    Password
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowHelpModal(true)}
-                    className="pv-help-trigger"
-                    aria-label="Need sign-in assistance or password help?"
-                  >
-                    Need assistance?
-                  </button>
+          {/* RIGHT: AUTH */}
+          <section className="lp-auth" aria-label="Officer Sign In">
+            <div className="lp-auth-topbar">
+              <span className="lp-topbar-label">Officer access</span>
+              <span className="lp-topbar-sep" aria-hidden="true" />
+              <button
+                type="button"
+                className="lp-topbar-help"
+                onClick={() => setShowHelpModal(true)}
+                aria-label="Get help with signing in"
+              >
+                Help
+              </button>
+            </div>
+
+            <div className="lp-auth-center">
+              <div className="lp-form-heading">
+                <div className="lp-form-eyebrow">OFFICER SIGN IN</div>
+                <h2 className="lp-form-title">Welcome back</h2>
+                <p className="lp-form-desc">Use your bank-issued credentials to continue.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="lp-form" noValidate aria-label="Sign in form">
+                {/* Email */}
+                <div className="lp-field">
+                  <label htmlFor="login-email" className="lp-label">Work email</label>
+                  <div className="lp-input-wrap">
+                    <Mail className="lp-input-icon" size={17} aria-hidden="true" />
+                    <input
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      autoComplete="username"
+                      required
+                      placeholder="name@bankname.com"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); if (error) setError("") }}
+                      className="lp-input lp-input--icon-left"
+                      disabled={loading}
+                      aria-describedby={error ? "login-error" : undefined}
+                    />
+                  </div>
                 </div>
-                <div className="pv-password-wrapper">
+
+                {/* Password */}
+                <div className="lp-field">
+                  <label htmlFor="login-password" className="lp-label">Password</label>
+                  <div className="lp-input-wrap">
+                    <Lock className="lp-input-icon" size={17} aria-hidden="true" />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => { setPassword(e.target.value); if (error) setError("") }}
+                      className="lp-input lp-input--icon-left lp-input--icon-right"
+                      disabled={loading}
+                      aria-describedby={error ? "login-error" : undefined}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((p) => !p)}
+                      className="lp-pwd-toggle"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={0}
+                    >
+                      {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
+                    </button>
+                  </div>
+                  <div className="lp-reset-row">
+                    <button type="button" onClick={() => setShowHelpModal(true)} className="lp-reset-link">
+                      Contact IT for password reset
+                    </button>
+                  </div>
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <div id="login-error" role="alert" className="lp-error" aria-live="assertive">
+                    <AlertCircle size={15} aria-hidden="true" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button type="submit" disabled={loading} className="lp-submit" aria-busy={loading}>
+                  {loading ? (
+                    <><span className="lp-spinner" aria-hidden="true" /><span>Signing in…</span></>
+                  ) : (
+                    <><span>Sign in to PravahOS</span><ArrowRight size={16} aria-hidden="true" /></>
+                  )}
+                </button>
+
+                {/* Remember device */}
+                <label className="lp-remember" htmlFor="login-remember">
                   <input
-                    id="login-password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value)
-                      if (error) setError("")
-                    }}
-                    className="pv-auth-input pv-password-input"
+                    id="login-remember"
+                    type="checkbox"
+                    className="lp-checkbox"
+                    checked={rememberDevice}
+                    onChange={(e) => setRememberDevice(e.target.checked)}
                     disabled={loading}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="pv-password-toggle"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    title={showPassword ? "Hide password" : "Show password"}
-                    tabIndex={0}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" aria-hidden="true" />
-                    ) : (
-                      <Eye className="w-4 h-4" aria-hidden="true" />
-                    )}
-                  </button>
-                </div>
-              </div>
+                  <span>Remember this workstation for 30 days</span>
+                </label>
+              </form>
+            </div>
+          </section>
+        </main>
 
-              {/* Error Message */}
-              {error && (
-                <div role="alert" className="pv-auth-alert">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-                  <span>{error}</span>
-                </div>
-              )}
+        {/* Footer */}
+        <footer className="lp-footer" aria-label="Security notice">
+          SECURE ACCESS · REGULATORY WORKSPACE · CONFIDENTIAL
+        </footer>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="pv-submit-btn"
-                aria-busy={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="pv-btn-spinner" aria-hidden="true" />
-                    <span>Signing in…</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign in to PravahOS</span>
-                    <ArrowRight className="w-4 h-4 ml-1" aria-hidden="true" />
-                  </>
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* Clean Security Note beneath Card */}
-          <div className="pv-auth-footer-note">
-            SECURE ACCESS · REGULATORY WORKSPACE
-          </div>
-        </div>
-      </section>
-
-      {/* IT Helpdesk Information Dialog */}
-      {showHelpModal && (
-        <div
-          className="pv-modal-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="help-modal-title"
-          onClick={() => setShowHelpModal(false)}
-        >
+        {/* IT Help Modal */}
+        {showHelpModal && (
           <div
-            className="pv-modal-card"
-            onClick={(e) => e.stopPropagation()}
+            className="lp-modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-modal-title"
+            onClick={() => setShowHelpModal(false)}
           >
-            <div className="pv-modal-header">
-              <div className="pv-modal-icon-wrap">
-                <HelpCircle className="w-5 h-5 text-[#0D9488]" />
+            <div className="lp-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="lp-modal-header">
+                <div className="lp-modal-icon">
+                  <HelpCircle size={18} />
+                </div>
+                <div className="lp-modal-header-text">
+                  <h3 id="help-modal-title" className="lp-modal-title">Credential Assistance</h3>
+                  <p className="lp-modal-sub">Bank security policy &amp; account recovery</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowHelpModal(false)}
+                  className="lp-modal-close"
+                  aria-label="Close dialog"
+                >
+                  <X size={15} />
+                </button>
               </div>
-              <div>
-                <h3 id="help-modal-title" className="pv-modal-title">
-                  Credential Assistance
-                </h3>
-                <p className="pv-modal-sub">
-                  Bank security policy &amp; account recovery
+              <div className="lp-modal-body">
+                <p>
+                  In accordance with institutional security guidelines, password resets and account
+                  provisions are centrally managed by your bank's internal IT Administration.
                 </p>
+                <div className="lp-modal-contact">
+                  <div className="lp-modal-contact-label">Support procedure:</div>
+                  <ul className="lp-modal-steps">
+                    <li>Raise a service ticket via your internal bank IT Service Desk.</li>
+                    <li>Reference application: <strong>PravahOS Compliance Portal</strong>.</li>
+                    <li>Provide your authorized corporate email address.</li>
+                  </ul>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowHelpModal(false)}
-                className="pv-modal-close"
-                aria-label="Close dialog"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="pv-modal-body">
-              <p>
-                In accordance with institutional security guidelines, password resets
-                and account provisions are centrally managed by your bank’s internal
-                IT Administration.
-              </p>
-              <div className="pv-modal-contact">
-                <div className="font-semibold text-[#102A43]">Support procedure:</div>
-                <ul className="pv-modal-steps">
-                  <li>Raise a service ticket via your internal bank IT Service Desk.</li>
-                  <li>Reference application: <strong>PravahOS Compliance Portal</strong>.</li>
-                  <li>Provide your authorized corporate email address.</li>
-                </ul>
+              <div className="lp-modal-footer">
+                <button type="button" onClick={() => setShowHelpModal(false)} className="lp-modal-btn">
+                  Understood
+                </button>
               </div>
-            </div>
-            <div className="pv-modal-footer">
-              <button
-                type="button"
-                onClick={() => setShowHelpModal(false)}
-                className="pv-modal-action-btn"
-              >
-                Understood
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Unified Color Theme CSS (Aligned with App Design Tokens) */}
       <style>{`
-        /* Root container using var(--paper) and var(--ink) */
-        .pv-login-root {
-          min-height: 100vh;
-          display: grid;
-          grid-template-columns: 54% 46%;
-          background: var(--paper);
-          color: var(--ink);
-          font-family: var(--font-body);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
 
-        /* ----------------------------------------------------
-           Left Branding Panel - App Navy & Brand Teal Palette
-           ---------------------------------------------------- */
-        .pv-login-brand {
-          background: linear-gradient(165deg, var(--ink) 0%, #0C1E33 55%, #071524 100%);
-          color: #FFFFFF;
-          padding: 48px 64px 40px;
+        .lp-outer {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(145deg, #DCEFED 0%, #D0EAE8 50%, #C8E5E2 100%);
+          padding: 32px 20px 24px;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Inter', system-ui, sans-serif;
+          -webkit-font-smoothing: antialiased;
+        }
+        .lp-bg-shapes {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .lp-bg-svg {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          inset: 0;
+        }
+        .lp-panel {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 1340px;
+          min-height: clamp(560px, 82vh, 840px);
+          background: #FFFFFF;
+          border-radius: 16px;
+          box-shadow: 0 24px 80px -12px rgba(16,42,67,0.14), 0 8px 24px -4px rgba(16,42,67,0.07);
+          display: grid;
+          grid-template-columns: 52% 48%;
+          overflow: hidden;
+        }
+        .lp-brand {
+          background: linear-gradient(160deg, #EAF5F4 0%, #E0F0EE 55%, #D8ECEB 100%);
+          padding: 52px 60px 48px;
           position: relative;
           overflow: hidden;
           display: flex;
           flex-direction: column;
-          border-right: 1px solid var(--line);
         }
-
-        .pv-brand-glow {
+        .lp-brand-grad {
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse 700px 480px at 78% 14%, rgba(13, 148, 136, 0.16), transparent 70%);
+          background:
+            radial-gradient(ellipse 600px 400px at 110% -10%, rgba(13,148,136,0.12), transparent 65%),
+            radial-gradient(ellipse 400px 300px at -20% 110%, rgba(13,148,136,0.08), transparent 60%);
           pointer-events: none;
         }
-
-        .pv-brand-content {
+        .lp-brand-inner {
           position: relative;
           z-index: 1;
           display: flex;
           flex-direction: column;
           height: 100%;
-          max-width: 540px;
         }
-
-        .pv-brand-header {
+        .lp-brand-header {
           display: flex;
           align-items: center;
           gap: 14px;
         }
-
-        .pv-brand-logo {
-          width: 38px;
-          height: 38px;
-          border-radius: var(--radius);
+        .lp-brand-logo {
+          width: 40px;
+          height: 40px;
           object-fit: contain;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+          border-radius: 10px;
+          flex-shrink: 0;
         }
-
-        .pv-brand-title {
-          font-family: 'Fraunces', Georgia, serif;
-          font-size: 21px;
-          font-weight: 600;
-          letter-spacing: -0.01em;
-          color: #FFFFFF;
+        .lp-brand-name {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: 20px;
+          font-weight: 700;
+          color: #102A43;
           line-height: 1.2;
+          letter-spacing: -0.01em;
         }
-
-        .pv-brand-subtitle {
-          font-size: 9.5px;
+        .lp-brand-tagline {
+          font-size: 9px;
           font-weight: 600;
           letter-spacing: 0.18em;
-          color: var(--faint);
-          margin-top: 2px;
-        }
-
-        .pv-brand-eyebrow {
-          margin-top: 52px;
-          font-size: 10.5px;
-          font-weight: 600;
-          letter-spacing: 0.18em;
-          color: var(--teal-bright);
+          color: #7185A3;
+          margin-top: 3px;
           text-transform: uppercase;
         }
-
-        .pv-brand-headline {
-          font-family: 'Fraunces', Georgia, serif;
-          font-size: clamp(34px, 3.4vw, 48px);
-          line-height: 1.08;
-          letter-spacing: -0.025em;
-          margin: 16px 0 18px;
-          font-weight: 600;
-          color: #FFFFFF;
+        .lp-headline {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: clamp(36px, 3.6vw, 56px);
+          line-height: 1.03;
+          font-weight: 700;
+          color: #102A43;
+          margin: 44px 0 0;
+          letter-spacing: -0.02em;
         }
-
-        .pv-brand-headline-accent {
-          color: var(--teal-bright);
+        .lp-headline-gold {
+          color: #C9A45F;
           font-style: italic;
-          font-family: 'Fraunces', Georgia, serif;
-          font-weight: 500;
+          font-weight: 600;
         }
-
-        .pv-brand-description {
-          font-size: 14.5px;
-          line-height: 1.58;
-          color: var(--faint);
-          margin: 0 0 32px 0;
+        .lp-description {
+          font-size: 16px;
+          line-height: 1.6;
+          color: #7185A3;
+          margin: 20px 0 0;
+          max-width: 400px;
           font-weight: 400;
         }
-
-        /* Feature rows */
-        .pv-feature-list {
-          display: flex;
-          flex-direction: column;
-          border-top: 1px solid rgba(226, 234, 242, 0.08);
-          margin-bottom: 24px;
-        }
-
-        .pv-feature-row {
-          display: flex;
-          align-items: flex-start;
-          gap: 16px;
-          padding: 13px 0;
-          border-bottom: 1px solid rgba(226, 234, 242, 0.08);
-        }
-
-        .pv-feature-num {
-          font-size: 11.5px;
-          font-weight: 600;
-          color: var(--teal-bright);
-          letter-spacing: 0.06em;
-          padding-top: 2px;
-          font-variant-numeric: tabular-nums;
-        }
-
-        .pv-feature-text {
+        .lp-illustration-wrap {
+          margin-top: 16px;
           flex: 1;
-        }
-
-        .pv-feature-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #FFFFFF;
-          letter-spacing: -0.01em;
-          line-height: 1.35;
-        }
-
-        .pv-feature-desc {
-          font-size: 12.5px;
-          line-height: 1.45;
-          color: var(--faint);
-          margin-top: 2px;
-        }
-
-        /* Custom regulatory audit visual */
-        .pv-audit-visual {
-          margin: 10px 0 auto;
-          padding: 8px 0;
-          opacity: 0.95;
           display: flex;
-          align-items: center;
-          justify-content: center;
+          align-items: flex-end;
         }
-
-        .pv-audit-svg {
+        .lp-illustration {
           width: 100%;
-          max-width: 480px;
+          max-width: 720px;
           height: auto;
+          max-height: 720px;
+          object-fit: contain;
           display: block;
         }
-
-        .pv-brand-footer {
-          margin-top: auto;
-          padding-top: 24px;
-          font-size: 10px;
-          letter-spacing: 0.14em;
-          color: var(--slate);
-          font-weight: 500;
-        }
-
-        /* ----------------------------------------------------
-           Right Authentication Panel - Unified Paper & Card
-           ---------------------------------------------------- */
-        .pv-login-auth {
+        .lp-auth {
+          background: #FFFFFF;
+          padding: 36px 52px 48px;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 48px 32px;
-          background: var(--paper);
+          flex-direction: column;
           position: relative;
         }
-
-        .pv-auth-wrap {
-          width: 100%;
-          max-width: 410px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .pv-auth-card {
-          width: 100%;
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: var(--radius-lg);
-          box-shadow: 0 4px 20px -2px rgba(16, 42, 67, 0.05), 0 2px 6px -1px rgba(16, 42, 67, 0.03);
-          padding: 32px 32px 28px;
-        }
-
-        .pv-card-header {
-          margin-bottom: 24px;
-        }
-
-        .pv-card-eyebrow {
-          margin-bottom: 8px;
-        }
-
-        .pv-card-eyebrow-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 3px 8px;
-          border-radius: 6px;
-          background: var(--teal-wash);
-          border: 1px solid var(--teal-light);
-          font-size: 10.5px;
-          font-weight: 600;
-          letter-spacing: 0.08em;
-          color: var(--teal);
-          text-transform: uppercase;
-        }
-
-        .pv-card-headline {
-          font-size: 26px;
-          font-weight: 600;
-          color: var(--ink);
-          margin: 6px 0 6px;
-          letter-spacing: -0.02em;
-          line-height: 1.25;
-        }
-
-        .pv-card-desc {
-          font-size: 13.5px;
-          line-height: 1.5;
-          color: var(--slate);
-          margin: 0;
-        }
-
-        .pv-auth-form {
-          display: flex;
-          flex-direction: column;
-          gap: 18px;
-        }
-
-        .pv-field-group {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-
-        .pv-label-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-
-        .pv-field-label {
-          font-size: 12.5px;
-          font-weight: 600;
-          color: var(--ink);
-          user-select: none;
-        }
-
-        .pv-help-trigger {
-          background: none;
-          border: none;
-          padding: 0;
-          font-size: 12px;
-          font-weight: 500;
-          color: var(--teal);
-          cursor: pointer;
-          transition: color 0.15s, text-decoration 0.15s;
-          text-decoration: none;
-        }
-
-        .pv-help-trigger:hover {
-          color: #0B7E73;
-          text-decoration: underline;
-        }
-
-        .pv-auth-input {
-          height: 46px;
-          width: 100%;
-          background: var(--card);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 0 14px;
-          font-size: 14px;
-          color: var(--ink);
-          outline: none;
-          transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
-          font-family: inherit;
-        }
-
-        .pv-auth-input::placeholder {
-          color: var(--faint);
-        }
-
-        .pv-auth-input:hover:not(:disabled) {
-          border-color: var(--slate);
-        }
-
-        .pv-auth-input:focus {
-          border-color: var(--teal);
-          box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14);
-        }
-
-        .pv-auth-input:disabled {
-          background: var(--muted);
-          cursor: not-allowed;
-          opacity: 0.8;
-        }
-
-        .pv-password-wrapper {
-          position: relative;
-          width: 100%;
-        }
-
-        .pv-password-input {
-          padding-right: 44px;
-        }
-
-        .pv-password-toggle {
-          position: absolute;
-          right: 8px;
-          top: 50%;
-          transform: translateY(-50%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          border-radius: 6px;
-          border: none;
-          background: transparent;
-          color: var(--slate);
-          cursor: pointer;
-          transition: color 0.14s, background-color 0.14s;
-        }
-
-        .pv-password-toggle:hover {
-          color: var(--ink);
-          background: var(--muted);
-        }
-
-        .pv-password-toggle:focus-visible {
-          outline: 2px solid var(--teal);
-          outline-offset: 1px;
-        }
-
-        /* Alert matching var(--critical) tokens */
-        .pv-auth-alert {
+        .lp-auth-topbar {
           display: flex;
           align-items: center;
           gap: 10px;
-          background: var(--critical-bg);
-          border: 1px solid var(--critical-border);
-          color: var(--critical);
-          font-size: 12.5px;
-          line-height: 1.45;
-          padding: 10px 12px;
-          border-radius: 8px;
+          justify-content: flex-end;
         }
-
-        /* Primary action button matching var(--teal) */
-        .pv-submit-btn {
-          height: 46px;
+        .lp-topbar-label {
+          font-size: 12.5px;
+          color: #7185A3;
+          font-weight: 500;
+        }
+        .lp-topbar-sep {
+          display: inline-block;
+          width: 1px;
+          height: 14px;
+          background: #DCE5ED;
+        }
+        .lp-topbar-help {
+          font-size: 12.5px;
+          color: #7185A3;
+          font-weight: 500;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.15s;
+          font-family: 'Inter', sans-serif;
+        }
+        .lp-topbar-help:hover { color: #0D9488; }
+        .lp-topbar-help:focus-visible { outline: 2px solid #0D9488; outline-offset: 3px; border-radius: 3px; }
+        .lp-auth-center {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          max-width: 440px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 32px 0 0;
+        }
+        .lp-form-heading { margin-bottom: 36px; }
+        .lp-form-eyebrow {
+          font-size: 10.5px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          color: #7185A3;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
+        .lp-form-title {
+          font-family: 'Playfair Display', Georgia, serif;
+          font-size: clamp(32px, 2.6vw, 40px);
+          font-weight: 700;
+          color: #102A43;
+          letter-spacing: -0.02em;
+          line-height: 1.1;
+          margin: 0 0 10px;
+        }
+        .lp-form-desc {
+          font-size: 15.5px;
+          color: #7185A3;
+          margin: 0;
+          line-height: 1.55;
+        }
+        .lp-form {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+        .lp-field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+        .lp-label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #102A43;
+          user-select: none;
+        }
+        .lp-input-wrap {
+          position: relative;
+          width: 100%;
+        }
+        .lp-input-icon {
+          position: absolute;
+          left: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #7185A3;
+          pointer-events: none;
+          flex-shrink: 0;
+        }
+        .lp-input {
+          width: 100%;
+          height: 56px;
+          background: #F3F6FA;
+          border: 1.5px solid #DCE5ED;
+          border-radius: 10px;
+          font-size: 14.5px;
+          color: #102A43;
+          outline: none;
+          transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+          font-family: 'Inter', sans-serif;
+        }
+        .lp-input::placeholder { color: #B0BDD0; }
+        .lp-input--icon-left { padding-left: 46px; }
+        .lp-input--icon-right { padding-right: 46px; }
+        .lp-input:hover:not(:disabled) { border-color: #B0BDD0; }
+        .lp-input:focus {
+          border-color: #0D9488;
+          box-shadow: 0 0 0 3px rgba(13,148,136,0.14);
+          background: #FFFFFF;
+        }
+        .lp-input:disabled { opacity: 0.7; cursor: not-allowed; background: #F8FAFB; }
+        .lp-pwd-toggle {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          border-radius: 7px;
+          color: #7185A3;
+          cursor: pointer;
+          transition: color 0.14s, background-color 0.14s;
+        }
+        .lp-pwd-toggle:hover { color: #102A43; background: rgba(16,42,67,0.06); }
+        .lp-pwd-toggle:focus-visible { outline: 2px solid #0D9488; outline-offset: 1px; }
+        .lp-reset-row { display: flex; justify-content: flex-end; margin-top: 4px; }
+        .lp-reset-link {
+          font-size: 12.5px;
+          font-weight: 500;
+          color: #0D9488;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          transition: color 0.14s;
+          font-family: 'Inter', sans-serif;
+        }
+        .lp-reset-link:hover { color: #087F80; text-decoration: underline; }
+        .lp-reset-link:focus-visible { outline: 2px solid #0D9488; outline-offset: 2px; border-radius: 2px; }
+        .lp-error {
+          display: flex;
+          align-items: center;
+          gap: 9px;
+          background: #FEF2F2;
+          border: 1px solid #FECACA;
+          color: #DC2626;
+          font-size: 13px;
+          line-height: 1.45;
+          padding: 11px 13px;
+          border-radius: 9px;
+        }
+        .lp-submit {
+          height: 58px;
           width: 100%;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          background: var(--teal);
+          gap: 9px;
+          background: #0D9488;
           color: #FFFFFF;
           border: none;
-          border-radius: 8px;
-          font-size: 14px;
+          border-radius: 10px;
+          font-size: 15px;
           font-weight: 600;
+          font-family: 'Inter', sans-serif;
           cursor: pointer;
-          margin-top: 6px;
           transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
-          box-shadow: 0 1px 3px rgba(13, 148, 136, 0.2);
+          box-shadow: 0 2px 8px rgba(13,148,136,0.28);
+          letter-spacing: 0.01em;
         }
-
-        .pv-submit-btn:hover:not(:disabled) {
-          background: #0B7E73;
-        }
-
-        .pv-submit-btn:active:not(:disabled) {
-          transform: translateY(1px);
-        }
-
-        .pv-submit-btn:focus-visible {
-          outline: none;
-          box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.35);
-        }
-
-        .pv-submit-btn:disabled {
-          opacity: 0.75;
-          cursor: not-allowed;
-        }
-
-        .pv-btn-spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid rgba(255, 255, 255, 0.35);
+        .lp-submit:hover:not(:disabled) { background: #087F80; box-shadow: 0 4px 16px rgba(13,148,136,0.34); }
+        .lp-submit:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 4px rgba(13,148,136,0.2); }
+        .lp-submit:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(13,148,136,0.38); }
+        .lp-submit:disabled { opacity: 0.72; cursor: not-allowed; }
+        .lp-spinner {
+          width: 17px;
+          height: 17px;
+          border: 2px solid rgba(255,255,255,0.35);
           border-top-color: #FFFFFF;
           border-radius: 50%;
-          animation: pv-spin 0.8s linear infinite;
+          animation: lp-spin 0.75s linear infinite;
         }
-
-        @keyframes pv-spin {
-          to { transform: rotate(360deg); }
-        }
-
-        .pv-auth-footer-note {
-          margin-top: 22px;
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          color: var(--slate);
-          font-weight: 500;
-          text-align: center;
+        @keyframes lp-spin { to { transform: rotate(360deg); } }
+        .lp-remember {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 13px;
+          color: #7185A3;
+          cursor: pointer;
           user-select: none;
         }
-
-        /* ----------------------------------------------------
-           IT Assistance Modal
-           ---------------------------------------------------- */
-        .pv-modal-overlay {
+        .lp-checkbox {
+          width: 17px;
+          height: 17px;
+          border: 2px solid #DCE5ED;
+          border-radius: 5px;
+          appearance: none;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: border-color 0.14s, background-color 0.14s;
+        }
+        .lp-checkbox:checked {
+          background: #0D9488;
+          border-color: #0D9488;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 4L5.5 9.5L3 7' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-size: 11px;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
+        .lp-checkbox:hover { border-color: #0D9488; }
+        .lp-checkbox:focus-visible { outline: 2px solid #0D9488; outline-offset: 2px; }
+        .lp-checkbox:disabled { opacity: 0.6; cursor: not-allowed; }
+        .lp-footer {
+          position: relative;
+          z-index: 1;
+          margin-top: 20px;
+          font-size: 10.5px;
+          font-weight: 600;
+          letter-spacing: 0.15em;
+          color: #7A9BAF;
+          text-align: center;
+          text-transform: uppercase;
+          user-select: none;
+        }
+        .lp-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(16, 42, 67, 0.55);
-          backdrop-filter: blur(2px);
+          background: rgba(16,42,67,0.52);
+          backdrop-filter: blur(3px);
           display: flex;
           align-items: center;
           justify-content: center;
-          z-index: 100;
+          z-index: 200;
           padding: 20px;
         }
-
-        .pv-modal-card {
+        .lp-modal {
           width: 100%;
           max-width: 440px;
-          background: var(--card);
-          border-radius: var(--radius-lg);
-          box-shadow: var(--shadow-pop);
-          border: 1px solid var(--line);
+          background: #FFFFFF;
+          border-radius: 16px;
+          box-shadow: 0 20px 60px -8px rgba(16,42,67,0.22);
+          border: 1px solid #E8EEF4;
           overflow: hidden;
         }
-
-        .pv-modal-header {
+        .lp-modal-header {
           display: flex;
           align-items: flex-start;
           gap: 12px;
           padding: 20px 20px 16px;
-          border-bottom: 1px solid var(--line);
+          border-bottom: 1px solid #EEF2F7;
           position: relative;
         }
-
-        .pv-modal-icon-wrap {
+        .lp-modal-icon {
           width: 36px;
           height: 36px;
-          border-radius: 8px;
-          background: var(--teal-wash);
-          border: 1px solid var(--teal-light);
+          border-radius: 9px;
+          background: #F0FDFA;
+          border: 1px solid #CCFBF1;
           display: flex;
           align-items: center;
           justify-content: center;
+          color: #0D9488;
           flex-shrink: 0;
         }
-
-        .pv-modal-title {
-          font-size: 16px;
-          font-weight: 600;
-          color: var(--ink);
-          margin: 0;
-        }
-
-        .pv-modal-sub {
-          font-size: 12px;
-          color: var(--slate);
-          margin: 2px 0 0;
-        }
-
-        .pv-modal-close {
+        .lp-modal-header-text { flex: 1; }
+        .lp-modal-title { font-size: 15.5px; font-weight: 600; color: #102A43; margin: 0 28px 0 0; }
+        .lp-modal-sub { font-size: 12px; color: #7185A3; margin: 3px 0 0; }
+        .lp-modal-close {
           position: absolute;
-          right: 16px;
-          top: 16px;
+          right: 14px;
+          top: 14px;
           background: none;
           border: none;
-          color: var(--faint);
+          color: #94A3B8;
           cursor: pointer;
-          padding: 4px;
-          border-radius: 6px;
+          padding: 5px;
+          border-radius: 7px;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: color 0.12s, background-color 0.12s;
         }
-
-        .pv-modal-close:hover {
-          color: var(--ink);
-          background: var(--muted);
-        }
-
-        .pv-modal-body {
-          padding: 16px 20px;
-          font-size: 13.5px;
-          line-height: 1.55;
-          color: var(--ink-2);
-        }
-
-        .pv-modal-body p {
-          margin: 0 0 14px;
-        }
-
-        .pv-modal-contact {
-          background: var(--line-soft);
-          border: 1px solid var(--line);
-          border-radius: 8px;
-          padding: 12px 14px;
+        .lp-modal-close:hover { color: #102A43; background: #F1F5F9; }
+        .lp-modal-close:focus-visible { outline: 2px solid #0D9488; outline-offset: 1px; }
+        .lp-modal-body { padding: 18px 20px; font-size: 13.5px; line-height: 1.6; color: #3D5168; }
+        .lp-modal-body p { margin: 0 0 14px; }
+        .lp-modal-contact {
+          background: #F8FAFB;
+          border: 1px solid #E8EEF4;
+          border-radius: 9px;
+          padding: 13px 15px;
           font-size: 12.5px;
         }
-
-        .pv-modal-steps {
-          margin: 8px 0 0;
-          padding-left: 18px;
-          color: var(--slate);
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .pv-modal-footer {
+        .lp-modal-contact-label { font-weight: 600; color: #102A43; margin-bottom: 8px; }
+        .lp-modal-steps { margin: 0; padding-left: 18px; color: #64748B; display: flex; flex-direction: column; gap: 5px; }
+        .lp-modal-footer {
           padding: 12px 20px 18px;
           display: flex;
           justify-content: flex-end;
-          background: var(--line-soft);
-          border-top: 1px solid var(--line);
+          background: #F8FAFB;
+          border-top: 1px solid #EEF2F7;
         }
-
-        .pv-modal-action-btn {
+        .lp-modal-btn {
           height: 36px;
-          padding: 0 16px;
-          background: var(--teal);
+          padding: 0 18px;
+          background: #0D9488;
           color: #FFFFFF;
           border: none;
-          border-radius: 6px;
+          border-radius: 7px;
           font-size: 13px;
           font-weight: 600;
+          font-family: 'Inter', sans-serif;
           cursor: pointer;
           transition: background-color 0.15s;
         }
+        .lp-modal-btn:hover { background: #087F80; }
+        .lp-modal-btn:focus-visible { outline: 2px solid #0D9488; outline-offset: 3px; }
 
-        .pv-modal-action-btn:hover {
-          background: #0B7E73;
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+          .lp-brand { padding: 44px 44px 40px; }
+          .lp-auth { padding: 32px 40px 44px; }
+          .lp-headline { font-size: clamp(32px, 3vw, 46px); }
         }
-
-        /* ----------------------------------------------------
-           Responsive Breakpoints
-           ---------------------------------------------------- */
-        @media (max-width: 1080px) {
-          .pv-login-brand {
-            padding: 40px 40px 32px;
-          }
-          .pv-brand-eyebrow {
-            margin-top: 40px;
-          }
-          .pv-login-auth {
-            padding: 40px 24px;
-          }
+        @media (max-width: 1024px) {
+          .lp-panel { grid-template-columns: 50% 50%; }
+          .lp-brand { padding: 36px 36px 32px; }
+          .lp-auth { padding: 28px 32px 36px; }
+          .lp-headline { margin-top: 32px; font-size: clamp(28px, 2.8vw, 40px); }
+          .lp-description { font-size: 14.5px; }
+          .lp-illustration { max-height: 620px; }
         }
-
-        @media (max-width: 880px) {
-          .pv-login-root {
+        @media (max-width: 860px) {
+          .lp-outer { padding: 20px 16px 20px; }
+          .lp-panel {
             grid-template-columns: 1fr;
+            grid-template-rows: auto 1fr;
+            min-height: unset;
           }
-          .pv-login-brand {
-            padding: 36px 24px 32px;
-            border-right: none;
-            border-bottom: 1px solid var(--line);
-          }
-          .pv-brand-content {
-            max-width: 100%;
-          }
-          .pv-brand-eyebrow {
-            margin-top: 32px;
-          }
-          .pv-brand-headline {
-            font-size: 32px;
-            margin: 12px 0 14px;
-          }
-          .pv-brand-description {
-            margin-bottom: 24px;
-          }
-          .pv-audit-visual {
-            display: none;
-          }
-          .pv-brand-footer {
-            display: none;
-          }
-          .pv-login-auth {
-            padding: 36px 20px 48px;
-          }
-          .pv-auth-wrap {
-            max-width: 420px;
-          }
-          .pv-auth-card {
-            padding: 28px 24px 24px;
-          }
+          .lp-brand { padding: 32px 28px 28px; border-bottom: 1px solid rgba(13,148,136,0.12); }
+          .lp-headline { font-size: 30px; margin-top: 28px; }
+          .lp-description { font-size: 14px; margin-top: 14px; }
+          .lp-illustration-wrap { display: none; }
+          .lp-auth { padding: 28px 28px 36px; }
+          .lp-auth-topbar { margin-bottom: 24px; }
+          .lp-auth-center { padding: 0; max-width: 100%; }
+          .lp-form-title { font-size: 30px; }
         }
-
+        @media (max-width: 540px) {
+          .lp-outer { padding: 16px 12px 16px; justify-content: flex-start; }
+          .lp-brand { padding: 24px 20px 20px; }
+          .lp-headline { font-size: 26px; margin-top: 22px; }
+          .lp-description { display: none; }
+          .lp-auth { padding: 24px 20px 32px; }
+          .lp-form-title { font-size: 26px; }
+          .lp-form-desc { font-size: 14px; }
+          .lp-submit { height: 52px; font-size: 14px; }
+          .lp-input { height: 50px; }
+        }
         @media (prefers-reduced-motion: reduce) {
-          .pv-btn-spinner {
-            animation: none;
-          }
-          .pv-auth-input,
-          .pv-submit-btn,
-          .pv-help-trigger {
-            transition: none !important;
-          }
+          .lp-spinner { animation: none; }
+          .lp-input, .lp-submit, .lp-reset-link, .lp-pwd-toggle { transition: none !important; }
         }
       `}</style>
-    </main>
+    </>
   )
 }

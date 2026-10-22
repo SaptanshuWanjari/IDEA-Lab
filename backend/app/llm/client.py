@@ -81,7 +81,7 @@ class LLMClient:
                         "model": self.model,
                         "messages": messages,
                         "stream": False,
-                        "options": {"temperature": temperature, "num_predict": max_tokens},
+                        "options": {"temperature": temperature, "num_predict": max_tokens, "think": False},
                     },
                     timeout=settings.ollama_chat_timeout,
                 )

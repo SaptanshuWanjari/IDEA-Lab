@@ -93,6 +93,14 @@ Ollama runs on the host, not in Docker. Install it from [ollama.com](https://oll
 ollama serve
 ```
 
+**Important for Docker on Linux:** Ollama binds to `127.0.0.1` by default. Docker containers cannot reach `host.docker.internal:11434` unless Ollama listens on all interfaces:
+
+```bash
+OLLAMA_HOST=0.0.0.0 ollama serve
+```
+
+This allows the API container to reach Ollama at `host.docker.internal:11434`.
+
 ### 3. Start Infrastructure
 
 ```bash
@@ -149,6 +157,21 @@ OLLAMA_CHAT_MODEL=minimax-m3:cloud
 OLLAMA_EMBEDDING_MODEL=qwen3-embedding:0.6b
 OLLAMA_RERANK_MODEL=minimax-m3:cloud
 ```
+
+### Document Ingestion Requirements
+
+- **pdfplumber** (installed via `uv sync`) — primary text/table extraction
+- **Optional OCR** — for scanned/image-based PDFs:
+  ```bash
+  # Ubuntu/Debian
+  sudo apt-get install tesseract-ocr poppler-utils
+  # macOS
+  brew install tesseract poppler
+  # Then enable:
+  ENABLE_OCR=true
+  ```
+
+The pipeline automatically detects low-text-yield pages and applies OCR when enabled.
 
 ### 6. Verify Services
 

@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from typing import Optional
 
 from app.agents.prompts import (
     DEPENDENCY_PROMPT,
@@ -11,8 +12,29 @@ from app.agents.prompts import (
 from app.agents.tools import query_graph, retrieve
 from app.llm.client import LLMClient, record_ai_run
 from app.schemas.agent import GeneratedMAP, Requirement
+from app.services.ingestion import ROLES, SYSTEMS
 
 _json_log = logging.getLogger(__name__)
+
+
+def _calculate_confidence(clause_match: bool, deadline_match: bool, entity_overlap: float) -> float:
+    """Heuristic confidence: 0.7 base + 0.1 per match + 0.1 * entity_overlap."""
+    base = 0.7
+    score = base
+    if clause_match:
+        score += 0.1
+    if deadline_match:
+        score += 0.1
+    score += 0.1 * entity_overlap
+    return round(min(max(score, 0.5), 1.0), 2)
+
+
+def _derive_estimated_days(deadline_days: Optional[int]) -> int:
+    """Derive estimated_days as 70% of deadline, minimum 1, default 7."""
+    if deadline_days is None or deadline_days <= 0:
+        return 7
+    return max(1, int(deadline_days * 0.7))
+
 
 # Prompt template versions pinned for AI run provenance (Task 10). Bump the
 # version string whenever the corresponding template text changes.
@@ -202,10 +224,30 @@ class AgentNodes:
         historical = retrieve("Measurable Action Point implementation plan", filters=filters)
         historical_context = "\n".join(h.get("text", "") for h in historical[:3])
         chunk_ids = _chunk_ids(historical)
+
+        # Extract deadline entities from clauses for deadline preservation validation
+        deadline_entities = []
+        for clause in state.get("clauses", []):
+            if isinstance(clause, dict):
+                text = clause.get("text", "")
+                # Find deadline patterns in clause text
+                deadline_matches = re.findall(r"(?:within|by)\s+(\d+)\s+(days?|months?|years?)", text, re.IGNORECASE)
+                for match in deadline_matches:
+                    deadline_entities.append(f"{match[0]} {match[1]}")
+                deadline_matches = re.findall(r"for\s+a\s+minimum\s+period\s+of\s+(\d+)\s+(days?|months?|years?)", text, re.IGNORECASE)
+                for match in deadline_matches:
+                    deadline_entities.append(f"{match[0]} {match[1]}")
+                deadline_matches = re.findall(r"for\s+at\s+least\s+(\d+)\s+(days?|months?|years?)", text, re.IGNORECASE)
+                for match in deadline_matches:
+                    deadline_entities.append(f"{match[0]} {match[1]}")
+        deadline_entities = list(set(deadline_entities))  # deduplicate
+        deadline_entities_str = ", ".join(deadline_entities) if deadline_entities else "none found"
+
         user_prompt = MAP_PROMPT.format(
             requirements=req_text,
             historical_context=historical_context,
             schema=json.dumps(GeneratedMAP.model_json_schema(), indent=2),
+            deadline_entities=deadline_entities_str,
         )
 
         response = self.client.chat(
@@ -233,6 +275,62 @@ class AgentNodes:
                 parsed = list(parsed.values())[0]
             else:
                 parsed = [parsed]
+
+        # Deadline validation: cross-reference MAP deadlines against extracted entities
+        if deadline_entities:
+            validated_maps = []
+            # Prepare entity days for deadline matching
+            entity_days = set()
+            for de in deadline_entities:
+                match = re.search(r"(\d+)\s*(days?|months?|years?)", de, re.IGNORECASE)
+                if match:
+                    num, unit = int(match.group(1)), match.group(2).lower()
+                    if "day" in unit:
+                        entity_days.add(num)
+                    elif "month" in unit:
+                        entity_days.add(num * 30)
+                    elif "year" in unit:
+                        entity_days.add(num * 365)
+
+            # Prepare clause entities for overlap calculation
+            clause_entities = set()
+            for clause in state.get("clauses", []):
+                if isinstance(clause, dict):
+                    text = clause.get("text", "")
+                    # Extract role and system entities
+                    for role in ROLES:
+                        if re.search(r"\b" + re.escape(role) + r"\b", text, re.IGNORECASE):
+                            clause_entities.add(role.lower())
+                    for system in SYSTEMS:
+                        if re.search(r"\b" + re.escape(system) + r"\b", text, re.IGNORECASE):
+                            clause_entities.add(system.lower())
+
+            valid_clause_ids = set(c.get("id") for c in state.get("clauses", []) if isinstance(c, dict))
+
+            for m in parsed:
+                if isinstance(m, dict):
+                    dl = m.get("deadline_days")
+                    if dl is not None:
+                        if dl not in entity_days and entity_days:
+                            m["deadline_warning"] = f"Deadline {dl} days not found in source entities: {sorted(entity_days)}"
+
+                    # Calculate confidence heuristic
+                    clause_match = m.get("source_clause_id") in valid_clause_ids or any(
+                        sc in valid_clause_ids for sc in m.get("source_clauses", [])
+                    )
+                    deadline_match = dl in entity_days if dl is not None else False
+
+                    # Calculate entity overlap
+                    map_entities = set()
+                    for entity in m.get("entities", []):
+                        if isinstance(entity, str):
+                            map_entities.add(entity.lower())
+                    entity_overlap = len(map_entities & clause_entities) / max(len(map_entities), 1) if map_entities else 0.0
+
+                    m["confidence"] = _calculate_confidence(clause_match, deadline_match, entity_overlap)
+                    m["estimated_days"] = _derive_estimated_days(dl)
+                validated_maps.append(m)
+            parsed = validated_maps
 
         _json_log.debug("MAPS PARSED: %d items", len(parsed))
         # Task 10 provenance: every generate_maps LLM call records model,

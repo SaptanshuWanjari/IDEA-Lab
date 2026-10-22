@@ -66,7 +66,7 @@ class HybridVectorStore:
             SchemaBuilder()
             .add_text_field("text", stored=True)
             .add_text_field("chunk_id", stored=True, tokenizer_name="raw")
-            .add_text_field("document_type", stored=True)
+            .add_text_field("document_type", stored=True, tokenizer_name="raw")
             .add_text_field("section", stored=True)
             .add_integer_field("page", stored=True)
             .add_text_field("bank_id", stored=True, tokenizer_name="raw")
@@ -74,6 +74,7 @@ class HybridVectorStore:
             .add_text_field("regulation_version_id", stored=True, tokenizer_name="raw")
             .add_text_field("source_version_id", stored=True, tokenizer_name="raw")
             .add_text_field("classification", stored=True, tokenizer_name="raw")
+            .add_text_field("department", stored=True, tokenizer_name="raw")
             .build()
         )
         os.makedirs(self.index_path, exist_ok=True)
@@ -135,6 +136,7 @@ class HybridVectorStore:
                 "regulation_version_id": p.payload.get("regulation_version_id") or "",
                 "source_version_id": p.payload.get("source_version_id") or "",
                 "classification": p.payload.get("classification") or "",
+                "department": p.payload.get("department") or "",
             }
             try:
                 document = Document(**doc_kwargs)
@@ -198,7 +200,7 @@ class HybridVectorStore:
             d = searcher.doc(doc_addr)
             chunk_id = d.get_first("chunk_id")
             record: dict[str, Any] = {"chunk_id": chunk_id, "score": score}
-            for field in ("bank_id", "legal_entity_id", "regulation_version_id", "source_version_id", "classification"):
+            for field in ("bank_id", "legal_entity_id", "regulation_version_id", "source_version_id", "classification", "document_type", "department"):
                 try:
                     record[field] = d.get_first(field)
                 except Exception:

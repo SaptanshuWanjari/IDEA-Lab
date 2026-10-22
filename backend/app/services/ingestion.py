@@ -1,8 +1,9 @@
+import os
 import re
 from io import BytesIO
 from typing import Literal, Optional, cast
 
-from pypdf import PdfReader
+import pdfplumber
 
 from app.schemas.document import Clause, DocumentStructure, Entity, TableInfo
 
@@ -34,12 +35,43 @@ SYSTEMS = [
 
 class IngestionService:
     def extract(self, pdf_bytes: bytes, source_version_id: str | None = None) -> DocumentStructure:
-        reader = PdfReader(BytesIO(pdf_bytes))
-        page_texts = [page.extract_text() or "" for page in reader.pages]
-        text = "\n".join(page_texts)
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            page_texts = [page.extract_text() or "" for page in pdf.pages]
+            text = "\n".join(page_texts)
+            # Extract tables using pdfplumber
+            tables = []
+            for i, page in enumerate(pdf.pages):
+                page_tables = page.extract_tables()
+                if page_tables:
+                    for table_data in page_tables:
+                        tables.append(TableInfo(
+                            page=i + 1,
+                            rows=table_data,
+                        ))
+
+        # Optional OCR fallback for scanned/image-based pages
+        enable_ocr = os.getenv("ENABLE_OCR", "false").lower() == "true"
+        if enable_ocr:
+            try:
+                import pytesseract
+                from pdf2image import convert_from_bytes
+                # For pages flagged as low-yield, run OCR
+                scan_pages = [i for i, t in enumerate(page_texts) if len(t.strip()) < 50]
+                if scan_pages:
+                    images = convert_from_bytes(pdf_bytes)
+                    for page_idx in scan_pages:
+                        if page_idx < len(images):
+                            ocr_text = pytesseract.image_to_string(images[page_idx])
+                            if ocr_text.strip():
+                                page_texts[page_idx] = ocr_text
+                    # Rebuild combined text after OCR
+                    text = "\n".join(page_texts)
+            except ImportError:
+                import logging
+                logging.warning("OCR requested but pytesseract/pdf2image not installed")
+
         sections = self._extract_sections(text)
         clauses = self._segment_clauses(text, page_texts=page_texts)
-        tables = self._extract_tables(reader)
         entities = self._extract_entities(text)
         quality = self._assess_quality(page_texts, tables)
         return DocumentStructure(
@@ -48,7 +80,7 @@ class IngestionService:
             clauses=clauses,
             tables=tables,
             entities=entities,
-            metadata={"source": "pypdf", "page_count": len(reader.pages)},
+            metadata={"source": "pdfplumber", "page_count": len(page_texts)},
             raw_markdown=text,
             source_version_id=source_version_id,
             pages={i + 1: t for i, t in enumerate(page_texts)},
@@ -148,16 +180,30 @@ class IngestionService:
                 flush()
                 continue
 
-            # Clause IDs use decimal numbering (e.g. 1.1, 2.2.1) to avoid matching
-            # standalone numbers like "90 days." that wrap from the previous line.
-            m = re.match(r"^(\d+\.\d+(?:\.\d+)*\.?)\s+(.*)$", line)
-            if m:
-                flush()
-                current_id = m.group(1).rstrip(".")
-                current_lines = [m.group(2)]
-                current_page = line_pages[line_idx] if line_idx < len(line_pages) else None
-                current_start = offset
-            elif current_id is not None:
+            # ENHANCED: Multiple clause patterns for RBI circulars
+            clause_patterns = [
+                # Standard: 1.1, 2.2.1, etc.
+                r"^(\d+\.\d+(?:\.\d+)*\.?)\s+(.*)$",
+                # Annex: Annex A, Annex-1, Annexure I
+                r"^(Annex[-\s]?[A-Z0-9IVX]+)\s+(.*)$",
+                # Sub-clauses: (a), (i), (1)
+                r"^\(([a-z]|[ivx]+|\d+)\)\s+(.*)$",
+            ]
+
+            matched = False
+            for pattern in clause_patterns:
+                m = re.match(pattern, line, re.IGNORECASE)
+                if m:
+                    flush()
+                    current_id = m.group(1).rstrip(".").replace(" ", "-")
+                    current_lines = [m.group(2)]
+                    current_page = line_pages[line_idx] if line_idx < len(line_pages) else None
+                    current_start = offset
+                    matched = True
+                    break
+
+            if not matched and current_id is not None:
+                # Continuation of current clause (wrapped line)
                 current_lines.append(line)
 
         flush()
@@ -208,13 +254,8 @@ class IngestionService:
         if tables:
             flags["table"] = f"{len(tables)} table(s) extracted"
         else:
-            flags["table"] = "no table structure extracted (pypdf text only)"
+            flags["table"] = "no table structure extracted"
         return flags
-
-    def _extract_tables(self, reader: PdfReader) -> list[TableInfo]:
-        # TODO: table extraction - pypdf does not extract table structure natively;
-        # placeholder for future OCR/table parser.
-        return []
 
     def _extract_entities(self, text: str) -> list[Entity]:
         seen: set[tuple[str, str]] = set()
@@ -236,6 +277,21 @@ class IngestionService:
             for m in re.finditer(pattern, text, re.IGNORECASE):
                 add(f"{m.group(1)} {m.group(2)}", cast(EntityType, "deadline"))
 
+        # Regulation references
+        reg_ref_pattern = r"(Master Direction|Circular|Framework|Guideline).*?RBI/\w+/\d{4}-\d{2}/\d+"
+        for m in re.finditer(reg_ref_pattern, text, re.IGNORECASE):
+            add(m.group(0), cast(EntityType, "regulation_ref"))
+
+        # Dates
+        date_pattern = r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b"
+        for m in re.finditer(date_pattern, text, re.IGNORECASE):
+            add(m.group(0), cast(EntityType, "date"))
+
+        # Thresholds
+        threshold_pattern = r"\b\d+(?:\.\d+)?\s*(?:crore|lakh|million|billion|%|percent|basis points?)\b"
+        for m in re.finditer(threshold_pattern, text, re.IGNORECASE):
+            add(m.group(0), cast(EntityType, "threshold"))
+
         # Roles and systems are matched against whitespace-normalized text so that
         # line-wrapped terms (e.g. "Chief Information\nSecurity Officer") are found.
         normalized_text = re.sub(r"\s+", " ", text)
@@ -249,5 +305,14 @@ class IngestionService:
         for system in SYSTEMS:
             if re.search(r"\b" + re.escape(system) + r"\b", normalized_text, re.IGNORECASE):
                 add(system, cast(EntityType, "system"))
+
+        # Departments
+        dept_patterns = [
+            r"Department of\s+\w+(?:\s+\w+)*",
+            r"\w+\s+Department",
+        ]
+        for pattern in dept_patterns:
+            for m in re.finditer(pattern, text, re.IGNORECASE):
+                add(m.group(0), cast(EntityType, "department"))
 
         return entities

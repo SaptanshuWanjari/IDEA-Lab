@@ -200,6 +200,17 @@ async def generate_maps(
     import traceback
 
     try:
+        # Clear old Pending/Draft MAPs for this regulation to prevent duplicates on re-generation
+        from app.models.map import Map, MapStatus
+        from sqlalchemy import delete
+        await session.execute(
+            delete(Map).where(
+                Map.regulation_id == regulation_id,
+                Map.status.in_([MapStatus.PENDING, MapStatus.DRAFT])
+            )
+        )
+        await session.commit()
+
         # Run 4-agent pipeline
         agent = AgentGraph()
         text = doc.raw_markdown[:8000]
