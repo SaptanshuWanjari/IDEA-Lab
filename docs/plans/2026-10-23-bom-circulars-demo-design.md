@@ -187,3 +187,23 @@ for each circular in [nrd-csr-2026, ferr-2026, fx-derivatives-2026]:
 - Evidence PDFs for new regulations (placeholder only)
 - Calibration of scenario estimates (requires 30+ historical actuals)
 - Production hardening (pilot mode already enforced)
+
+---
+
+## Test Results (2026-10-23)
+
+**Status:** Partial — upload/ingest verified, LLM-dependent steps pending Ollama model install.
+
+| Step | nrd-csr-2026 | ferr-2026 | fx-derivatives-2026 |
+|------|-------------|-----------|---------------------|
+| Upload | ✅ `bd04811d` | ✅ `0d528fe1` | ✅ `1d5463aa` |
+| Ingest | ✅ 1 clause, RBI Circular | ✅ 1 clause, RBI Circular | ✅ 4 clauses, RBI Circular |
+| Generate MAPs | ❌ 500 (no Ollama model) | ❌ 500 (no Ollama model) | ❌ 500 (no Ollama model) |
+| Approve obligations | ⏭️ skipped | ⏭️ skipped | ⏭️ skipped |
+| Snapshot | ⏭️ skipped | ⏭️ skipped | ⏭️ skipped |
+| Verify | graph=0, median=0 | graph=0, median=0 | graph=0, median=0 |
+
+**Notes:**
+- Idempotent upload working: re-runs skip already-uploaded circulars by `content_hash`
+- `fx-derivatives-2026` extracts 4 clauses vs 1 for others (richer PDF structure)
+- Generate requires a running Ollama model — pull any model (e.g. `ollama pull qwen2.5:7b`) and re-run `python scripts/demo_bom_circulars.py --base-url http://localhost:8000` to complete full demo
