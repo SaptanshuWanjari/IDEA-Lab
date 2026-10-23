@@ -115,13 +115,6 @@ export default function LoginPage({
                 inspection-ready evidence — in one controlled workspace.
               </p>
 
-              <div className="lp-illustration-wrap" aria-hidden="true">
-                <img
-                  src={loginAsset}
-                  alt="Banking compliance workflow — bank building, RBI circular document, compliance shield"
-                  className="lp-illustration"
-                />
-              </div>
             </div>
           </section>
 
