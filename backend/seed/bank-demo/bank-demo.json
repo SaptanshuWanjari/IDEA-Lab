@@ -42,6 +42,27 @@
       "owner_dept": "Compliance",
       "version": "v1.0",
       "file": "policies/customer-data-privacy-policy.md"
+    },
+    {
+      "file": "policies/nrd-csr-policy.md",
+      "id": "pol-nrd-01",
+      "linked_regulation": "nrd-csr-2026",
+      "owner_dept": "Treasury",
+      "version": "v1.0"
+    },
+    {
+      "file": "policies/ferr-policy.md",
+      "id": "pol-ferr-01",
+      "linked_regulation": "ferr-2026",
+      "owner_dept": "Risk",
+      "version": "v1.0"
+    },
+    {
+      "file": "policies/fx-derivatives-policy.md",
+      "id": "pol-fxderiv-01",
+      "linked_regulation": "fx-derivatives-2026",
+      "owner_dept": "Treasury",
+      "version": "v1.0"
     }
   ],
   "regulations": [
@@ -54,6 +75,9 @@
     "credit-risk-2026",
     "msme-lending-2026",
     "business-continuity-2026",
-    "data-privacy-2026"
+    "data-privacy-2026",
+    "nrd-csr-2026",
+    "ferr-2026",
+    "fx-derivatives-2026"
   ]
 }
