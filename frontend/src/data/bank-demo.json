@@ -26,6 +26,60 @@
       "owner_dept": "Operations",
       "title": "Operational Resilience Policy",
       "version": "v1.0"
+    },
+    {
+      "excerpt": "Designate the MLRO, run annual enterprise-wide risk assessment, diligence correspondent banking, capture wire-transfer particulars, monitor PEPs, deploy trade-based laundering rules, screen virtual-asset exposures, report attempted suspicious transactions, and retain records for 5 years.\nEvidence: Risk assessment report, wire transfer audit logs, PEP screening register, STR filings.",
+      "file": "policies/aml-cft-policy.md",
+      "id": "pol-aml-01",
+      "linked_regulation": "aml-cft-2026",
+      "owner_dept": "Compliance",
+      "title": "AML/CFT Policy",
+      "version": "v1.0"
+    },
+    {
+      "excerpt": "Maintain central outsourcing register, risk-assess material arrangements for Board approval, diligence providers, contract audit rights and data ownership, manage concentration and exit strategies, enforce data localisation in India, control subcontracting, and audit material arrangements annually.\nEvidence: Central outsourcing register, board approvals, vendor audit reports, exit strategy plans.",
+      "file": "policies/it-outsourcing-policy.md",
+      "id": "pol-outsource-01",
+      "linked_regulation": "it-outsourcing-2026",
+      "owner_dept": "IT",
+      "title": "IT Outsourcing Policy",
+      "version": "v1.0"
+    },
+    {
+      "excerpt": "Appoint Data Protection Officer, keep data inventory, enforce consent and purpose limitation, honour access/correction/erasure requests in 30 days, encrypt and tokenise data, notify breaches in 24/72 hours, schedule retention and anonymisation, govern third-party sharing, and assess new products before launch.\nEvidence: DPO appointment record, data inventory, breach notification register, encryption certificates.",
+      "file": "policies/customer-data-privacy-policy.md",
+      "id": "pol-privacy-01",
+      "linked_regulation": "data-privacy-2026",
+      "owner_dept": "Compliance",
+      "title": "Customer Data Privacy Policy",
+      "version": "v1.0"
+    },
+    {
+      "excerpt": "Step 1 | Register nodal office on CIMS Sankalan portal with entity credentials. (Treasury | 1)\nStep 2 | Download NRD-CSR return template v11.0.3 from RBI CIMS portal. (Treasury | 2)\nStep 3 | Prepare monthly NRD-CSR data in prescribed .xlsx format. (Treasury | 3)\nStep 4 | Submit monthly return via screen-based upload on CIMS portal. (Treasury | 4)\nStep 5 | Maintain revised maturity codes and record types per Annex. (Treasury | Annex)\nStep 6 | Run validation checks before submission; rectify errors. (Treasury | Annex)\nEvidence: CIMS portal submission receipts, NRD-CSR template v11.0.3, validation check logs, nodal office registration confirmation.",
+      "file": "policies/nrd-csr-policy.md",
+      "id": "pol-nrd-01",
+      "linked_regulation": "nrd-csr-2026",
+      "owner_dept": "Treasury",
+      "title": "NRD-CSR Compliance Policy",
+      "version": "v1.0"
+    },
+    {
+      "excerpt": "Step 1 | Calculate FERR as per RBI prescribed methodology. (Risk | 2)\nStep 2 | Maintain FERR for all foreign exchange derivative contracts post-circular. (Risk | 5)\nStep 3 | Report FERR details daily via RBI CIMS portal. (Risk | 4)\nStep 4 | Monitor for circumvention: multiple transactions across dealers. (Risk | 3)\nStep 5 | Flag violations for Board reporting. (Risk | 3)\nStep 6 | Ensure FERR applies only to contracts after circular issuance. (Risk | 5)\nEvidence: Daily CIMS FERR reports, FERR calculation workbooks, circumvention monitoring logs, Board violation reports.",
+      "file": "policies/ferr-policy.md",
+      "id": "pol-ferr-01",
+      "linked_regulation": "ferr-2026",
+      "owner_dept": "Risk",
+      "title": "Foreign Exchange Risk Reserve Policy",
+      "version": "v1.0"
+    },
+    {
+      "excerpt": "Step 1 | Enforce USD 100M single limit across all INR currency pairs. (Treasury | 2)\nStep 2 | Apply USD 5M threshold for additional documentation facilities. (Treasury | 2(d))\nStep 3 | Obtain undertaking: underlying exposure not hedged with another AD. (Treasury | 2(d))\nStep 4 | Allow cancellation/rebooking only per RBI permitted scenarios. (Treasury | 2(a)-(c))\nStep 5 | Track outstanding notional vs. limits daily. (Risk | 2)\nStep 6 | Report limit breaches to Board within 24 hours. (Risk | 2)\nEvidence: Position limit monitoring reports, customer undertakings, cancellation/rebooking logs, Board breach notifications.",
+      "file": "policies/fx-derivatives-policy.md",
+      "id": "pol-fxderiv-01",
+      "linked_regulation": "fx-derivatives-2026",
+      "owner_dept": "Treasury",
+      "title": "FX Derivatives Risk Management Policy",
+      "version": "v1.0"
     }
   ]
 }

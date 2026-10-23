@@ -378,13 +378,6 @@ const ICONS = {
       <polyline points="12 5 19 12 12 19" />
     </svg>
   ),
-  ellipsis: (
-    <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
-      <circle cx="12" cy="5" r="1.5" />
-      <circle cx="12" cy="12" r="1.5" />
-      <circle cx="12" cy="19" r="1.5" />
-    </svg>
-  ),
 }
 
 export default function DashboardPage() {
@@ -625,7 +618,6 @@ export default function DashboardPage() {
                 <th>Department</th>
                 <th>Due date</th>
                 <th>Status</th>
-                <th style={{ width: 28 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -751,15 +743,6 @@ export default function DashboardPage() {
                       {row.statusLabel}
                     </StatusChip>
                   </td>
-                  <td style={{ width: 28, textAlign: "center" }}>
-                    <button
-                      className="pv-actions-btn"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Actions"
-                    >
-                      {ICONS.ellipsis}
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -828,7 +811,6 @@ export default function DashboardPage() {
                 <th style={{ textAlign: "right" }}>Target</th>
                 <th style={{ textAlign: "right" }}>Variance</th>
                 <th>Risk</th>
-                <th style={{ width: 28 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -962,15 +944,6 @@ export default function DashboardPage() {
                       {dept.risk}
                     </StatusChip>
                   </td>
-                  <td style={{ width: 28, textAlign: "center" }}>
-                    <button
-                      className="pv-actions-btn"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Department actions"
-                    >
-                      {ICONS.ellipsis}
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1009,7 +982,6 @@ export default function DashboardPage() {
                 <th style={{ textAlign: "right" }}>MAPs</th>
                 <th>Status</th>
                 <th>Uploaded</th>
-                <th style={{ width: 28 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -1074,15 +1046,6 @@ export default function DashboardPage() {
                     }}
                   >
                     {row.uploaded}
-                  </td>
-                  <td style={{ width: 28, textAlign: "center" }}>
-                    <button
-                      className="pv-actions-btn"
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label="Actions"
-                    >
-                      {ICONS.ellipsis}
-                    </button>
                   </td>
                 </tr>
               ))}

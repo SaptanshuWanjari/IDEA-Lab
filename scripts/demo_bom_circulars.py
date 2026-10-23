@@ -171,11 +171,21 @@ def create_plan_and_snapshot(
 
     Returns (message, plan_id_or_None).
     """
-    approved_maps = get_approved_maps(admin_client, base_url, reg_id)
-    if not approved_maps:
-        return "no approved MAPs -- skipping plan/snapshot", None
+    # Check for approved obligations (required by plan candidate endpoint)
+    obl_resp = admin_client.get(f"{base_url}/regulations/{reg_id}/obligations")
+    obligation_ids = []
+    if obl_resp.is_success:
+        obligation_ids = [
+            str(o["id"])
+            for o in obl_resp.json()
+            if (o.get("status") or "").upper() == "APPROVED"
+        ]
 
-    map_ids = [str(m["id"]) for m in approved_maps]
+    if not obligation_ids:
+        approved_maps = get_approved_maps(admin_client, base_url, reg_id)
+        if not approved_maps:
+            return "no approved MAPs or obligations -- skipping plan/snapshot", None
+        return f"{len(approved_maps)} MAPs approved (no approved ledger obligations for plan candidate) -- skipping plan/snapshot", None
 
     # Create plan candidate (admin creates)
     try:
@@ -183,8 +193,8 @@ def create_plan_and_snapshot(
             f"{base_url}/regulations/{reg_id}/plans/candidate",
             json={
                 "regulation_version_id": reg_id,
-                "obligation_ids": map_ids,
-                "rationale": "Demo plan from approved MAPs",
+                "obligation_ids": obligation_ids,
+                "rationale": "Demo plan from approved obligations",
             },
         )
         if not resp.is_success:
