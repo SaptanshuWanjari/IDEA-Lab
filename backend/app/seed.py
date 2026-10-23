@@ -38,4 +38,20 @@ async def seed():
                 )
                 session.add(admin_user)
 
+            # Seed demo bank accounts for demo scripts and maker-checker testing
+            for demo_email, demo_role in [
+                ("admin@demobank.in", "compliance_officer"),
+                ("compliance@demobank.in", "compliance_officer"),
+            ]:
+                res = await session.execute(select(User).where(User.email == demo_email))
+                if not res.scalar_one_or_none():
+                    session.add(
+                        User(
+                            email=demo_email,
+                            hashed_password=pwd_context.hash("Demobank@123"),
+                            role=demo_role,
+                            is_active=True,
+                        )
+                    )
+
         await session.commit()

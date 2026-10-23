@@ -113,11 +113,29 @@ class IngestionService:
             title = title.replace("\n", " ")
             title = re.sub(r"\s+", " ", title).strip()
             return title
-        # Fallback to the first non-empty line that is not a page number or short junk.
+
+        # RBI circulars: subject is placed directly below the salutation (Madam / Sir, etc.)
+        m2 = re.search(
+            r"(?:Madam\s*/\s*Sir|Dear\s+Sir\s*/\s*Madam|Dear\s+Sir|Sir\s*/\s*Madam),?\s*\n+(.*?)(?=\n+\s*(?:Attention of|Please refer to|It has been decided|With a view|\d+\.|\Z))",
+            text,
+            re.DOTALL | re.IGNORECASE,
+        )
+        if m2:
+            sub = m2.group(1).replace("-\n", "").replace("\n", " ")
+            sub = re.sub(r"\s+", " ", sub).strip()
+            if len(sub) >= 5:
+                return sub
+
+        # Fallback to the first non-empty line that is ASCII/English and not a page/junk line
         lines = [
             line.strip()
             for line in text.split("\n")
-            if line.strip() and not line.strip().isdigit() and len(line.strip()) >= 5
+            if line.strip()
+            and not line.strip().isdigit()
+            and len(line.strip()) >= 5
+            and any(c.isascii() and c.isalpha() for c in line.strip())
+            and "reserve bank of india" not in line.strip().lower()
+            and "www.rbi.org.in" not in line.strip().lower()
         ]
         return lines[0] if lines else None
 

@@ -25,7 +25,55 @@ function slugCore(slug: string): string {
   return slug.replace(/-\d{4}$/, "")
 }
 
+const POLICY_KEYWORDS: Record<string, string[]> = {
+  "nrd-csr-2026": [
+    "nrd-csr",
+    "nrd",
+    "csr",
+    "non-resident deposit",
+    "sankalan",
+    "cims",
+    "circular.pdf",
+  ],
+  "ferr-2026": [
+    "ferr",
+    "foreign exchange risk reserve",
+    "risk reserve",
+    "circular2.pdf",
+    "circular2",
+  ],
+  "fx-derivatives-2026": [
+    "fx derivative",
+    "fx-derivative",
+    "rebooking",
+    "rollover",
+    "circular3.pdf",
+    "circular3",
+  ],
+  "kyc-aml-2026": ["kyc", "due diligence", "cdd", "principal officer"],
+  "cyber-controls-2026": ["cyber", "ciso", "incident", "mfa"],
+  "op-resilience-2026": [
+    "operational resilience",
+    "resilience",
+    "impact tolerance",
+    "rto",
+    "rpo",
+  ],
+  "aml-cft-2026": ["aml", "cft", "mlro", "money laundering"],
+  "it-outsourcing-2026": ["outsourcing", "vendor", "data localisation"],
+  "data-privacy-2026": ["privacy", "dpo", "customer data", "protection officer"],
+}
+
 function matchesPolicy(policy: BankDemoPolicy, candidate: string): boolean {
+  if (!candidate) return false
+  const candLower = candidate.toLowerCase()
+
+  // Keyword match for demo circulars/policies
+  const keywords = POLICY_KEYWORDS[policy.linked_regulation] || []
+  if (keywords.some((kw) => candLower.includes(kw))) {
+    return true
+  }
+
   const c = slugify(candidate)
   if (!c) return false
   const linked = slugify(policy.linked_regulation)
@@ -57,14 +105,20 @@ function matchesPolicy(policy: BankDemoPolicy, candidate: string): boolean {
 
 /**
  * Return manifest policies linked to a regulation, matching by regulation
- * id, id prefix, or title slug (e.g. "RBI KYC/AML Directions 2026" matches
- * linked_regulation "kyc-aml-2026").
+ * id, id prefix, title, summary, or source pdf filename.
  */
 export function getPoliciesForReg(
   regIdOrSlug: string,
-  regTitle?: string,
+  regTitle?: string | null,
+  regSummary?: string | null,
+  sourceUrl?: string | null,
 ): BankDemoPolicy[] {
-  const candidates = [regIdOrSlug, regTitle ?? ""].filter(Boolean)
+  const candidates = [
+    regIdOrSlug,
+    regTitle ?? "",
+    regSummary ?? "",
+    sourceUrl ?? "",
+  ].filter(Boolean)
   return policies.filter((p) => candidates.some((c) => matchesPolicy(p, c)))
 }
 

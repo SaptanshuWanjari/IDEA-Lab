@@ -20,9 +20,11 @@ import {
   FileText,
   KeyRound,
   ShieldAlert,
+  Trash2,
 } from "lucide-react"
 import { useApp } from "../App"
 import { Card, SectionHead, StatusChip } from "../components/ui"
+import CleanDbModal from "../components/CleanDbModal"
 
 type SettingsTab = "Profile" | "Notifications" | "Security" | "Integrations" | "Team"
 
@@ -92,6 +94,7 @@ export default function SettingsPage() {
 
   // Danger zone state
   const [showDeactivateModal, setShowDeactivateModal] = useState(false)
+  const [showCleanDbModal, setShowCleanDbModal] = useState(false)
   const [deactivateConfirmationInput, setDeactivateConfirmationInput] =
     useState("")
 
@@ -607,6 +610,32 @@ export default function SettingsPage() {
                 >
                   <span>Deactivate account</span>
                   <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Clean Database Box */}
+              <div className="bg-white border border-rose-200 rounded-lg p-4 mt-3">
+                <div className="flex items-center gap-1.5 text-rose-700 text-xs font-bold mb-1">
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>SYSTEM RESET</span>
+                </div>
+                <h4 className="text-[13.5px] font-bold text-ink mb-1">
+                  Clean database & reset application state
+                </h4>
+                <p className="text-xs text-slate-500 mb-3.5 leading-relaxed">
+                  Reset the database to clean factory state. Erases all
+                  registered circulars, extracted clauses, MAP tasks, evidence
+                  records, and report snapshots. Re-seeds base departments and
+                  default administrator accounts.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCleanDbModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors cursor-pointer shadow-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clean database</span>
                 </button>
               </div>
             </div>
@@ -1200,6 +1229,11 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      <CleanDbModal
+        open={showCleanDbModal}
+        onClose={() => setShowCleanDbModal(false)}
+      />
     </div>
   )
 }

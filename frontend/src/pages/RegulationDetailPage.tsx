@@ -99,8 +99,19 @@ export default function RegulationDetailPage() {
   }
 
   const linkedPolicies = useMemo(
-    () => getPoliciesForReg(selectedId ?? "", regulation?.title ?? ""),
-    [selectedId, regulation?.title],
+    () =>
+      getPoliciesForReg(
+        selectedId ?? "",
+        regulation?.title,
+        regulation?.summary,
+        regulation?.source_pdf_url,
+      ),
+    [
+      selectedId,
+      regulation?.title,
+      regulation?.summary,
+      regulation?.source_pdf_url,
+    ],
   )
 
   const handleIngest = async () => {

@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Plus, Search, ArrowRight, AlertCircle, FileText, Inbox } from 'lucide-react'
+import { Plus, Search, ArrowRight, AlertCircle, FileText, Inbox, Trash2 } from 'lucide-react'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
 import { api } from '../lib/api'
 import { openFilePicker } from '../lib/fileHelper'
 import type { RegulationOut } from '../lib/types'
+import CleanDbModal from '../components/CleanDbModal'
 import {
   Card,
   SectionHead,
@@ -20,6 +21,7 @@ export default function RegulationsPage() {
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('All')
   const [uploading, setUploading] = useState(false)
+  const [showCleanDbModal, setShowCleanDbModal] = useState(false)
 
   const {
     data: regulations,
@@ -77,14 +79,25 @@ export default function RegulationsPage() {
           badge={`${filtered.length} folios`}
           sub="Manage registered regulatory circulars, intake dates, and folio references."
           right={
-            <button
-              onClick={handleUpload}
-              disabled={uploading}
-              className="h-9.5 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer disabled:opacity-70 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{uploading ? 'Registering…' : 'Register circular'}</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCleanDbModal(true)}
+                className="h-9.5 px-3 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-xs"
+                title="Wipe database and reset circular folios"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Clean DB</span>
+              </button>
+              <button
+                onClick={handleUpload}
+                disabled={uploading}
+                className="h-9.5 px-3.5 rounded-lg bg-[#0D9488] hover:bg-[#0b7e73] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer disabled:opacity-70 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{uploading ? 'Registering…' : 'Register circular'}</span>
+              </button>
+            </div>
           }
         />
 
@@ -234,6 +247,12 @@ export default function RegulationsPage() {
           )}
         </div>
       </Card>
+
+      <CleanDbModal
+        open={showCleanDbModal}
+        onClose={() => setShowCleanDbModal(false)}
+        onSuccess={() => refetch()}
+      />
     </div>
   )
 }

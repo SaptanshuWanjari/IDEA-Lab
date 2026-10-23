@@ -10,8 +10,10 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Trash2,
 } from 'lucide-react'
 import { useApp } from '../App'
+import CleanDbModal from './CleanDbModal'
 
 const SUB: Record<string, string> = {
   Dashboard: 'Command Desk · Q3 compliance cycle · All departments',
@@ -58,6 +60,7 @@ export default function Header({
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [showCleanDbModal, setShowCleanDbModal] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -376,6 +379,28 @@ export default function Header({
                     </kbd>
                   </button>
                 )}
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setProfileOpen(false)
+                    setShowCleanDbModal(true)
+                  }}
+                  className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left hover:bg-rose-50 text-rose-700 transition-colors cursor-pointer group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-rose-100 group-hover:bg-rose-200/80 text-rose-600 flex items-center justify-center shrink-0 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[12.5px] font-semibold leading-tight">
+                      Clean Database
+                    </div>
+                    <div className="text-[10.5px] text-rose-600/80 leading-tight mt-0.5">
+                      Reset database & wipe all circulars
+                    </div>
+                  </div>
+                </button>
               </div>
 
               {/* Divider */}
@@ -407,6 +432,11 @@ export default function Header({
           )}
         </div>
       </div>
+
+      <CleanDbModal
+        open={showCleanDbModal}
+        onClose={() => setShowCleanDbModal(false)}
+      />
     </header>
   )
 }
