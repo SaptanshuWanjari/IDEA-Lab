@@ -225,6 +225,9 @@ class AgentNodes:
         historical_context = "\n".join(h.get("text", "") for h in historical[:3])
         chunk_ids = _chunk_ids(historical)
 
+        # Check if demo mode is enabled
+        demo_mode = state.get("demo_mode", False)
+
         # Extract deadline entities from clauses for deadline preservation validation
         deadline_entities = []
         for clause in state.get("clauses", []):
@@ -250,22 +253,41 @@ class AgentNodes:
             deadline_entities=deadline_entities_str,
         )
 
-        response = self.client.chat(
-            [
-                {
-                    "role": "system",
-                    "content": (
-                        "Return only a valid JSON array of MAPs. "
-                        "owner_department MUST be one of: Compliance, Risk, IT, Operations, Audit. "
-                        "No other department names are allowed."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                },
-            ]
-        )
+        # Use demo fallback chain if demo_mode is enabled
+        if demo_mode:
+            response = self.client.chat_demo(
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Return only a valid JSON array of MAPs. "
+                            "owner_department MUST be one of: Compliance, Risk, IT, Operations, Audit. "
+                            "No other department names are allowed."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": user_prompt,
+                    },
+                ]
+            )
+        else:
+            response = self.client.chat(
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Return only a valid JSON array of MAPs. "
+                            "owner_department MUST be one of: Compliance, Risk, IT, Operations, Audit. "
+                            "No other department names are allowed."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": user_prompt,
+                    },
+                ]
+            )
         _json_log.debug("MAPS LLM RESPONSE (len=%d): %s", len(response), response[:300])
         parsed = _extract_json(response, default=[])
 

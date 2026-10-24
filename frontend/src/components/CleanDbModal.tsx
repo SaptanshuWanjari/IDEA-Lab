@@ -79,31 +79,25 @@ export default function CleanDbModal({
         </div>
 
         <h2 id="pv-clean-db-title" className="text-lg font-bold text-ink mb-2">
-          Clean Database & Reset System
+          Reset Generated Policies & Tasks
         </h2>
 
         <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 text-[12.5px] text-rose-900 mb-4 leading-relaxed">
           <p className="font-semibold mb-1">
-            This action will wipe application state and cannot be undone:
+            This will reset generated policies, task progress, and audit logs:
           </p>
           <ul className="list-disc pl-4 space-y-1 text-rose-800 text-[12px] mt-2">
             <li>
-              All registered RBI circulars, parsed clauses, and folio records
-              will be deleted.
+              All generated MAP tasks, dependencies, candidate plans, and obligation reviews will be cleared.
             </li>
             <li>
-              All MAP tasks, dependencies, evidence files, and report snapshots
-              will be permanently removed.
+              Uploaded task evidence files, AI assessments, and audit report snapshots will be removed.
             </li>
             <li>
-              Knowledge graph nodes and vector embeddings will be cleared.
+              Audit logs, AI run records, and MAP execution graph nodes will be reset.
             </li>
             <li>
-              Default departments and system administrator accounts (
-              <span className="font-mono font-semibold">admin@pravah.in</span>{" "}
-              and{" "}
-              <span className="font-mono font-semibold">admin@demobank.in</span>
-              ) will be re-seeded.
+              <span className="font-semibold text-rose-950">Preserved:</span> All registered RBI circulars, ingested bank policies, department structures, and active user logins remain intact.
             </li>
           </ul>
         </div>
@@ -127,12 +121,12 @@ export default function CleanDbModal({
             {cleaning ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Cleaning database…</span>
+                <span>Cleaning generated data…</span>
               </>
             ) : (
               <>
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Wipe & Clean Database</span>
+                <span>Reset Generated Data</span>
               </>
             )}
           </button>

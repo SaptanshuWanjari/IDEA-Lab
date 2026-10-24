@@ -183,13 +183,6 @@ export default function SettingsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="pv-chip pv-chip--teal">
-            <span className="dot" />
-            Active session
-          </span>
-          <span className="pv-chip text-xs">RBI Q3 Cycle</span>
-        </div>
       </div>
 
       {/* Tab Navigation */}
@@ -620,13 +613,13 @@ export default function SettingsPage() {
                   <span>SYSTEM RESET</span>
                 </div>
                 <h4 className="text-[13.5px] font-bold text-ink mb-1">
-                  Clean database & reset application state
+                  Reset generated policies & task state
                 </h4>
                 <p className="text-xs text-slate-500 mb-3.5 leading-relaxed">
-                  Reset the database to clean factory state. Erases all
-                  registered circulars, extracted clauses, MAP tasks, evidence
-                  records, and report snapshots. Re-seeds base departments and
-                  default administrator accounts.
+                  Reset generated policies, MAP tasks, evidence records, report snapshots,
+                  and audit logs back to base intake state. Registered RBI circulars,
+                  ingested bank documents, department configurations, and user accounts
+                  are preserved.
                 </p>
 
                 <button
@@ -635,7 +628,7 @@ export default function SettingsPage() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-rose-600 rounded-lg hover:bg-rose-700 transition-colors cursor-pointer shadow-xs"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Clean database</span>
+                  <span>Reset generated data</span>
                 </button>
               </div>
             </div>

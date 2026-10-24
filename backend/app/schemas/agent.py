@@ -21,9 +21,9 @@ class GeneratedMAP(BaseModel):
     deadline_days: Optional[int] = None
     evidence_required: Optional[str] = None
     depends_on: List[str] = Field(default_factory=list)
-    confidence: float
-    reasoning: str
-    source_clauses: List[str]
+    confidence: float = 0.7
+    reasoning: str = "Auto-generated from regulation clause"
+    source_clauses: List[str] = Field(default_factory=list)
     retrieved_context: Optional[str] = None
 
     @field_validator("owner_department", mode="before")

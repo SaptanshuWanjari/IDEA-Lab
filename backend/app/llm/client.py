@@ -59,6 +59,12 @@ def record_ai_run(
 
 
 class LLMClient:
+    # Demo model fallback chain - use smaller model for speed
+    DEMO_MODELS = {
+        "primary": "llama3.2:latest",
+        "fallback": "qwen3:8b",
+    }
+
     def __init__(self, model: str | None = None):
         self.model = model or settings.ollama_chat_model
         self.url = settings.ollama_url
@@ -116,6 +122,25 @@ class LLMClient:
             if os.getenv("OPENAI_API_KEY"):
                 return self._openai_chat(messages, temperature, max_tokens)
             raise e
+
+    def chat_demo(
+        self,
+        messages: list[dict],
+        temperature: float | None = None,
+        max_tokens: int | None = None,
+    ) -> str:
+        """Chat with demo fallback chain: qwen3:8b -> llama3.2:latest."""
+        for model_name in [self.DEMO_MODELS["primary"], self.DEMO_MODELS["fallback"]]:
+            try:
+                original_model = self.model
+                self.model = model_name
+                result = self.chat(messages, temperature, max_tokens)
+                self.model = original_model
+                return result
+            except Exception as e:
+                _llm_log.warning(f"Demo model {model_name} failed: {e}, trying fallback")
+                continue
+        raise RuntimeError("All demo models failed")
 
     def _openai_chat(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
         import openai

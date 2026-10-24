@@ -37,7 +37,7 @@ class AgentGraph:
         builder.add_edge("dependencies", END)
         self.graph = builder.compile()
 
-    def run(self, regulation_id: str, text: str, clauses: list, document_type: str | None = None) -> dict:
+    def run(self, regulation_id: str, text: str, clauses: list, document_type: str | None = None, demo_mode: bool = False) -> dict:
         return self.graph.invoke(
-            {"regulation_id": regulation_id, "text": text, "clauses": clauses, "document_type": document_type}
+            {"regulation_id": regulation_id, "text": text, "clauses": clauses, "document_type": document_type, "demo_mode": demo_mode}
         )

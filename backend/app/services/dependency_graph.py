@@ -41,6 +41,8 @@ class DependencyGraph:
         return order
 
     def critical_path(self) -> list[UUID]:
+        if not self._map_ids:
+            return []
         order = self.topological_order()
         dist = {m: self._days.get(m, 7) for m in self._map_ids}
         prev = {m: None for m in self._map_ids}

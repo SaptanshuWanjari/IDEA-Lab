@@ -747,21 +747,14 @@ export default function MapTasksPage() {
 
   // Initialize and synchronize task dataset
   useEffect(() => {
-    if (apiMaps && apiMaps.length > 0) {
-      // Enrich backend MAP records
+    if (apiMaps !== undefined && apiMaps !== null) {
+      // Enrich backend MAP records directly; if empty, render empty board
       const enriched = apiMaps.map((m, idx) => enrichBackendMap(m, idx, OFFICERS))
       setTasks(enriched)
-    } else {
-      // Fallback to rich 150-task demo dataset
-      let initial = DEMO_MAPS
-      if (selectedId) {
-        // Scope to selected circular if applicable
-        initial = DEMO_MAPS.filter(t => t.regulation_id === selectedId || t.circular_title.toLowerCase().includes(selectedId.toLowerCase()))
-        if (initial.length === 0) initial = DEMO_MAPS.slice(0, 30)
-      }
-      setTasks(initial)
+    } else if (error) {
+      setTasks([])
     }
-  }, [apiMaps, selectedId])
+  }, [apiMaps, error, selectedId])
 
   // Filtered & Sorted Tasks
   const filteredTasks = useMemo(() => {

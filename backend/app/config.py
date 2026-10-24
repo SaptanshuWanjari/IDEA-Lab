@@ -36,9 +36,9 @@ class Settings(BaseSettings):
     ollama_url: str = "http://localhost:11434"
 
     # Ollama models (override in .env)
-    ollama_chat_model: str = "minimax-m3:cloud"
+    ollama_chat_model: str = "qwen3:8b"
     ollama_embedding_model: str = "qwen3-embedding:0.6b"
-    ollama_rerank_model: str = "minimax-m3:cloud"
+    ollama_rerank_model: str = "qwen3:8b"
 
     # Timeouts and generation limits
     ollama_embed_timeout: float = 60.0

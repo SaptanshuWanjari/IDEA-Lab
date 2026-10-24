@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Search, ArrowRight, AlertCircle, FileText, Inbox, Trash2 } from 'lucide-react'
 import { useApp } from '../App'
 import { useApi } from '../hooks/useApi'
@@ -22,6 +22,17 @@ export default function RegulationsPage() {
   const [filterStatus, setFilterStatus] = useState('All')
   const [uploading, setUploading] = useState(false)
   const [showCleanDbModal, setShowCleanDbModal] = useState(false)
+
+  // Handle navigation from DemoModal
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      if (e.detail?.regId) {
+        navigate('regulation-detail', e.detail.regId)
+      }
+    }
+    window.addEventListener('navigate-to-regulation', handler as EventListener)
+    return () => window.removeEventListener('navigate-to-regulation', handler as EventListener)
+  }, [navigate])
 
   const {
     data: regulations,
@@ -84,7 +95,7 @@ export default function RegulationsPage() {
                 type="button"
                 onClick={() => setShowCleanDbModal(true)}
                 className="h-9.5 px-3 rounded-lg border border-rose-200 bg-white hover:bg-rose-50 text-rose-700 text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors shrink-0 cursor-pointer shadow-xs"
-                title="Wipe database and reset circular folios"
+                title="Reset generated policies, MAP tasks, and audit logs"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Clean DB</span>

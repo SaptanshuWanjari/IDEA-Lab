@@ -429,8 +429,7 @@ export default function DashboardPage() {
   )
 
   const stillLoading = loading || extrasLoading
-  const usingDemoData =
-    !stillLoading && (circulars.length === 0 || totalMaps === 0)
+  const usingDemoData = !stillLoading && circulars.length === 0
 
   // Deadline filtering
   const filterCounts = useMemo(
@@ -486,11 +485,11 @@ export default function DashboardPage() {
   // Circular data — use live if available, else static
   const circularTableData: CircularRecord[] =
     !usingDemoData && circulars.length > 0
-      ? circulars.map((r, i) => ({
+      ? circulars.map((r) => ({
           id: r.id,
           title: r.title ?? "(untitled)",
           type: "RBI Circular",
-          maps: (mapsByReg[r.id] ?? []).length || [24, 18, 12, 31, 16][i % 5],
+          maps: (mapsByReg[r.id] ?? []).length,
           status: r.status,
           uploaded: new Date(r.created_at).toLocaleDateString("en-IN", {
             day: "2-digit",

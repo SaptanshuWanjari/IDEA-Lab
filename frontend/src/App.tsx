@@ -35,6 +35,7 @@ export interface NavCtx {
   selectedId: string | null
   user: UserOut | null
   logout: () => Promise<void> | void
+  refresh: () => void
 }
 
 export const AppCtx = createContext<NavCtx>({
@@ -43,6 +44,7 @@ export const AppCtx = createContext<NavCtx>({
   selectedId: null,
   user: null,
   logout: () => {},
+  refresh: () => {},
 })
 
 export const useApp = () => useContext(AppCtx)
@@ -220,12 +222,20 @@ export default function App() {
     setCurrentPage("login")
   }
 
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((k) => k + 1)
+    toast("info", "Data refreshed", "Reloaded latest changes from server.")
+  }, [toast])
+
   const ctx: NavCtx = {
     navigate: navigate as NavCtx["navigate"],
     toast,
     selectedId,
     user,
     logout: handleLogout,
+    refresh: handleRefresh,
   }
 
   const renderPage = () => {
@@ -283,12 +293,13 @@ export default function App() {
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebar={toggleSidebar}
             onLogout={handleLogout}
+            onRefresh={handleRefresh}
           />
           <main
             className="flex-1 flex flex-col"
             style={{ padding: "16px 24px 40px", width: "100%", minWidth: 0 }}
           >
-            <div key={currentPage} className="pv-rise flex-1 flex flex-col">
+            <div key={`${currentPage}-${refreshKey}`} className="pv-rise flex-1 flex flex-col">
               {renderPage()}
             </div>
             <footer

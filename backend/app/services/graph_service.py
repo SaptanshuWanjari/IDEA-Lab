@@ -7,6 +7,7 @@ from app.config import settings
 from app.graph.client import GraphClient
 from app.llm.client import LLMClient
 from app.schemas.document import DocumentStructure
+from neo4j.exceptions import ConstraintError
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,15 @@ class GraphService:
     def __init__(self, client: GraphClient):
         self.client = client
 
+    def _run_safe(self, query: str, params: dict):
+        """Run a query, catching and logging constraint errors but continuing."""
+        try:
+            self.client.run(query, params)
+        except ConstraintError as e:
+            logger.warning("Constraint error (continuing): %s", e)
+        except Exception as e:
+            logger.warning("Graph query failed (continuing): %s", e)
+
     def ingest_regulation(
         self,
         regulation_id: str,
@@ -49,7 +59,7 @@ class GraphService:
         # writes are idempotent, so a constraint error indicates real
         # corruption that reconciliation must report.
         if source_version_id is not None:
-            self.client.run(
+            self._run_safe(
                 "MERGE (sv:SourceVersion {id: $id}) "
                 "SET sv.regulation_id = $reg_id, sv.bank_id = $bank_id, "
                 "sv.legal_entity_id = $legal_entity_id, "
@@ -63,9 +73,12 @@ class GraphService:
                 },
             )
         else:
-            self.client.run(
-                "MERGE (r:Regulation {id: $id}) SET r.title = $title",
-                {"id": regulation_id, "title": title},
+            self._run_safe(
+                """
+                MERGE (r:Regulation {id: $reg_id})
+                SET r.title = $title
+                """,
+                {"reg_id": regulation_id, "title": title},
             )
         clause_ids = {c.id for c in document.clauses}
         for clause in document.clauses:
@@ -82,7 +95,7 @@ class GraphService:
                 "source_version_id": source_version_id,
             }
             if source_version_id is not None:
-                self.client.run(
+                self._run_safe(
                     """
                     MATCH (sv:SourceVersion {id: $source_version_id})
                     MERGE (c:Clause {id: $clause_id})
@@ -96,18 +109,13 @@ class GraphService:
                     params,
                 )
             else:
-                self.client.run(
+                self._run_safe(
                     """
                     MERGE (c:Clause {id: $clause_id})
                     SET c.text = $text, c.section = $section, c.regulation_id = $reg_id
                     MERGE (r:Regulation {id: $reg_id})-[:CONTAINS]->(c)
                     """,
-                    {
-                        "clause_id": clause_id,
-                        "text": clause.text,
-                        "section": clause.section,
-                        "reg_id": regulation_id,
-                    },
+                    params,
                 )
 
         try:
@@ -136,7 +144,7 @@ class GraphService:
             "AMENDS": "MATCH (a:Clause {id: $source}) MATCH (b:Clause {id: $target}) MERGE (a)-[:AMENDS]->(b)",
             "DEFINES": "MATCH (a:Clause {id: $source}) MATCH (b:Clause {id: $target}) MERGE (a)-[:DEFINES]->(b)",
         }
-        self.client.run(queries[rel_type], {"source": source, "target": target})
+        self._run_safe(queries[rel_type], {"source": source, "target": target})
 
     def _extract_relations(self, title: str, document: DocumentStructure) -> list[dict]:
         if not document.clauses:

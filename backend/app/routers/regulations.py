@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -169,6 +169,7 @@ async def reprocess_regulation(
 @router.post("/{regulation_id}/generate", response_model=list[MAPOut])
 async def generate_maps(
     regulation_id: UUID,
+    demo: bool = Query(False, description="Use demo model fallback chain"),
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
@@ -201,12 +202,12 @@ async def generate_maps(
 
     try:
         # Clear old Pending/Draft MAPs for this regulation to prevent duplicates on re-generation
-        from app.models.map import Map, MapStatus
+        from app.models.map import MAP as Map
         from sqlalchemy import delete
         await session.execute(
             delete(Map).where(
                 Map.regulation_id == regulation_id,
-                Map.status.in_([MapStatus.PENDING, MapStatus.DRAFT])
+                Map.status.in_(["Pending", "Draft"])
             )
         )
         await session.commit()
@@ -214,7 +215,7 @@ async def generate_maps(
         # Run 4-agent pipeline
         agent = AgentGraph()
         text = doc.raw_markdown[:8000]
-        result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses], doc_class)
+        result = agent.run(str(regulation_id), text, [c.model_dump() for c in doc.clauses], doc_class, demo_mode=demo)
 
         import logging
         _log = logging.getLogger(__name__)

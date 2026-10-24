@@ -11,9 +11,12 @@ import {
   LogOut,
   ChevronRight,
   Trash2,
+  Film,
+  RotateCw,
 } from 'lucide-react'
 import { useApp } from '../App'
 import CleanDbModal from './CleanDbModal'
+import DemoModal from './DemoModal'
 
 const SUB: Record<string, string> = {
   Dashboard: 'Command Desk · Q3 compliance cycle · All departments',
@@ -48,19 +51,30 @@ export default function Header({
   sidebarCollapsed,
   onToggleSidebar,
   onLogout,
+  onRefresh,
 }: {
   title: string
   onPaletteOpen?: () => void
   sidebarCollapsed?: boolean
   onToggleSidebar?: () => void
   onLogout?: () => void
+  onRefresh?: () => void
 }) {
-  const { user, navigate, logout: ctxLogout } = useApp()
+  const { user, navigate, logout: ctxLogout, refresh: ctxRefresh } = useApp()
   const handleLogout = onLogout ?? ctxLogout
+  const triggerRefresh = onRefresh ?? ctxRefresh
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefreshClick = () => {
+    setRefreshing(true)
+    triggerRefresh?.()
+    setTimeout(() => setRefreshing(false), 600)
+  }
 
   const [notifOpen, setNotifOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [showCleanDbModal, setShowCleanDbModal] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false)
   const notifRef = useRef<HTMLDivElement>(null)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -149,6 +163,33 @@ export default function Header({
           <kbd className="text-[10px] bg-white border border-[#E2EAF2] rounded px-1.5 py-0.5 text-slate-500 font-mono">
             ⌘K
           </kbd>
+        </button>
+
+        {/* Refresh latest data button */}
+        <button
+          type="button"
+          onClick={handleRefreshClick}
+          disabled={refreshing}
+          className="h-9 px-2.5 rounded-lg border border-[#E2EAF2] bg-white hover:bg-slate-50 text-slate-600 hover:text-[#0D9488] hover:border-[#0D9488]/30 text-xs font-semibold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 disabled:opacity-60"
+          title="Reload latest data changes from server"
+          aria-label="Reload latest data"
+        >
+          <RotateCw
+            className={`w-3.5 h-3.5 transition-transform ${
+              refreshing ? 'animate-spin text-[#0D9488]' : 'text-slate-500'
+            }`}
+          />
+          <span className="hidden sm:inline">Refresh</span>
+        </button>
+
+        {/* Demo Mode button */}
+        <button
+          onClick={() => setDemoOpen(true)}
+          className="pv-btn-ghost px-3 py-1.5 gap-1.5 text-slate-500 hover:text-orange-500"
+          title="Run BoM Circulars Demo"
+        >
+          <Film className="w-4 h-4" />
+          <span className="text-sm font-medium">Demo</span>
         </button>
 
         {/* Notifications toggle */}
@@ -394,10 +435,10 @@ export default function Header({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[12.5px] font-semibold leading-tight">
-                      Clean Database
+                      Reset Generated Data
                     </div>
                     <div className="text-[10.5px] text-rose-600/80 leading-tight mt-0.5">
-                      Reset database & wipe all circulars
+                      Reset MAP tasks, evidence & audit logs
                     </div>
                   </div>
                 </button>
@@ -436,6 +477,10 @@ export default function Header({
       <CleanDbModal
         open={showCleanDbModal}
         onClose={() => setShowCleanDbModal(false)}
+      />
+      <DemoModal
+        open={demoOpen}
+        onClose={() => setDemoOpen(false)}
       />
     </header>
   )
